@@ -53,7 +53,7 @@ function init(environment, contextVals, config){
     featureflow.controls = {};
     eventEmitter = EventEmitter();
     controlsUrl = config.controlsUrl || 'https://controls.featureflow.io';
-    baseUrl = config.baseUrl|| 'https://featureflow.io';
+    baseUrl = config.baseUrl|| 'https://app.featureflow.io';
     restClient = RestClient(baseUrl, environment);
 
     //1. Set the context

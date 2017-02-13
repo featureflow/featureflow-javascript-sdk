@@ -46,15 +46,24 @@ function updateContext(contextVals){
         eventEmitter.emit(updated);
     });
 }
+function init(appKey){
+    var contextVals = {
+        key: "anonymous"
+    };
+    init(appKey, contextVals, {})
+}
+function init(appKey, contextVals){
+    init(appKey, contextVals, {})
+}
 
-function init(environment, contextVals, config){
+function init(appKey, contextVals, config){
     config = config || {};
-    environment = environment;
+    appKey = appKey;
     featureflow.controls = {};
     eventEmitter = EventEmitter();
     controlsUrl = config.controlsUrl || 'https://controls.featureflow.io';
     baseUrl = config.baseUrl|| 'https://app.featureflow.io';
-    restClient = RestClient(baseUrl, environment);
+    restClient = RestClient(baseUrl, appKey);
 
     //1. Set the context
     context = FeatureflowContext(contextVals);

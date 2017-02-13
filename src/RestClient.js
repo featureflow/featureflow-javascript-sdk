@@ -20,12 +20,12 @@ function getJSON(endpoint, callback) {
     return request;
 }
 
-function RestClient(baseUrl, environment){
+function RestClient(baseUrl, appKey){
     var restClient = {};
 
     restClient.getControls = function(context, callback){
         var contextData= encodeURI(base64URLEncode(context));
-        var url = baseUrl + '/api/sdk/js/v1/evaluate/' + environment + "/context/" + contextData;
+        var url = baseUrl + '/api/sdk/js/v1/evaluate/' + appKey + "/context/" + contextData;
         getJSON(url, callback);
     };
 

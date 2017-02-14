@@ -25,7 +25,7 @@ function RestClient(baseUrl, appKey){
 
     restClient.getControls = function(context, callback){
         var contextData= encodeURI(base64URLEncode(context));
-        var url = baseUrl + '/api/sdk/js/v1/evaluate/' + appKey + "/context/" + contextData;
+        var url = baseUrl + '/api/js/v1/evaluate/' + appKey + "/context/" + contextData;
         getJSON(url, callback);
     };
 

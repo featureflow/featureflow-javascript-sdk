@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <script src="./dist/featureflow.js"></script>
+    <script src="./dist/featureflow.js" crossorigin="anonymous" ></script>
   </head>
   <body>
     <h1>Featureflow test harness</h1>
@@ -15,9 +15,19 @@
               country: 'australia'
           }
       };
-      var featureflow = Featureflow.init('fftestjs', context, {
+      /*var featureflow = Featureflow.init('fftestjs', context, {
         baseUrl:    'http://localhost:8081',
-      });
+      });*/
+      //var featureflow = Featureflow.init('env-7ee02f8bbf2f4b8eadb135f22650274f', context, {}); //featueflow.io Featureflow Application Local Environment Key
+
+      var config = {baseUrl:    'http://localhost:8081'};
+      var apiKey = 'env-ece048bd8b1f408a9a0601b2dc26e78e'; //// featureflow.dev local env
+
+      //var config = {}; //for prod
+      //var apiKey = 'env-74895ab46c7f4b0aaa36bdb4a608290a'; //featureflow.io local env
+
+
+      var featureflow = Featureflow.init(apiKey, context, config); //featureflow prod local env
 
       function render(key, failoverValue){
         var value = featureflow.evaluate(key, failoverValue);
@@ -26,6 +36,12 @@
       }
       featureflow.on('updated', function() {
           console.log('Updated!');
+          for (var property in featureflow.controls) {
+              if (featureflow.controls.hasOwnProperty(property)) {
+                  render(property, 'OFF');
+              }
+          }
+          //featureflow.updateContext(context);
       });
 
       featureflow.on('ready', function() {
@@ -35,16 +51,15 @@
                   render(property, 'OFF');
               }
           }
+      });
 
-          var context = {
+      function fakeLogin(){
+          context = {
               key: "oliver",
               tier: "gold"
           };
           featureflow.updateContext(context);
-
-
-
-      });
+      }
 
     </script>
   </body>

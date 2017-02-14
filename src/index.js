@@ -13,8 +13,8 @@ var controlsUrl;
 var baseUrl;
 var eventEmitter;
 var ready = 'ready';
-var updated = 'updated';
-
+var contextUpdated = 'update:context';
+var controlsUpdated = 'update:controls';
 
 
 var featureflow = {
@@ -43,7 +43,8 @@ function updateContext(contextVals){
     restClient.getControls(context.getContext(), function(response){
         localStorage.setItem(environment + ":" + context.getContext().key, JSON.stringify(response));
         featureflow.controls = response;
-        eventEmitter.emit(updated);
+        eventEmitter.emit(contextUpdated, context.getContext());
+        eventEmitter.emit(controlsUpdated, response);
     });
 }
 function init(appKey){

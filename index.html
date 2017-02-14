@@ -24,8 +24,12 @@
         var el = document.querySelector('#features');
         el.innerHTML = el.innerHTML + "<li>" + key + ' = ' + value.toString() + " </li>";
       }
-      featureflow.on('updated', function() {
-          console.log('Updated!');
+      featureflow.on('update:context', function(context) {
+          console.log('Updated!', context);
+      });
+
+      featureflow.on('update:controls', function(context) {
+        console.log('Updated!', context);
       });
 
       featureflow.on('ready', function() {

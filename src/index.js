@@ -80,7 +80,8 @@ function init(appKey, contextVals, config){
         //.add("Accept", "text/event-stream")
     es.addEventListener('message', function (e) {
         console.log(e.data);
-        alert('got event: ' + e);
+        //alert('got event: ' + e);
+        //reevaluate control
         eventEmitter.emit(updated);
     }, false);
     //4. Send an event

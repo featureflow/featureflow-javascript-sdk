@@ -6,7 +6,7 @@
   </head>
   <body>
     <h1>Featureflow test harness</h1>
-    <ul id="features">...</ul>
+    <ul id="features"></ul>
     <script>
       var context = {
         key: 'user1',
@@ -22,7 +22,7 @@
       function render(key, failoverValue){
         var value = featureflow.evaluate(key, failoverValue);
         var el = document.querySelector('#features');
-        el.innerHTML = el.innerHTML + "<li>" + key + ' = ' + value.toString() + " </li>";
+        el.innerHTML = el.innerHTML + "<li>" + key  + ' = ' + value.toString() + " </li>";
       }
       featureflow.on('updated', function() {
           console.log('Updated!');

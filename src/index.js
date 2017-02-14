@@ -77,7 +77,14 @@ function init(appKey, contextVals, config){
     });
 
     //3. Set up SSE if required
-
+    var es = new EventSource(baseUrl + '/api/js/v1/stream/' + appKey);
+        //.add("Accept", "text/event-stream")
+    es.addEventListener('message', function (e) {
+        console.log(e.data);
+        //alert('got event: ' + e);
+        //reevaluate control
+        eventEmitter.emit(updated);
+    }, false);
     //4. Send an event
 
     return featureflow;

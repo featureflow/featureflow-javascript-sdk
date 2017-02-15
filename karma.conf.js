@@ -17,6 +17,8 @@ module.exports = function(config) {
     browsers: ['Chrome'],
     
     webpack: webpackConfig,
+
+    failOnEmptyTestSuite: false,
     
     webpackServer: {
       noInfo: true

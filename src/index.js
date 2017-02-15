@@ -82,6 +82,10 @@ export function init(apiKey: string, contextVals: KeyValueNested = {...DEFAULT_C
   return featureflow;
 }
 
+export default {
+  init
+}
+
 if(window.VERSION !== undefined) {
   module.exports.version = window.VERSION;
 }

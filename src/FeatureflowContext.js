@@ -19,5 +19,5 @@ function FeatureflowContext(context){
     return featureflowContext;
 }
 
-module.exports = FeatureflowContext;
+export default FeatureflowContext;
 

@@ -1,24 +1,20 @@
-/**
- * Created by oliver on 23/11/16.
- * EventEmitter inspired by nodejs EventEmitter
- */
-
+// @flow
 function EventEmitter(){
-    var eventEmitter = {};
-    var _listeners = {};
+    let eventEmitter = {};
+    let _listeners = {};
 
-    eventEmitter.initEventEmitter = function () {
+    eventEmitter.initEventEmitter = function () : void {
         this._listeners = {};
     };
 
-    eventEmitter.initEventEmitterType = function (type) {
+    eventEmitter.initEventEmitterType = function (type: string) {
         if (!type) {
             return;
         }
         this._listeners[type] = [];
     };
 
-    eventEmitter.hasEventListener = function (type, fn) {
+    eventEmitter.hasEventListener = function (type: string) {
         if (!this.listener) {
             return false;
         }
@@ -30,7 +26,7 @@ function EventEmitter(){
         return true;
     };
 
-    eventEmitter.addListener = function (type, fn) {
+    eventEmitter.addListener = function (type: string, fn: ()=>any) {
         if (!this._listeners) {
             this.initEventEmitter();
         }
@@ -44,12 +40,12 @@ function EventEmitter(){
 
     eventEmitter.on = eventEmitter.addListener;
 
-    eventEmitter.one = function (type, fn) {
+    eventEmitter.one = function (type: string, fn: ()=>any) {
         fn._oneTimeListener = true;
         this.addListener(type, fn);
     };
 
-    eventEmitter.removeListener = function (type, fn) {
+    eventEmitter.removeListener = function (type: string, fn: ()=>any) {
         if (!this._listeners) {
             return;
         }
@@ -82,7 +78,7 @@ function EventEmitter(){
         this.emit('removeListener', type, fn);
     };
 
-    eventEmitter.emit = function (type) {
+    eventEmitter.emit = function (type: string) {
         if (!this._listeners) {
             return;
         }
@@ -106,7 +102,7 @@ function EventEmitter(){
         }
     };
 
-    eventEmitter.listeners = function (type) {
+    eventEmitter.listeners = function (type: string) {
         if (!type) {
             return undefined;
         }
@@ -121,4 +117,4 @@ function EventEmitter(){
     return eventEmitter;
 }
 
-module.exports = EventEmitter;
+export default EventEmitter;

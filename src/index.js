@@ -1,103 +1,87 @@
-/**
- * Created by oliver on 23/11/16.
- */
+// @flow
+import RestClient from './RestClient';
+import EventEmitter  from './EventEmitter';
+import FeatureflowContext from './FeatureflowContext';
 
-var RestClient = require('./RestClient');
-var EventEmitter = require('./EventEmitter');
-var FeatureflowContext = require('./FeatureflowContext');
+let context: any;
+let restClient: RestClientType;
+let eventEmitter;
+let environment: string;
+let controlsUrl: string;
+let baseUrl: string;
+const EVENT_READY = 'ready';
+const EVENT_UPDATED_CONTEXT = 'update:context';
+const EVENT_UPDATED_CONTROLS = 'update:controls';
 
-var context;
-var environment;
-var restClient;
-var controlsUrl;
-var baseUrl;
-var eventEmitter;
-var ready = 'ready';
-var contextUpdated = 'update:context';
-var controlsUpdated = 'update:controls';
+const DEFAULT_CONTEXT_VALUES: KeyValueNested = {
+  key: 'anonymous'
+}
 
 
-var featureflow = {
-    controls: {},
-    env: {},
-    context: {},
-    on: on,
-    removeListener: removeListener,
-    updateContext: updateContext,
-    evaluate: evaluate
+let featureflow = {
+  controls: {},
+  env: {},
+  context: {},
+  on: on,
+  removeListener: removeListener,
+  updateContext: updateContext,
+  evaluate: evaluate
 };
 
-function evaluate(key, failoverValue){
-    return (featureflow.controls && featureflow.controls.hasOwnProperty(key) && featureflow.controls[key] !== null)?featureflow.controls[key]:failoverValue;
+function evaluate(key: string, failoverValue: string){
+  return (featureflow.controls && featureflow.controls.hasOwnProperty(key) && featureflow.controls[key] !== null)
+    ? featureflow.controls[key]
+    : failoverValue;
 };
 
-function on(event, handler) {
-    eventEmitter.on(event, handler);
+function on(event: string, handler: CallbackType<*>) {
+  eventEmitter.on(event, handler);
 }
-function removeListener(eventName, listener) {
-    eventEmitter.removeListener(eventName, listener)
-}
-
-function updateContext(contextVals){
-    context = FeatureflowContext(contextVals);
-    restClient.getControls(context.getContext(), function(response){
-        localStorage.setItem(environment + ":" + context.getContext().key, JSON.stringify(response));
-        featureflow.controls = response;
-        eventEmitter.emit(contextUpdated, context.getContext());
-        eventEmitter.emit(controlsUpdated, response);
-    });
-}
-function init(appKey){
-    var contextVals = {
-        key: "anonymous"
-    };
-    init(appKey, contextVals, {})
-}
-function init(appKey, contextVals){
-    init(appKey, contextVals, {})
+function removeListener(eventName: string, listener: any) {
+  eventEmitter.removeListener(eventName, listener)
 }
 
-function init(appKey, contextVals, config){
-    config = config || {};
-    appKey = appKey;
-    featureflow.controls = {};
-    eventEmitter = EventEmitter();
-    controlsUrl = config.controlsUrl || 'https://controls.featureflow.io';
-    baseUrl = config.baseUrl|| 'https://app.featureflow.io';
-    restClient = RestClient(baseUrl, appKey);
-
-    //1. Set the context
-    context = FeatureflowContext(contextVals);
-
-    //2. Load evaluated controls from featureflow
-    restClient.getControls(context.getContext(), function(response){
-        localStorage.setItem(environment + ":" + context.getContext().key, JSON.stringify(response));
-        featureflow.controls = response;
-        eventEmitter.emit(ready);
-    });
-
-    //3. Set up SSE if required
-    var es = new EventSource(baseUrl + '/api/js/v1/stream/' + appKey);
-        //.add("Accept", "text/event-stream")
-    es.addEventListener('message', function (e) {
-        console.log(e.data);
-        //alert('got event: ' + e);
-        //reevaluate control
-        eventEmitter.emit(updated);
-    }, false);
-    //4. Send an event
-
-    return featureflow;
+function updateContext(contextVals: KeyValueNested){
+  context = FeatureflowContext(contextVals);
+  restClient.getControls(context.getContext(), function(response){
+    localStorage.setItem(environment + ":" + context.getContext().key, JSON.stringify(response));
+    featureflow.controls = response;
+    eventEmitter.emit(EVENT_UPDATED_CONTEXT, context.getContext());
+    eventEmitter.emit(EVENT_UPDATED_CONTROLS, response);
+  });
 }
 
+export function init(apiKey: string, contextVals: KeyValueNested = {...DEFAULT_CONTEXT_VALUES}, config: ConfigType = {}){
+  featureflow.controls = {};
+  eventEmitter = EventEmitter();
+  controlsUrl = config.controlsUrl || 'https://controls.featureflow.io';
+  baseUrl = config.baseUrl|| 'https://app.featureflow.io';
+  restClient = RestClient(baseUrl, apiKey);
 
+  //1. Set the context
+  context = FeatureflowContext(contextVals);
 
+  //2. Load evaluated controls from featureflow
+  restClient.getControls(context.getContext(), function(response){
+    localStorage.setItem(environment + ":" + context.getContext().key, JSON.stringify(response));
+    featureflow.controls = response;
+    eventEmitter.emit(EVENT_READY);
+  });
 
+  // //3. Set up SSE if required
+  // let es = new window.EventSource(baseUrl + '/api/js/v1/stream/' + apiKey);
+  // //.add("Accept", "text/event-stream")
+  // es.addEventListener('message', function (e) {
+  //   console.log(e.data);
+  //   //alert('got event: ' + e);
+  //   //reevaluate control
+  //   eventEmitter.emit(EVENT_UPDATED_CONTEXT);
+  // }, false);
+  //4. Send an event
 
-module.exports = {
-    init: init
-};
+  return featureflow;
+}
 
-if(typeof VERSION !== 'undefined') {
-    module.exports.version = VERSION;
+if(window.VERSION !== undefined) {
+  module.exports.version = window.VERSION;
 }

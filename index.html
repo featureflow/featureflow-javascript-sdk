@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <script src="./dist/featureflow.js"></script>
+    <script src="dist/featureflow.js"></script>
   </head>
   <body>
     <h1>Featureflow test harness</h1>
@@ -20,11 +20,11 @@
       });
       //var featureflow = Featureflow.init('env-7ee02f8bbf2f4b8eadb135f22650274f', context, {}); //featueflow.io Featureflow Application Local Environment Key
 
-      var config = {baseUrl:    'http://localhost:8081'};
-      var apiKey = 'env-ece048bd8b1f408a9a0601b2dc26e78e'; //// featureflow.dev local env
+//      var config = {baseUrl:    'http://localhost:8081'};
+//      var apiKey = 'env-ece048bd8b1f408a9a0601b2dc26e78e'; //// featureflow.dev local env
 
-     // var config = {}; //for prod
-     // var apiKey = 'env-7ee02f8bbf2f4b8eadb135f22650274f'; //featureflow.io local env
+      var config = {}; //for prod
+      var apiKey = 'env-7ee02f8bbf2f4b8eadb135f22650274f'; //featureflow.io local env
 
 
       var featureflow = Featureflow.init(apiKey, context, config); //featureflow prod local env

@@ -1,10 +1,6 @@
-/**
- * Created by oliver on 23/11/16.
- */
-
-
-function getJSON(endpoint, callback) {
-    var request = new XMLHttpRequest();
+// @flow
+function getJSON(endpoint: string, callback: CallbackType<*>): XMLHttpRequest {
+    let request = new XMLHttpRequest();
     request.addEventListener('load', function() {
         if (request.status === 200 && request.getResponseHeader('Content-type') === "application/json;charset=UTF-8") {
             callback(JSON.parse(request.responseText));
@@ -20,20 +16,18 @@ function getJSON(endpoint, callback) {
     return request;
 }
 
-function RestClient(baseUrl, appKey){
-    var restClient = {};
-
-    restClient.getControls = function(context, callback){
-        var contextData= encodeURI(base64URLEncode(context));
-        var url = baseUrl + '/api/js/v1/evaluate/' + appKey + "/context/" + contextData;
-        getJSON(url, callback);
-    };
-
+function RestClient(baseUrl:string, apiKey: string): RestClientType{
     function base64URLEncode(context) {
         return btoa(JSON.stringify(context));//.replace(/\+/g, '-').replace(/\//g, '_').replace(/\=+$/, '');
     }
 
-    return restClient;
+    return {
+      getControls: (context: any, callback: CallbackType<KeyValueFlat>): void => {
+        let contextData= encodeURI(base64URLEncode(context));
+        let url = baseUrl + '/api/js/v1/evaluate/' + apiKey + "/context/" + contextData;
+        getJSON(url, callback);
+      }
+    };
 }
 
-module.exports = RestClient;
+export default RestClient;

@@ -6,6 +6,17 @@ module.exports = {
     library: 'Featureflow',
     libraryTarget: 'umd'
   },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: [
+          'babel-loader'
+        ]
+      }
+    ]
+  },
   plugins: [
     new webpack.DefinePlugin({
       VERSION: JSON.stringify(package.version)

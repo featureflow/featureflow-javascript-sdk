@@ -30,11 +30,11 @@ Include `featureflow.js` in your HTML file, which exposes the global variable `F
 ```
 
 If you are using `webpack`, you can require the code using
-```javascript
+```js
 var Featureflow = require('featureflow-client');
 ```
 or using es6 syntax
-```javascript 1.6
+```js
 import Featureflow from 'featureflow-client';
 ```
 
@@ -42,7 +42,7 @@ import Featureflow from 'featureflow-client';
 
 Get your environment's Featureflow Javascript API key and initialise the Featureflow client
 
-```javascript
+```js
 var FF_JS_API_KEY = '<Your javascript api key goes here>';
 //...
 var featureflow = Featureflow.init(FF_JS_API_KEY);
@@ -52,7 +52,7 @@ This will load the value of each feature for the current environment specified b
 
 In your code, this is how you test the value of your feature where the value of `my-feature-key` is `on`
 
-```javascript
+```js
   var KEY_DEFAULT = 'off';
   
   if(featureflow.evaluate('my-feature-key', KEY_DEFAULT) === 'off'){

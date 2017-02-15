@@ -52,7 +52,7 @@ This will load the value of each feature for the current environment specified b
 
 In your code, this is how you test the value of your feature where the value of `my-feature-key` is `on`
 
-```javascript 1.6
+```javascript
   var KEY_DEFAULT = 'off';
   
   if(featureflow.evaluate('my-feature-key', KEY_DEFAULT) === 'off'){

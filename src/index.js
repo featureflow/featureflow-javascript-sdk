@@ -46,6 +46,7 @@ function updateContext(contextVals: KeyValueNested){
   restClient.getControls(context.getContext(), function(response){
     localStorage.setItem(environment + ":" + context.getContext().key, JSON.stringify(response));
     featureflow.controls = response;
+    featureflow.context = context.getContext();
     eventEmitter.emit(EVENT_UPDATED_CONTEXT, context.getContext());
     eventEmitter.emit(EVENT_UPDATED_CONTROLS, response);
   });
@@ -65,6 +66,7 @@ export function init(apiKey: string, contextVals: KeyValueNested = {...DEFAULT_C
   restClient.getControls(context.getContext(), function(response){
     localStorage.setItem(environment + ":" + context.getContext().key, JSON.stringify(response));
     featureflow.controls = response;
+    featureflow.context = context.getContext();
     eventEmitter.emit(EVENT_READY);
   });
 

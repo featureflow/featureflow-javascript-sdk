@@ -1,0 +1,58 @@
+<!doctype>
+<html>
+  <head>
+    <link href="/public/style.css" rel="stylesheet"/>
+    <link href="/public/lumen.bootstrap.min.css" rel="stylesheet"/>
+    <link rel="shortcut icon" href="/public/favicon.ico" />
+  </head>
+<body>
+  <h1>Featureflow 5 minute example</h1>
+  <div class="row">
+    <div class="col-sm-6">
+      <div class="panel panel-primary">
+        <div class="panel-heading">Feature Status</div>
+        <ul id="features" class="list-group"></ul>
+      </div>
+    </div>
+    <div class="col-sm-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">Current Context</div>
+        <div class="panel-body">
+          <pre id="context"></pre>
+          <br/>
+          <div class="form-inline">
+            <select class="form-control block" id="tier-select">
+              <option>gold</option>
+              <option>silver</option>
+              <option>bronze</option>
+            </select>
+            <button class="btn btn-success" id="tier-button">Change Tier</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-12">
+      <table id="logs"
+             class="table table-bordered table-striped table-hover table-condensed table-responsive">
+        <thead>
+        <tr>
+          <th>
+            EVENT
+          </th>
+          <th>
+            DATA
+          </th>
+          <th>
+            TIME
+          </th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,4 +1,7 @@
 # Change log
+## [0.0.5] - 2017-02-16
+### Changed
+- Added an example project
 
 ## [0.0.4] - 2017-02-15
 ### Changed

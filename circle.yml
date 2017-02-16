@@ -3,3 +3,9 @@ dependencies:
  - npm install -g karma-cli
  cache_directories:
  - ~/nvm
+deployment:
+  production:
+    branch: master
+    commands:
+      - ./deploy_prod_npm.sh
+

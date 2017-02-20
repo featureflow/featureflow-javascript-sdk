@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "postinstall": "node ./scripts/build.js"
+  }
+}

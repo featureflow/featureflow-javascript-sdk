@@ -1,7 +1,7 @@
 {
   "name": "featureflow-client",
   "description": "Featureflow Javascipt Client",
-  "main": "dist/featureflow/index.js",
+  "main": "dist/featureflow.js",
   "authors": [
     "Featureflow <featureflow@featureflow.io>"
   ],

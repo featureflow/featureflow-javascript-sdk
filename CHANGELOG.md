@@ -1,4 +1,9 @@
 # Change log
+
+## [0.0.6] - 2017-02-20
+### Changed
+- Added bower support
+
 ## [0.0.5] - 2017-02-16
 ### Changed
 - Added an example project

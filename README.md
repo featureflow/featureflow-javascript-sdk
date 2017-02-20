@@ -16,19 +16,22 @@ Please see [CHANGELOG](https://github.com/featureflow/featureflow-javascript-sdk
 
 ## Installation
 
+Using NPM
 ```bash
 $ npm install --save featureflow-client
+```
+
+Using bower
+```bash
+$ bower install featureflow-client
 ```
 
 ## Usage
 
 ### Adding The Featureflow
 
-Include `featureflow.js` in your HTML file, which exposes the global variable `Featureflow`
-```html
-<script crossorigin="anonymous" src="https://controls.featureflow.io/featureflow.js"></script>
-```
 
+##### Webpack
 If you are using `webpack`, you can require the code using
 ```js
 var Featureflow = require('featureflow-client');
@@ -37,6 +40,21 @@ or using es6 syntax
 ```js
 import Featureflow from 'featureflow-client';
 ```
+
+##### Bower
+Include the following script in HTML file. This will expose the global variable `Featureflow`
+```html
+<script crossorigin="anonymous" src="bower_components/featureflow-client/dist/featureflow.min.js"></script>
+```
+Note: It is recommended to use build tools to manage your bower dependencies.
+Please see the [bower website](https://bower.io/#use-packages) for more details.
+
+##### CDN
+Include the following script in HTML file. This will expose the global variable `Featureflow`
+```html
+<script crossorigin="anonymous" src="https://controls.featureflow.io/featureflow.js"></script>
+```
+
 
 ### Quick start
 

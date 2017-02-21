@@ -1,6 +1,6 @@
 # Change log
 
-## [0.0.6] - 2017-02-20
+## [0.0.7] - 2017-02-20
 ### Changed
 - Added bower support
 

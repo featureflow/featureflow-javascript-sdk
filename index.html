@@ -65,11 +65,13 @@
           featureflow.updateContext(context);
       }
 
-      //var source = new EventSource('http://rtm.featureflow.io/api/js/v1/stream/env-7ee02f8bbf2f4b8eadb135f22650274f');//ff.io local env
-      var source = new EventSource('http://localhost:8081/api/js/v1/stream/env-ece048bd8b1f408a9a0601b2dc26e78e');
-      source.onmessage = function(e) {
-          document.body.innerHTML += e.data + '<br>';
-      };
+      document.addEventListener('DOMContentLoaded', function () {
+          var eventSrc = new EventSource('http://rtm.featureflow.io/api/js/v1/stream/env-7ee02f8bbf2f4b8eadb135f22650274f');//ff.io local env
+          //var eventSrc  = new EventSource('http://localhost:7999/api/js/v1/stream/env-ece048bd8b1f408a9a0601b2dc26e78e'); //ff.dev local env
+          eventSrc.onmessage = function(e) {
+              document.body.innerHTML += e.data + '<br>';
+          };
+      }, false);
     </script>
   </body>
 </html>

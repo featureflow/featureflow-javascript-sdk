@@ -1,11 +1,14 @@
 dependencies:
- pre:
- - npm install -g karma-cli
- cache_directories:
- - ~/nvm
+  pre:
+  - npm install -g karma-cli
+  cache_directories:
+  - ~/nvm
+  override:
+  - sudo pip install awscli
 deployment:
   production:
     branch: master
     commands:
-      - ./deploy_prod_npm.sh
+    - chmod +x ./deploy_prod_s3.sh
+    - ./deploy_prod_s3.sh
 

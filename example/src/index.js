@@ -93,13 +93,14 @@ function render(){
 }
 
 featureflow.on(Featureflow.events.LOADED, function(data) {
-  console.log('Loaded!', data);
+  console.log('Loaded', data);
   logEvent('Loaded', data);
   render();
 });
 
 featureflow.on(Featureflow.events.UPDATED_CONTROL, function(value){
-  console.log('STREAMING', value);
+  console.log('Live Update', value);
+  logEvent('Live Update', value);
   render();
 })
 

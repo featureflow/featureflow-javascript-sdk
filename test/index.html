@@ -38,7 +38,7 @@
           console.log('Updated', controls);
           render();
       });
-      reflow.on(Featureflow.events.UPDATED_CONTROL, function(controls) {
+      featureflow.on(Featureflow.events.UPDATED_CONTROL, function(controls) {
           console.log('Streaming', controls);
           render();
       });

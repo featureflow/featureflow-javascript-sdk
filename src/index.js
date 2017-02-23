@@ -80,8 +80,8 @@ export function init(apiKey: string, _context: ContextTypeParam = {}, _config: C
 
     RestClient.getControls(config.baseUrl, apiKey, context, [], (error, _controls)=>{
       if (!error){
-        controls = _controls;
-        localStorage.setItem(`ff:${context.key}:${apiKey}`, JSON.stringify(_controls));
+        controls = _controls || {};
+        localStorage.setItem(`ff:${context.key}:${apiKey}`, JSON.stringify(controls));
         emitter.emit(events.LOADED, _controls);
       }
       else{

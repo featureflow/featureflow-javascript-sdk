@@ -16,4 +16,5 @@ aws s3 cp dist/featureflow.js s3://cdn.featureflow.io/featureflow.js
 aws s3 cp dist/featureflow.min.js s3://cdn.featureflow.io/featureflow.min.js
 aws s3 cp dist/featureflow.js s3://cdn.featureflow.io/v$PACKAGE_VERSION/featureflow.js
 aws s3 cp dist/featureflow.min.js s3://cdn.featureflow.io/v$PACKAGE_VERSION/featureflow.min.js
+aws configure set preview.cloudfront true
 aws cloudfront create-invalidation --invalidation-batch file://invbatch.json --distribution-id E2AUGN9EALQ72O

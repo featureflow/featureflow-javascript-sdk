@@ -1,0 +1,7 @@
+{
+  "Paths": {
+    "Quantity": 2,
+    "Items": ["/featureflow.js", "/featureflow.min.js"]
+  },
+  "CallerReference": "ff-depoyment-2017-01-01"
+}

@@ -1,20 +1,61 @@
 import Featureflow from '../../src/index';
-const FF_KEY = 'env-ba36e02748b0447da387682bfa49db23';
+const FF_KEY = 'env-de55e0df8070427e88da31d3906010d9';
 
 var context = {
-  key: 'user1',
-  values: {
+  values:{
     tier: 'gold',
     country: 'australia'
   }
 };
 
-var featureflow = Featureflow.init(FF_KEY, context, {});
+var featureflow = Featureflow.init(FF_KEY, context, {
+  streaming: true
+});
+
+document.querySelector('#context').innerHTML = JSON.stringify(context, false, 2);
+
+//Setup the editor
+var editor = ace.edit("editor");
+editor.setTheme("ace/theme/github");
+editor.getSession().setMode("ace/mode/json");
+editor.setHighlightActiveLine(false);
+editor.setShowPrintMargin(false);
+editor.getSession().setTabSize(2);
+editor.$blockScrolling = Infinity;
+
+editor.on('change', function(){
+  var value = editor.getValue();
+  var errors = document.querySelector('#errors');
+  errors.innerHTML = '';
+  try {
+    var object = JSON.parse(value);
+    if (typeof object.key !== 'string' && object.key){
+      errors.innerHTML += ('<li>The property "key" is required to be a string</li>')
+    }
+    if (object.values){
+      if (typeof object.values !== 'object' || typeof object.values === null || Array.isArray(object.values)){
+        errors.innerHTML += ('<li>The property "values" is required to be a flat object</li>');
+      }
+      else{
+        var notFlat = Object.keys(object.values).filter(function(key){
+            return typeof object.values[key] === 'object';
+          }).length > 0;
+
+        if (notFlat){
+          errors.innerHTML += ('<li>The property "values" is required to be a flat object</li>')
+        }
+      }
+    }
+  }
+  catch(err){
+    errors.innerHTML += ('<li>Not valid JSON</li>');
+  }
+});
 
 function addListItem(id, text, badge){
   var el = document.querySelector(id);
   el.innerHTML = el.innerHTML +
-  `<li class='list-group-item'>
+    `<li class='list-group-item'>
     ${text}
     ${badge ? `<span class='badge'>${badge}</span>` : '' }
   </li>`;
@@ -36,53 +77,62 @@ function logEvent(event, data){
 }
 
 
-function render(key, failoverValue){
+function renderControl(key, failoverValue){
   var value = featureflow.evaluate(key, failoverValue);
   addListItem('#features', key, value.toString());
-
 }
-featureflow.on('update:context', function(context) {
-  console.log('Updated!', context);
-  renderContext();
-  logEvent('Updated context', context);
+
+function render(){
+  document.querySelector('#features').innerHTML = "";
+  let controls = featureflow.getControls();
+  for (var property in controls) {
+    if (controls.hasOwnProperty(property)) {
+      renderControl(property, 'OFF');
+    }
+  }
+}
+
+featureflow.on(Featureflow.events.LOADED, function(data) {
+  console.log('Loaded!', data);
+  logEvent('Loaded', data);
+  render();
 });
 
-featureflow.on('update:controls', function(controls){
-  renderControls();
+featureflow.on(Featureflow.events.UPDATED_CONTROL, function(value){
+  console.log('STREAMING', value);
+  render();
 })
 
-featureflow.on('ready', function() {
-  logEvent('Ready');
-  renderControls();
-  renderContext();
-  document.querySelector('#tier-button').addEventListener("click", changeTier);
+document.querySelector('#update-button').addEventListener('click', function updateContext(){
+  editor.setValue(JSON.stringify(context, null, 2));
+  editor.navigateFileStart();
+  document.querySelector("#view-visible").classList.add('hidden');
+  document.querySelector("#edit-visible").classList.remove('hidden');
 });
 
-function renderControls(){
-  var features = document.querySelector("#features");
-  while (features.firstChild) {
-    features.removeChild(features.firstChild);
+document.querySelector('#save-button').addEventListener('click', function saveUpdateContext(){
+  var errors = document.querySelector('#errors');
+  if (errors.innerHTML !== ''){
+    return alert('There are still errors with the JSON.');
   }
-  for (var property in featureflow.controls) {
-    if (featureflow.controls.hasOwnProperty(property)) {
-      render(property, 'OFF');
-    }
+  try{
+    context = JSON.parse(editor.getValue());
+    featureflow.updateContext(context);
+    document.querySelector('#context').innerHTML = JSON.stringify(context, false, 2);
+
+    document.querySelector("#view-visible").classList.remove('hidden');
+    document.querySelector("#edit-visible").classList.add('hidden');
+  }catch(err){
+    alert('Context is not a valid JSON object')
   }
-}
+});
 
-function renderContext(){
-  document.querySelector('#context').innerText = JSON.stringify(featureflow.context, null, 2);
-}
+document.querySelector('#cancel-button').addEventListener('click', function cancelUpdateContext(){
+  editor.setValue(JSON.stringify(context, null, 2));
+  editor.setReadOnly(true);
 
-function changeTier(){
-  var tier = document.querySelector('#tier-select').value;
-  var context = {
-    key: 'user1',
-    values: {
-      tier: tier,
-      country: 'australia'
-    }
-  };
-  featureflow.updateContext(context);
-}
+  document.querySelector("#view-visible").classList.remove('hidden');
+  document.querySelector("#edit-visible").classList.add('hidden');
+});
+
 

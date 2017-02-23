@@ -1,0 +1,52 @@
+<!doctype>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="../dist/featureflow.js"></script>
+  </head>
+  <body>
+    <h1>Featureflow test harness</h1>
+    <ul id="features">...</ul>
+    <script>
+      var apiKey = 'env-de55e0df8070427e88da31d3906010d9';
+      var context = {
+        key: 'user1',
+          values: {
+              tier: 'gold',
+              country: 'australia'
+          }
+      };
+      var config = { streaming: true };
+      var featureflow = Featureflow.init(apiKey, context, config);
+
+      function renderControl(key, failoverValue){
+        var value = featureflow.evaluate(key, failoverValue);
+        var el = document.querySelector('#features');
+        el.innerHTML = el.innerHTML + "<li>" + key  + ' = ' + value.toString() + " </li>";
+      }
+
+      function render(){
+        var controls = featureflow.getControls();
+        for (var property in controls) {
+          if (controls.hasOwnProperty(property)) {
+            renderControl(property, 'OFF');
+          }
+        }
+      }
+
+      featureflow.on(Featureflow.events.LOADED, function(controls) {
+          console.log('Updated', controls);
+          render();
+      });
+      reflow.on(Featureflow.events.UPDATED_CONTROL, function(controls) {
+          console.log('Streaming', controls);
+          render();
+      });
+
+      featureflow.on(Featureflow.events.ERROR, function(error) {
+        console.warn('Error', error);
+      });
+
+    </script>
+  </body>
+</html>

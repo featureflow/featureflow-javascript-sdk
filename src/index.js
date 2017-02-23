@@ -1,91 +1,121 @@
 // @flow
 import RestClient from './RestClient';
-import EventEmitter  from './EventEmitter';
-import FeatureflowContext from './FeatureflowContext';
+import Emitter from 'tiny-emitter';
 
-let context: any;
-let restClient: RestClientType;
-let eventEmitter;
-let environment: string;
-let controlsUrl: string;
-let baseUrl: string;
-const EVENT_READY = 'ready';
-const EVENT_UPDATED_CONTEXT = 'update:context';
-const EVENT_UPDATED_CONTROLS = 'update:controls';
-
-const DEFAULT_CONTEXT_VALUES: KeyValueNested = {
+const DEFAULT_CONTEXT_VALUES: ContextType = {
   key: 'anonymous'
-}
-
-
-let featureflow = {
-  controls: {},
-  env: {},
-  context: {},
-  on: on,
-  removeListener: removeListener,
-  updateContext: updateContext,
-  evaluate: evaluate
 };
 
-function evaluate(key: string, failoverValue: string){
-  return (featureflow.controls && featureflow.controls.hasOwnProperty(key) && featureflow.controls[key] !== null)
-    ? featureflow.controls[key]
-    : failoverValue;
+const DEFAULT_BASE_URL = 'https://app.featureflow.io';
+const DEFAULT_RTM_URL = 'https://rtm.featureflow.io';
+
+const DEFAULT_CONFIG: ConfigType = {
+  baseUrl: DEFAULT_BASE_URL,
+  rtmUrl: DEFAULT_RTM_URL,
+  streaming: false
 };
 
-function on(event: string, handler: CallbackType<*>) {
-  eventEmitter.on(event, handler);
-}
-function removeListener(eventName: string, listener: any) {
-  eventEmitter.removeListener(eventName, listener)
-}
+const INIT_MODULE_ERROR = new Error('init() has not been called with a valid apiKey');
 
-function updateContext(contextVals: KeyValueNested){
-  context = FeatureflowContext(contextVals);
-  restClient.getControls(context.getContext(), function(response){
-    localStorage.setItem(environment + ":" + context.getContext().key, JSON.stringify(response));
-    featureflow.controls = response;
-    featureflow.context = context.getContext();
-    eventEmitter.emit(EVENT_UPDATED_CONTEXT, context.getContext());
-    eventEmitter.emit(EVENT_UPDATED_CONTROLS, response);
-  });
-}
+export const events = {
+  LOADED: 'LOADED',
+  ERROR: 'ERROR',
+  UPDATED_CONTROL: 'UPDATED_CONTROL'
+};
 
-export function init(apiKey: string, contextVals: KeyValueNested = {...DEFAULT_CONTEXT_VALUES}, config: ConfigType = {}){
-  featureflow.controls = {};
-  eventEmitter = EventEmitter();
-  controlsUrl = config.controlsUrl || 'https://controls.featureflow.io';
-  baseUrl = config.baseUrl|| 'https://app.featureflow.io';
-  restClient = RestClient(baseUrl, apiKey);
+export function init(apiKey: string, _context: ContextTypeParam = {}, _config: ConfigTypeParam = {}): FeatureflowInstance {
+  let controls: ControlsType = {};
+  let config: ConfigType;
+  let context: ContextType;
+  let emitter = new Emitter();
 
-  //1. Set the context
-  context = FeatureflowContext(contextVals);
+  //1. They must have an api key
+  if (!apiKey){
+    throw INIT_MODULE_ERROR;
+  }
 
-  //2. Load evaluated controls from featureflow
-  restClient.getControls(context.getContext(), function(response){
-    localStorage.setItem(environment + ":" + context.getContext().key, JSON.stringify(response));
-    featureflow.controls = response;
-    featureflow.context = context.getContext();
-    eventEmitter.emit(EVENT_READY);
-  });
+  //2. Extend the default configuration
+  config = {
+    ...DEFAULT_CONFIG,
+    ..._config
+  };
 
-  // //3. Set up SSE if required
-  // let es = new window.EventSource(baseUrl + '/api/js/v1/stream/' + apiKey);
-  // //.add("Accept", "text/event-stream")
-  // es.addEventListener('message', function (e) {
-  //   console.log(e.data);
-  //   //alert('got event: ' + e);
-  //   //reevaluate control
-  //   eventEmitter.emit(EVENT_UPDATED_CONTEXT);
-  // }, false);
-  //4. Send an event
+  //3. Load initial data
+  updateContext(_context);
 
-  return featureflow;
+  //4. Set up realtime streaming
+  if (config.streaming){
+    let es = new window.EventSource(`${config.rtmUrl}/api/js/v1/stream/${apiKey}`);
+    es.onmessage = (e) => {
+      let keys = [];
+      try{
+        keys = JSON.parse(e.data);
+      }
+      catch(err){
+        //Ah well, we tried...
+      }
+
+      RestClient.getControls(config.baseUrl, apiKey, context, keys, (error, _controls)=>{
+        controls = {
+          ...controls,
+          ..._controls
+        };
+        emitter.emit(events.UPDATED_CONTROL, _controls);
+      })
+    };
+  }
+
+  function updateContext(_context: ContextTypeParam): ContextType{
+    context = {
+      ...DEFAULT_CONTEXT_VALUES,
+      ..._context
+    };
+
+    try{
+      controls = JSON.parse(localStorage.getItem(`ff:${context.key}:${apiKey}`) || '{}');
+    }
+    catch(err){
+      controls = {};
+    }
+
+    RestClient.getControls(config.baseUrl, apiKey, context, [], (error, _controls)=>{
+      if (!error){
+        controls = _controls;
+        localStorage.setItem(`ff:${context.key}:${apiKey}`, JSON.stringify(_controls));
+        emitter.emit(events.LOADED, _controls);
+      }
+      else{
+        emitter.emit(events.ERROR, error);
+      }
+    })
+    return context;
+  }
+
+  function evaluate(key: string, failOverValue: string): string{
+    return controls[key] || failOverValue;
+  }
+
+  function getControls(): ControlsType{
+    return controls;
+  }
+
+  function getContext(): ContextType{
+    return context;
+  }
+
+  return {
+    updateContext,
+    getControls,
+    getContext,
+    evaluate,
+    on: emitter.on.bind(emitter),
+    off: emitter.off.bind(emitter)
+  }
 }
 
 export default {
-  init
+  init,
+  events
 }
 
 if(window.VERSION !== undefined) {

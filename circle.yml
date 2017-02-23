@@ -1,6 +1,7 @@
 dependencies:
   pre:
   - npm install -g karma-cli
+  - npm install
   cache_directories:
   - ~/nvm
   override:

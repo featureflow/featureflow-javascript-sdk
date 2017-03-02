@@ -62,7 +62,7 @@ function addListItem(id, text, badge){
 }
 
 function logEvent(event, data){
-  data = data || null;
+  data = data !== undefined ? data : null;
   var date = new Date().toString();
   var el = document.querySelector('#logs tbody');
   el.innerHTML = `
@@ -77,8 +77,8 @@ function logEvent(event, data){
 }
 
 
-function renderControl(key, failoverValue){
-  var value = featureflow.evaluate(key, failoverValue);
+function renderControl(key){
+  var value = featureflow.evaluate(key).value();
   addListItem('#features', key, value.toString());
 }
 
@@ -95,6 +95,11 @@ function render(){
 featureflow.on(Featureflow.events.LOADED, function(data) {
   console.log('Loaded', data);
   logEvent('Loaded', data);
+  console.log(featureflow.evaluate('example-feature').isOn())
+  console.log(featureflow.evaluate('example-feature').isOff())
+  logEvent('example-feature isOn()', featureflow.evaluate('example-feature').isOn());
+  logEvent('example-feature isOff()', featureflow.evaluate('example-feature').isOff());
+  logEvent('example-feature is(\'on\')', featureflow.evaluate('example-feature').is('on'));
   render();
 });
 

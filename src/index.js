@@ -12,7 +12,8 @@ const DEFAULT_RTM_URL = 'https://rtm.featureflow.io';
 const DEFAULT_CONFIG: ConfigType = {
   baseUrl: DEFAULT_BASE_URL,
   rtmUrl: DEFAULT_RTM_URL,
-  streaming: false
+  streaming: true,
+  defaultValues: {}
 };
 
 const INIT_MODULE_ERROR = new Error('init() has not been called with a valid apiKey');
@@ -87,12 +88,31 @@ export function init(apiKey: string, _context: ContextTypeParam = {}, _config: C
       else{
         emitter.emit(events.ERROR, error);
       }
-    })
+    });
     return context;
   }
 
-  function evaluate(key: string, failOverValue: string): string{
-    return controls[key] || failOverValue;
+  class Evaluate{
+    key: string;
+    constructor(key: string){
+      this.key = key;
+    }
+
+    value() : string{
+      return controls[this.key] || config.defaultValues[this.key] || 'off';
+    }
+
+    is(value: string) : boolean {
+      return  value.toLowerCase() === this.value().toLowerCase();
+    }
+
+    isOn() : boolean{
+      return this.is('on');
+    }
+
+    isOff() : boolean{
+      return this.is('off');
+    }
   }
 
   function getControls(): ControlsType{
@@ -107,7 +127,9 @@ export function init(apiKey: string, _context: ContextTypeParam = {}, _config: C
     updateContext,
     getControls,
     getContext,
-    evaluate,
+    evaluate: (value: string) : Evaluate =>{
+      return new Evaluate(value);
+    },
     on: emitter.on.bind(emitter),
     off: emitter.off.bind(emitter)
   }

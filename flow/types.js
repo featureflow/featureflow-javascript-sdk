@@ -24,7 +24,8 @@ type ContextTypeParam = {
 type ConfigType = {
   rtmUrl : string,
   baseUrl : string,
-  streaming: boolean
+  streaming: boolean,
+  defaultValues: ControlsType
 }
 
 type ConfigTypeParam = {
@@ -33,13 +34,19 @@ type ConfigTypeParam = {
   streaming?: boolean
 }
 
+interface EvaluateInterface {
+  is: (value: string) => boolean;
+  isOn: () => boolean;
+  isOff: () => boolean;
+  value: () => string;
+}
+
 
 type FeatureflowInstance = {
   updateContext: (context: ContextTypeParam) => ContextType,
   getControls: () => ControlsType,
   getContext: () => ContextType,
-  evaluate: (key: string, failover: string) => string,
-  events: KeyValueFlat,
+  evaluate: (key: string) => any,
   on: (event: string, callback: EventCallbackType<*>)=>any,
   off: (event: string, callback: EventCallbackType<*>)=>any
 }

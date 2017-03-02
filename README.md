@@ -71,19 +71,26 @@ This will load the value of each feature for the current environment specified b
 
 **Note: You are responsible for passing the featureflow client instance around your application**
 
-In your code, you can test the value of your feature where the value of `my-feature-key` is `on`
-
+In your code, you can test the value of your feature where the value of `my-feature-key` is equal to `'on'` 
 ```js
-  var KEY_DEFAULT = 'off';
-  
-  if(featureflow.evaluate('my-feature-key', KEY_DEFAULT) === 'off'){
-  	console.warn('This should not be run!');
-  }
-  
-  if(featureflow.evaluate('my-feature-key', KEY_DEFAULT) === 'on'){
-  	alert('The feature is enabled, I should be seen!');
+  if (featureflow.evaluate('my-feature-key').is('on')){
+    // this feature code will be run because 'my-feature-key' is set to 'on'
   }
 ```
+
+Because the default variants for any feature are `'on'` and `'off'`, we have provided two helper methods `.isOn()` and `.isOff()`
+
+```js
+
+if(featureflow.evaluate('my-feature-key').isOn()){
+  // this feature code will be run because 'my-feature-key' is set to 'on'
+}
+
+if(featureflow.evaluate('my-feature-key').isOff()){
+  // this feature code won't be run because 'my-feature-key' is not set to 'off'
+}
+```
+
 
 Further more documentation can be found [here](http://docs.featureflow.io/docs)
 
@@ -101,14 +108,44 @@ Returns a `featureflow` instance, see below
 
 ####Featureflow Instance
 These properties are available on the return of `Featureflow.init(...)`
-####`featureflow.evaluate(featureKey, failoverValue)`
-Evaluates 
+####`featureflow.evaluate(featureKey)`
+Returns an object that can be used to help evaluate feature values in an expressive way.
+#####`featureflow.evaluate(featureKey).is(value)`
+Evaluates the value of a feature for the given context.
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `featureKey*`  | `string` | **`Required`** | The feature key you are targeting |
-| `failoverValue*`  | `string` | **`Required`**  | The value to return if the feature is not available <br/>*(e.g. either the feature doesn't exist, or there is no cached local version and no internet connection)* |
-| **`return`** | `string` | | The evaluated value for the given context |
+| `value*`  | `string` | **`Required`** | The value you are testing against |
+| **`return`** | `boolean` | | `true` if the feature's value is equal to the `value` provided, otherwise `false`  |
+
+
+#####`featureflow.evaluate(featureKey).isOn()`
+Evaluates the value of a feature for the given context is equal to `'on'`.
+
+| Params | Type | Default | Description |
+|---------------|----------|--------------|----------------------------------------------------------------|
+| `featureKey*`  | `string` | **`Required`** | The feature key you are targeting |
+| **`return`** | `boolean` | | `true` if the feature's value is equal to `'on'` provided, otherwise `false`  |
+
+
+#####`featureflow.evaluate(featureKey).isOff()`
+Evaluates the value of a feature for the given context is equal to `'off'`.
+
+| Params | Type | Default | Description |
+|---------------|----------|--------------|----------------------------------------------------------------|
+| `featureKey*`  | `string` | **`Required`** | The feature key you are targeting |
+| **`return`** | `boolean` | | `true` if the feature's value is equal to `'off'` provided, otherwise `false`  |
+
+#####`featureflow.evaluate(featureKey).value()`
+Returns the value of a feature for the given context.
+
+| Params | Type | Default | Description |
+|---------------|----------|--------------|----------------------------------------------------------------|
+| `featureKey*`  | `string` | **`Required`** | The feature key you are targeting |
+| **`return`** | `string` | | The value of the feature, or the `config.defaultValue` for the feature if present, or `'off'`  |
+
+
 
 ####`featureflow.updateContext(context)`
 Updates and returns the current `context` of the instance and reevaluates all feature controls using the new `context`. 
@@ -159,12 +196,13 @@ Listen to events when the `featureflow` instance is updated
 | Property | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `key` | `string` | `"anonymous"` | Uniquely identifies the current user. Also used to calculate split variants |
-| `values` | `object` | `undefined` | Flat key value object containing extra meta about the current user. Used to serve different features for specifically targeted attributes.
+| `values` | `object` | `undefined` | Flat key-value object containing extra meta about the current user. Used to serve different features for specifically targeted attributes.
 
 ####`config`
 | Property | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| `streaming` | `boolean` | `false` | Set to `true` when calling `Featureflow.init(..., config)` to listen for realtime updates |
+| `streaming` | `boolean` | `true` | Set to `true` when calling `Featureflow.init(..., config)` to listen for realtime updates |
+| `defaultValues` | `object` | `undefined` | A flat key-value object representing the default variants a feature should be set to if there is an interrupted connection and no cached value.  <br/> <br/> *e.g. if you set `config.defaultValues` to `{'my-feature': 'on'}`, `featureflow.evaluate('my-feature').isOn()` will return `true` when there is an interrupted connection to Featureflow and no locally cached feature controls.*|
 
 #### Events
 #### `Featureflow.events.LOADED`

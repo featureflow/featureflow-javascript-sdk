@@ -1,4 +1,13 @@
 # Change log
+## [0.2.0] - 2017-03-02
+### Changed
+- default variant value to 'off' if no feature control is defined
+- default variants are passed in as part of the configuration object
+- set streaming on as default in config
+- Updated README.md with changes made to library
+### Breaking Changes
+- Changed the interface to be more expressive when evaluating features
+- Removed defaultVariant argument from evaluate functions
 
 ## [0.1.0] - 2017-02-23
 ### Changed

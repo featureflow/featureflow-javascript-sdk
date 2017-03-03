@@ -25,7 +25,7 @@
     "watch": "webpack --watch src/index.js dist/featureflow.js",
     "test": "karma start --single-run",
     "test:watch": "karma start --auto-watch --reporters=dots",
-    "prepublish": "node ./scripts/build.js",
+    "prepublish": "node ./scripts/prepublish.js",
     "flow": "flow",
     "example": "webpack-dev-server --config ./example/webpack.config.js --content-base example/ --inline --port 8182"
   },

@@ -6,9 +6,11 @@
 
 > Featureflow Javascript Client SDK
 
-## JS Bin Demo
+Get your Featureflow account at [featureflow.io](http://www.featureflow.io)
 
-http://jsbin.com/mulocir/1/edit?js,output
+## Get Started
+
+The easiest way to get started is to follow the [Featureflow quick start guides](http://docs.featureflow.io/docs)
 
 > Alternatively clone this repository and run `$ npm install` and `$ npm run example`
 
@@ -53,7 +55,7 @@ Please see the [bower website](https://bower.io/#use-packages) for more details.
 ##### CDN
 Include the following script in HTML file. This will expose the global variable `Featureflow`
 ```html
-<script crossorigin="anonymous" src="https://controls.featureflow.io/featureflow.js"></script>
+<script crossorigin="anonymous" src="https://features.featureflow.io/featureflow.js"></script>
 ```
 
 
@@ -92,7 +94,7 @@ if(featureflow.evaluate('my-feature-key').isOff()){
 ```
 
 
-Further more documentation can be found [here](http://docs.featureflow.io/docs)
+Further documentation can be found [here](http://docs.featureflow.io/docs)
 
 ### API and Configuration
 #### Globals
@@ -143,27 +145,27 @@ Returns the value of a feature for the given context.
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `featureKey*`  | `string` | **`Required`** | The feature key you are targeting |
-| **`return`** | `string` | | The value of the feature, or the `config.defaultValue` for the feature if present, or `'off'`  |
+| **`return`** | `string` | | The value of the feature, or the default feature value from `config.defaultFeatures[featureKey]` if present, or `'off'`  |
 
 
 
 ####`featureflow.updateContext(context)`
-Updates and returns the current `context` of the instance and reevaluates all feature controls using the new `context`. 
+Updates and returns the current `context` of the instance and reevaluates all feature features using the new `context`. 
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `context` | `context` | ... | See the `context` object below |
 | **`return`**  | `context` |  | The updated `context` object |
 
-Fires a `Featureflow.events.LOADED` event when the controls have been evaluated.
+Fires a `Featureflow.events.LOADED` event when the features have been evaluated.
 
 
-####`featureflow.getControls()`
-Returns the current evaluated `controls` as flat key-value map
+####`featureflow.getFeatures()`
+Returns the current evaluated `features` as flat key-value map
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| **`return`**  | `object` |  | The current `controls` object |
+| **`return`**  | `object` |  | The current `features` object |
 
 ####`featureflow.getContext()`
 Returns the current `context`
@@ -201,24 +203,24 @@ Listen to events when the `featureflow` instance is updated
 ####`config`
 | Property | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| `streaming` | `boolean` | `true` | Set to `true` when calling `Featureflow.init(..., config)` to listen for realtime updates |
-| `defaultValues` | `object` | `undefined` | A flat key-value object representing the default variants a feature should be set to if there is an interrupted connection and no cached value.  <br/> <br/> *e.g. if you set `config.defaultValues` to `{'my-feature': 'on'}`, `featureflow.evaluate('my-feature').isOn()` will return `true` when there is an interrupted connection to Featureflow and no locally cached feature controls.*|
+| `streaming` | `boolean` | `true` | Set to `true` when calling `Featureflow.init(..., ..., config)` to listen for realtime updates |
+| `defaultFeatures` | `object` | `undefined` | A flat key-value object representing the default variants a feature should be set to if there is an interrupted connection and no cached value.  <br/> <br/> *e.g. if you set `config.defaultFeatures` to `{'my-feature': 'on'}`, `featureflow.evaluate('my-feature').isOn()` will return `true` when there is an interrupted connection to Featureflow and no locally cached feature features.*|
 
 #### Events
 #### `Featureflow.events.LOADED`
-Fired when controls have been evaluated and loaded. 
+Fired when features have been evaluated and loaded. 
 Triggered by both `Featureflow.init(...)` and `featureflow.updateContext`.
 
-Callback is fired with one parameter with the value of all evaluated `controls`.
+Callback is fired with one parameter with the value of all evaluated `features`.
 
-#### `Featureflow.events.UPDATED_CONTROL`
+#### `Featureflow.events.UPDATED_FEATURE`
 Only available when streaming is enabled.
 Fired when a feature has been changed. 
 
-Callback is fired with one parameter with the value of only the updated `controls` returned by the stream. In the majority of cases, this object will only contain one property.
+Callback is fired with one parameter with the value of only the updated `features` returned by the stream. In the majority of cases, this object will only contain one property.
 
 #### `Featureflow.events.ERROR`
-Fired when an error has occurred evaluating the feature controls for the given context.
+Fired when an error has occurred evaluating the feature features for the given context.
 
 Callback is fired with one parameter with the error message.
 

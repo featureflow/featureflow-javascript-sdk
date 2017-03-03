@@ -7,7 +7,7 @@ type KeyValueFlat = {
   [key:string]: mixed
 }
 
-type ControlsType = {
+type FeaturesType = {
   [key: string]: string
 }
 
@@ -25,7 +25,7 @@ type ConfigType = {
   rtmUrl : string,
   baseUrl : string,
   streaming: boolean,
-  defaultValues: ControlsType
+  defaultFeatures: FeaturesType
 }
 
 type ConfigTypeParam = {
@@ -44,7 +44,7 @@ interface EvaluateInterface {
 
 type FeatureflowInstance = {
   updateContext: (context: ContextTypeParam) => ContextType,
-  getControls: () => ControlsType,
+  getFeatures: () => FeaturesType,
   getContext: () => ContextType,
   evaluate: (key: string) => any,
   on: (event: string, callback: EventCallbackType<*>)=>any,

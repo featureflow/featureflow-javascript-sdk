@@ -1,5 +1,5 @@
 // @flow
-function getJSON(endpoint: string, callback: NodeCallbackType<ControlsType>): XMLHttpRequest {
+function getJSON(endpoint: string, callback: NodeCallbackType<FeaturesType>): XMLHttpRequest {
     let request = new XMLHttpRequest();
     request.addEventListener('load', function() {
       if (request.status === 200 && request.getResponseHeader('Content-type') === "application/json;charset=UTF-8") {
@@ -22,7 +22,7 @@ function base64URLEncode(context: ContextType): string {
 }
 
 export default {
-  getControls: (baseUrl: string, apiKey: string, context: any, keys: string[] = [], callback: NodeCallbackType<ControlsType>): void => {
+  getFeatures: (baseUrl: string, apiKey: string, context: any, keys: string[] = [], callback: NodeCallbackType<FeaturesType>): void => {
     let query = ( keys.length > 0 ) ? `?keys=${ keys.join(',') }` : '';
     getJSON(
       `${baseUrl}/api/js/v1/evaluate/${ apiKey }/context/${ encodeURI(base64URLEncode(context)) }${ query }`,

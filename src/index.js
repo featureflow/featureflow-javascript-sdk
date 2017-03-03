@@ -13,7 +13,7 @@ const DEFAULT_CONFIG: ConfigType = {
   baseUrl: DEFAULT_BASE_URL,
   rtmUrl: DEFAULT_RTM_URL,
   streaming: true,
-  defaultValues: {}
+  defaultFeatures: {}
 };
 
 const INIT_MODULE_ERROR = new Error('init() has not been called with a valid apiKey');
@@ -21,11 +21,11 @@ const INIT_MODULE_ERROR = new Error('init() has not been called with a valid api
 export const events = {
   LOADED: 'LOADED',
   ERROR: 'ERROR',
-  UPDATED_CONTROL: 'UPDATED_CONTROL'
+  UPDATED_FEATURE: 'UPDATED_FEATURE'
 };
 
 export function init(apiKey: string, _context: ContextTypeParam = {}, _config: ConfigTypeParam = {}): FeatureflowInstance {
-  let controls: ControlsType = {};
+  let features: FeaturesType = {};
   let config: ConfigType;
   let context: ContextType;
   let emitter = new Emitter();
@@ -56,12 +56,12 @@ export function init(apiKey: string, _context: ContextTypeParam = {}, _config: C
         //Ah well, we tried...
       }
 
-      RestClient.getControls(config.baseUrl, apiKey, context, keys, (error, _controls)=>{
-        controls = {
-          ...controls,
-          ..._controls
+      RestClient.getFeatures(config.baseUrl, apiKey, context, keys, (error, _features)=>{
+        features = {
+          ...features,
+          ..._features
         };
-        emitter.emit(events.UPDATED_CONTROL, _controls);
+        emitter.emit(events.UPDATED_FEATURE, _features);
       })
     };
   }
@@ -73,17 +73,17 @@ export function init(apiKey: string, _context: ContextTypeParam = {}, _config: C
     };
 
     try{
-      controls = JSON.parse(localStorage.getItem(`ff:${context.key}:${apiKey}`) || '{}');
+      features = JSON.parse(localStorage.getItem(`ff:${context.key}:${apiKey}`) || '{}');
     }
     catch(err){
-      controls = {};
+      features = {};
     }
 
-    RestClient.getControls(config.baseUrl, apiKey, context, [], (error, _controls)=>{
+    RestClient.getFeatures(config.baseUrl, apiKey, context, [], (error, _features)=>{
       if (!error){
-        controls = _controls || {};
-        localStorage.setItem(`ff:${context.key}:${apiKey}`, JSON.stringify(controls));
-        emitter.emit(events.LOADED, _controls);
+        features = _features || {};
+        localStorage.setItem(`ff:${context.key}:${apiKey}`, JSON.stringify(features));
+        emitter.emit(events.LOADED, _features);
       }
       else{
         emitter.emit(events.ERROR, error);
@@ -99,7 +99,7 @@ export function init(apiKey: string, _context: ContextTypeParam = {}, _config: C
     }
 
     value() : string{
-      return controls[this.key] || config.defaultValues[this.key] || 'off';
+      return features[this.key] || config.defaultFeatures[this.key] || 'off';
     }
 
     is(value: string) : boolean {
@@ -115,8 +115,8 @@ export function init(apiKey: string, _context: ContextTypeParam = {}, _config: C
     }
   }
 
-  function getControls(): ControlsType{
-    return controls;
+  function getFeatures(): FeaturesType{
+    return features;
   }
 
   function getContext(): ContextType{
@@ -125,7 +125,7 @@ export function init(apiKey: string, _context: ContextTypeParam = {}, _config: C
 
   return {
     updateContext,
-    getControls,
+    getFeatures,
     getContext,
     evaluate: (value: string) : Evaluate =>{
       return new Evaluate(value);

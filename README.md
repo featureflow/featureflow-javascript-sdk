@@ -229,7 +229,7 @@ Callback is fired with one parameter with the error message.
 - [x] Write documentation
 - [x] Release to npm
 - [x] Release to bower
-- [ ] Automate release to bower on `npm prepublish`
+- [x] Automate release to bower on `npm prepublish`
 - [ ] Automate release script to cdn on `npm prepublish`
 
 ## License

@@ -59,9 +59,21 @@ Include the following script in HTML file. This will expose the global variable 
 ```
 
 ##### Realtime events and EventSource 
-Featureflow uses EventSource for realtime streaming of feature updates. If you wish to target a browser that doesn't natively support EventSource, we recommend using a polyfill.
+Featureflow uses EventSource for realtime streaming of feature updates. If you wish to target a browser that doesn't natively support EventSource, we recommend using a polyfill such as [this one](https://github.com/Yaffle/EventSource).
 
+You can either require/include the polyfill in your application, 
 
+```js
+//for example
+import 'event-source-polyfill';
+
+```
+
+or include it in your `<head>` of your html file before you load the Featureflow client.
+
+```html
+<script src="https://cdnjs.cloudflare.com/ajax/libs/event-source-polyfill/0.0.9/eventsource.js"></script>
+```
 
 
 ### Quick start

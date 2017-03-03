@@ -58,6 +58,11 @@ Include the following script in HTML file. This will expose the global variable 
 <script crossorigin="anonymous" src="https://features.featureflow.io/featureflow.js"></script>
 ```
 
+##### Realtime events and EventSource 
+Featureflow uses EventSource for realtime streaming of feature updates. If you wish to target a browser that doesn't natively support EventSource, we recommend using a polyfill.
+
+
+
 
 ### Quick start
 

@@ -25,6 +25,6 @@ exec('cd '+bowerTempPath+' ' +
   '&& git add . ' +
   '&& git commit -m \"v'+packageJson.version+'" ' +
   '&& git tag '+packageJson.version+' ' +
-  '&& git push origin master' +
+  '&& git push origin master --tags' +
   '&& rm -rf '+bowerTempPath);
 

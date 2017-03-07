@@ -1,4 +1,5 @@
 // @flow
+import packageJSON from '../package.json';
 function getJSON(endpoint: string, callback: NodeCallbackType<FeaturesType>): XMLHttpRequest {
     let request = new XMLHttpRequest();
     request.addEventListener('load', function() {
@@ -12,6 +13,7 @@ function getJSON(endpoint: string, callback: NodeCallbackType<FeaturesType>): XM
       callback(request.statusText);
     });
     request.open('GET', endpoint);
+    request.setRequestHeader('X-Featureflow-Client', `javascript-${packageJSON.version}`);
     request.send();
     return request;
 }

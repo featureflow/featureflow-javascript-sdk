@@ -77,17 +77,17 @@ function logEvent(event, data){
 }
 
 
-function renderControl(key){
+function renderFeature(key){
   var value = featureflow.evaluate(key).value();
   addListItem('#features', key, value.toString());
 }
 
 function render(){
   document.querySelector('#features').innerHTML = "";
-  let controls = featureflow.getControls();
-  for (var property in controls) {
-    if (controls.hasOwnProperty(property)) {
-      renderControl(property, 'OFF');
+  let features = featureflow.getFeatures();
+  for (var property in features) {
+    if (features.hasOwnProperty(property)) {
+      renderFeature(property, 'OFF');
     }
   }
 }
@@ -103,7 +103,7 @@ featureflow.on(Featureflow.events.LOADED, function(data) {
   render();
 });
 
-featureflow.on(Featureflow.events.UPDATED_CONTROL, function(value){
+featureflow.on(Featureflow.events.UPDATED_FEATURE, function(value){
   console.log('Live Update', value);
   logEvent('Live Update', value);
   render();

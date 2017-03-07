@@ -1,4 +1,12 @@
 # Change log
+## [0.2.1] - 2017-03-07
+### Fixed
+- Fixed bug where after a realtime update error it would try to 
+apply the changes to the features object, even though it didn't exist
+### Changed
+- Added library version and license comment banner to the top of the generated JS files
+- Updated the example code to work after refactor of controls to features
+- Added library version to HTTP headers
 ## [0.2.0] - 2017-03-02
 ### Changed
 - default feature variant value set to `'off'` if no default feature is defined

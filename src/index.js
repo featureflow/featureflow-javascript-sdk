@@ -57,11 +57,16 @@ export function init(apiKey: string, _context: ContextTypeParam = {}, _config: C
       }
 
       RestClient.getFeatures(config.baseUrl, apiKey, context, keys, (error, _features)=>{
-        features = {
-          ...features,
-          ..._features
-        };
-        emitter.emit(events.UPDATED_FEATURE, _features);
+        if (!error){
+          features = {
+            ...features,
+            ..._features
+          };
+          emitter.emit(events.UPDATED_FEATURE, _features);
+        }
+        else{
+          emitter.emit(events.ERROR, error);
+        }
       })
     };
   }

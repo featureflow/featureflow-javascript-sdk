@@ -3,8 +3,8 @@
 type NodeCallbackType<T=*, RET=any> = (error: any, ...rest: Array<T>)=>RET
 type EventCallbackType<T=*, RET=any> = (...rest: Array<T>)=>RET
 
-type KeyValueFlat = {
-  [key:string]: mixed
+type ConfigValuesType<T=string|number> = {
+  [key:string]: T | T[]
 }
 
 type FeaturesType = {
@@ -13,12 +13,12 @@ type FeaturesType = {
 
 type ContextType = {
   key: string,
-  values?: KeyValueFlat
+  values?: ConfigValuesType
 }
 
 type ContextTypeParam = {
   key?: string,
-  values?: KeyValueFlat
+  values?: ConfigValuesType
 }
 
 type ConfigType = {

@@ -62,6 +62,7 @@ export function init(apiKey: string, _context: ContextTypeParam = {}, _config: C
             ...features,
             ..._features
           };
+          localStorage.setItem(`ff:${context.key}:${apiKey}`, JSON.stringify(features));
           emitter.emit(events.UPDATED_FEATURE, _features);
         }
         else{

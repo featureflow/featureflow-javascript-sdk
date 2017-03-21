@@ -1,4 +1,7 @@
 # Change log
+## [0.2.3] - 2017-03-07
+### Fixed
+- Fixed bug where the realtime update doesn't save to localStorage.
 ## [0.2.1] - 2017-03-07
 ### Fixed
 - Fixed bug where after a realtime update error it would try to 

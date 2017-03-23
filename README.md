@@ -171,15 +171,15 @@ Sends a goal event, along with the current evaluated features to **featureflow.i
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `goalKey*` | `string` |  | The key of the goal you want to target. |
 
-####`featureflow.updateContext(context)`
-Updates and returns the current `context` of the instance and reevaluates all feature features using the new `context`. 
+####`featureflow.updateContext(context, [callback])`
+Updates the current `context` of the instance and reevaluates all feature features using the new `context`. 
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `context` | `context` | ... | See the `context` object below |
-| **`return`**  | `context` |  | The updated `context` object |
 
 Fires a `Featureflow.events.LOADED` event when the features have been evaluated.
+Also Fires the callback if provided with the newly evaluated features.
 
 
 ####`featureflow.getFeatures()`

@@ -41,7 +41,7 @@ export default class FeatureflowClient{
   config: ConfigType;
   context: ContextType;
 
-  constructor(apiKey: string, context: ContextTypeParam = {}, config: ConfigTypeParam = {}){
+  constructor(apiKey: string, context: ContextTypeParam = {}, config: ConfigTypeParam = {}, callback: NodeCallbackType = ()=>{}){
     this.emitter = new Emitter();
     this.apiKey = apiKey;
 
@@ -79,9 +79,11 @@ export default class FeatureflowClient{
             };
             saveFeatures(this.apiKey, this.context.key, this.features);
             this.emitter.emit(Events.UPDATED_FEATURE, features);
+            callback(undefined, features);
           }
           else{
             this.emitter.emit(Events.ERROR, error);
+            callback(error);
           }
         })
       };
@@ -92,7 +94,7 @@ export default class FeatureflowClient{
     this.off = this.emitter.off.bind(this.emitter);
   }
 
-  updateContext(context: ContextTypeParam = {}): ContextType{
+  updateContext(context: ContextTypeParam = {}, callback: NodeCallbackType = ()=>{}): void{
     this.context = {
       key: context.key || DEFAULT_CONTEXT_VALUES.key,
       values: context.values
@@ -105,12 +107,14 @@ export default class FeatureflowClient{
         this.features = features || {};
         saveFeatures(this.apiKey, this.context.key, this.features);
         this.emitter.emit(Events.LOADED, features);
+        callback(undefined, features);
       }
       else{
         this.emitter.emit(Events.ERROR, error);
+        callback(error);
       }
+      return this.context;
     });
-    return this.context;
   }
   getFeatures(): FeaturesType{
     return this.features;
@@ -123,8 +127,6 @@ export default class FeatureflowClient{
   }
 
   goal(goal:string): void {
-    return RestClient.postGoalEvent(this.config.baseUrl, this.apiKey, goal, this.getFeatures(),(error, response)=>{
-      //noop
-    })
+    return RestClient.postGoalEvent(this.config.baseUrl, this.apiKey, goal, this.getFeatures(),()=>{});
   }
 }

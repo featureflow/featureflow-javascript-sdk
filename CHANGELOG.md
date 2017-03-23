@@ -1,4 +1,7 @@
 # Change log
+## [0.2.5] - 2017-03-24
+### Changed
+- `featureflow.updateContext(context, [callback])` - now takes callback argument
 ## [0.2.4] - 2017-03-23
 ### Changed
 - Rewritten Featureflow client as es6 class. No change on functionality, just nicer syntax to write in.

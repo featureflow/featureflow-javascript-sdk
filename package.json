@@ -1,6 +1,6 @@
 {
   "name": "featureflow-client",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Featureflow Javascipt Client",
   "author": "Featureflow <featureflow@featureflow.io>",
   "license": "Apache-2.0",
@@ -64,9 +64,6 @@
     "webpack-dev-server": "^2.3.0"
   },
   "dependencies": {
-    "Base64": "1.0.0",
-    "escape-string-regexp": "1.0.5",
-    "sizzle": "2.3.0",
     "tiny-emitter": "^1.1.0"
   }
 }

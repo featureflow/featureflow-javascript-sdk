@@ -1,5 +1,4 @@
 import Featureflow from '../../src/index';
-const FF_KEY = 'env-de55e0df8070427e88da31d3906010d9';
 const FF_KEY = 'env-7ee02f8bbf2f4b8eadb135f22650274f';
 
 var context = {
@@ -133,6 +132,10 @@ document.querySelector('#save-button').addEventListener('click', function saveUp
     alert('Context is not a valid JSON object')
   }
 });
+
+document.querySelector('#goal-button').addEventListener('click', function(){
+  featureflow.goal('goal-button-clicked');
+})
 
 document.querySelector('#cancel-button').addEventListener('click', function cancelUpdateContext(){
   editor.setValue(JSON.stringify(context, null, 2));

@@ -164,7 +164,12 @@ Returns the value of a feature for the given context.
 | `featureKey*`  | `string` | **`Required`** | The feature key you are targeting |
 | **`return`** | `string` | | The value of the feature, or the default feature value from `config.defaultFeatures[featureKey]` if present, or `'off'`  |
 
+####`featureflow.goal(goalKey)`
+Sends a goal event, along with the current evaluated features to **featureflow.io**. Use with experiments in the admin console.
 
+| Params | Type | Default | Description |
+|---------------|----------|--------------|----------------------------------------------------------------|
+| `goalKey*` | `string` |  | The key of the goal you want to target. |
 
 ####`featureflow.updateContext(context)`
 Updates and returns the current `context` of the instance and reevaluates all feature features using the new `context`. 

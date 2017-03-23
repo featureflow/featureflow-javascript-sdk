@@ -1,5 +1,9 @@
 # Change log
-## [0.2.3] - 2017-03-07
+## [0.2.4] - 2017-03-23
+### Changed
+- Rewritten Featureflow client as es6 class. No change on functionality, just nicer syntax to write in.
+- Added goal endpoint for A/B testing experiments. Use `featureflow.goal('goal-key')` to register goals with your project/environment.
+## [0.2.3] - 2017-03-21
 ### Fixed
 - Fixed bug where the realtime update doesn't save to localStorage.
 ## [0.2.1] - 2017-03-07

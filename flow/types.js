@@ -25,13 +25,16 @@ type ConfigType = {
   rtmUrl : string,
   baseUrl : string,
   streaming: boolean,
-  defaultFeatures: FeaturesType
+  defaultFeatures: FeaturesType,
+  useCookies: boolean
 }
 
 type ConfigTypeParam = {
   rtmUrl?: string,
   baseUrl?: string,
-  streaming?: boolean
+  streaming?: boolean,
+  defaultFeatures?: FeaturesType,
+  useCookies?: boolean
 }
 
 interface EvaluateInterface {

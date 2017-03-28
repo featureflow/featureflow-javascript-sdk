@@ -1,6 +1,6 @@
 {
   "name": "featureflow-client",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "description": "Featureflow Javascipt Client",
   "author": "Featureflow <featureflow@featureflow.io>",
   "license": "Apache-2.0",
@@ -25,7 +25,8 @@
     "watch": "webpack --watch src/index.js dist/featureflow.js",
     "test": "karma start --single-run",
     "test:watch": "karma start --auto-watch --reporters=dots",
-    "prepublish": "node ./scripts/prepublish.js",
+    "prepublish": "node ./scripts/build.js",
+    "publish:bower": "node ./scripts/bower.js",
     "flow": "flow",
     "example": "webpack-dev-server --config ./example/webpack.config.js --content-base example/ --inline --port 8182"
   },
@@ -64,6 +65,7 @@
     "webpack-dev-server": "^2.3.0"
   },
   "dependencies": {
+    "js-cookie": "^2.1.3",
     "tiny-emitter": "^1.1.0"
   }
 }

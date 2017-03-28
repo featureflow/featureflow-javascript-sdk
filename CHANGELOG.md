@@ -1,4 +1,13 @@
 # Change log
+## [0.3.0] - 2017-03-28
+### Breaking Changes
+- Appended a random string to anonymous context key to assist with split variants. This is stored in localStorage against the apiKey.
+  - e.g. context key would change from `'anonymous'` to a string similar to `'anonymous:f444bt1f2v9iy0hpvi'`
+### Changed
+- Now storing cookie for context key which can be used to sync anonymous user requests with backend Featureflow SDK.
+- Added `config.useCookie` option to turn cookie off. Defaults to `true`.
+### Fixed
+- Goal endpoint updated to include `contextKey` and use explicit property `goalKey`
 ## [0.2.5] - 2017-03-24
 ### Changed
 - `featureflow.updateContext(context, [callback])` - now takes callback argument

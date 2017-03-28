@@ -5,10 +5,7 @@ import Evaluate from './Evaluate';
 import Events from './Events';
 
 import Emitter from 'tiny-emitter';
-
-const DEFAULT_CONTEXT_VALUES: ContextType = {
-  key: 'anonymous'
-};
+import Cookies from 'js-cookie';
 
 const DEFAULT_BASE_URL = 'https://app.featureflow.io';
 const DEFAULT_RTM_URL = 'https://rtm.featureflow.io';
@@ -17,12 +14,13 @@ const DEFAULT_CONFIG: ConfigType = {
   baseUrl: DEFAULT_BASE_URL,
   rtmUrl: DEFAULT_RTM_URL,
   streaming: true,
-  defaultFeatures: {}
+  defaultFeatures: {},
+  useCookies: true
 };
 
 const INIT_MODULE_ERROR = new Error('init() has not been called with a valid apiKey');
 
-function loadFeatures(apiKey: string, contextKey: string){
+function loadFeatures(apiKey: string, contextKey: string): FeaturesType{
   try{
     return JSON.parse(localStorage.getItem(`ff:${contextKey}:${apiKey}`) || '{}');
   }
@@ -31,7 +29,7 @@ function loadFeatures(apiKey: string, contextKey: string){
   }
 }
 
-function saveFeatures(apiKey: string, contextKey: string, features: FeaturesType){
+function saveFeatures(apiKey: string, contextKey: string, features: FeaturesType): void{
   return localStorage.setItem(`ff:${contextKey}:${apiKey}`, JSON.stringify(features));
 }
 
@@ -96,7 +94,7 @@ export default class FeatureflowClient{
 
   updateContext(context: ContextTypeParam = {}, callback: NodeCallbackType = ()=>{}): void{
     this.context = {
-      key: context.key || DEFAULT_CONTEXT_VALUES.key,
+      key: context.key || this.getAnonymousKey(),
       values: context.values
     };
 
@@ -127,6 +125,21 @@ export default class FeatureflowClient{
   }
 
   goal(goal:string): void {
-    return RestClient.postGoalEvent(this.config.baseUrl, this.apiKey, goal, this.getFeatures(),()=>{});
+    return RestClient.postGoalEvent(this.config.baseUrl, this.apiKey, this.context.key, goal, this.getFeatures(),()=>{});
+  }
+
+  getAnonymousKey(): string{
+    return localStorage.getItem(`ff-anonymous-key`) || this.resetAnonymousKey();
+  }
+
+  resetAnonymousKey(): string{
+    let anonymousKey = 'anonymous:'+Math.random().toString(36).substring(10);
+    localStorage.setItem(`ff-anonymous-key`, anonymousKey);
+
+    if (this.config.useCookies){
+      //Set the anonymous key cookie for potential future usage with Server SDK
+      Cookies.set('ff-anonymous-key', anonymousKey);
+    }
+    return anonymousKey;
   }
 }

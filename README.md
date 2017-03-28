@@ -110,8 +110,21 @@ if(featureflow.evaluate('my-feature-key').isOff()){
 }
 ```
 
-
 Further documentation can be found [here](http://docs.featureflow.io/docs)
+
+
+#### Anonymous Context and Featureflow Server SDKs
+In some instances you will want to split test a feature with anonymous users that spans both client and server code.
+The `featureflow` client generates a unique anonymous key for the user which can be shared with your server requests. 
+There are a couple of ways you can do this.
+##### 1. Access the cookie `ff-anonymous-key`
+Anytime the anonymous context is updated the `featureflow` client will set the `ff-anonymous-key` cookie. 
+If request server is on the same \[sub\]domain and it doesn't have a context key you should use this cookie.
+##### 2. Pass the value into the request yourself
+If you cannot use cookies (e.g. api on a separate \[sub\]domain), you can pass the anonymous key directly into the request.
+Here are some examples of how you can do this:
+1. Using HTTP Header: `headers["X-Featureflow-Anonymous-Key"] = featureflow.getAnonymousKey()`
+2. Adding a query param: `'?ff-anonymouskey='+featureflow.getAnonymousKey()`
 
 ### API and Configuration
 #### Globals
@@ -215,17 +228,35 @@ Listen to events when the `featureflow` instance is updated
 | `event*`  | `string` | **`Required`** | The name of the event to unsubscribe from. |
 | `callback`  | `function` | **`Required`** | The callback used when binding the object  |
 
+
+####`featureflow.getAnonymousKey()`
+Returns the anonymous context key assigned for the user in localStorage.
+
+| Params | Type | Default | Description |
+|---------------|----------|--------------|----------------------------------------------------------------|
+| **`return`**  | `string` |  | The string of the anonymous context key in localStorage. |
+
+
+####`featureflow.resetAnonymousKey()`
+Resets the anonymous context key for the user stored in localStorage. This will not re-evaluate the features, you must still call `updateContext()` to evaluate the latest features variants.
+
+
+| Params | Type | Default | Description |
+|---------------|----------|--------------|----------------------------------------------------------------|
+| **`return`**  | `string` |  | The string of the **new** anonymous context key. |
+
 #### Object Types
 ####`context`
 | Property | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| `key` | `string` | `"anonymous"` | Uniquely identifies the current user. Also used to calculate split variants |
+| `key` | `string` | `'anonymous:**********'` | Uniquely identifies the current user. Also used to calculate split variants. If not provided a random string prefixed with `'anonymous:'` will be used. This will set a cookie that can be used to link the anonymous user with your server's Featureflow SDK. |
 | `values` | `object` | `undefined` | Flat key-value object containing extra meta about the current user. Used to serve different features for specifically targeted attributes.
 
 ####`config`
 | Property | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `streaming` | `boolean` | `true` | Set to `true` when calling `Featureflow.init(..., ..., config)` to listen for realtime updates |
+| `useCookies` | `boolean` | `true` | Set to `false` if you do not want to use cookies (you will have to pass the result of `featureflow.getAnonymousKey()` to any future requests if you wish for the server to match the client anonymous key)  |
 | `defaultFeatures` | `object` | `undefined` | A flat key-value object representing the default variants a feature should be set to if there is an interrupted connection and no cached value.  <br/> <br/> *e.g. if you set `config.defaultFeatures` to `{'my-feature': 'on'}`, `featureflow.evaluate('my-feature').isOn()` will return `true` when there is an interrupted connection to Featureflow and no locally cached feature features.*|
 
 #### Events

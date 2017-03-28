@@ -43,12 +43,13 @@ export default {
       callback
     );
   },
-  postGoalEvent: (baseUrl: string, apiKey:string, key: string, evaluated: FeaturesType, callback: NodeCallbackType<FeaturesType>): void => {
+  postGoalEvent: (baseUrl: string, apiKey:string, contextKey: string, goalKey: string, evaluated: FeaturesType, callback: NodeCallbackType<FeaturesType>): void => {
     request(`${baseUrl}/api/js/v1/goalevent/${ apiKey }`,
       {
         method: 'POST',
         body: {
-          key,
+          contextKey,
+          goalKey,
           hits: 1,
           evaluated
         }

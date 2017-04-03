@@ -43,15 +43,35 @@ export default {
       callback
     );
   },
-  postGoalEvent: (baseUrl: string, apiKey:string, contextKey: string, goalKey: string, evaluated: FeaturesType, callback: NodeCallbackType<FeaturesType>): void => {
-    request(`${baseUrl}/api/js/v1/goalevent/${ apiKey }`,
+  postGoalEvent: (baseUrl: string, apiKey:string, contextKey: string, goalKey: string, evaluatedFeaturesMap: FeaturesType, callback: NodeCallbackType<FeaturesType>): void => {
+    request(`${baseUrl}/api/js/v1/event/${ apiKey }`,
       {
         method: 'POST',
         body: {
-          contextKey,
-          goalKey,
-          hits: 1,
-          evaluated
+          type: 'goal',
+          data: [{
+            contextKey,
+            goalKey,
+            hits: 1,
+            evaluated: evaluatedFeaturesMap
+          }]
+        }
+      },
+      callback
+    );
+  },
+  postEvaluateEvent: (baseUrl: string, apiKey:string, contextKey: string, featureKey: string, variant: string, callback: NodeCallbackType<FeaturesType>): void => {
+    request(`${baseUrl}/api/js/v1/event/${ apiKey }`,
+      {
+        method: 'POST',
+        body: {
+          type: 'evaluate',
+          data: [{
+            contextKey,
+            featureKey,
+            variant,
+            hits: 1,
+          }]
         }
       },
       callback

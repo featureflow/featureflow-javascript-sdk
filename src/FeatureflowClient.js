@@ -121,6 +121,7 @@ export default class FeatureflowClient{
     return this.context;
   }
   evaluate(key: string) : Evaluate {
+    RestClient.postEvaluateEvent(this.config.baseUrl, this.apiKey, this.context.key, key, ()=>{})
     return new Evaluate(this.features[key] || this.config.defaultFeatures[key] || 'off');
   }
 

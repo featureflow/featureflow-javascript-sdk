@@ -1,4 +1,9 @@
 # Change log
+## [0.4.0] - 2017-04-03
+### Breaking Changes
+- Updated events service to post to new endpoint. Not a breaking change for client, but breaking change for application.
+### Changed
+- Added event for when calling the evaluate method.
 ## [0.3.0] - 2017-03-28
 ### Breaking Changes
 - Appended a random string to anonymous context key to assist with split variants. This is stored in localStorage against the apiKey.

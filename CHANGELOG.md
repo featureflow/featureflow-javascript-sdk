@@ -1,4 +1,7 @@
 # Change log
+## [0.4.1] - 2017-04-06
+### Changed
+- Added default callback on requests to hide console errors.
 ## [0.4.0] - 2017-04-03
 ### Breaking Changes
 - Updated events service to post to new endpoint. Not a breaking change for client, but breaking change for application.

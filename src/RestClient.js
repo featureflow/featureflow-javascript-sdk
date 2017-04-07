@@ -7,7 +7,6 @@ type RequestConfig = {
 function request(endpoint: string, config: ConfigType, callback: NodeCallbackType<FeaturesType> = ()=>{}): XMLHttpRequest {
     let request = new XMLHttpRequest();
     request.addEventListener('load', function() {
-      console.log(request.status)
       if (request.status === 200 && request.getResponseHeader('Content-type') === "application/json;charset=UTF-8") {
         callback(null, JSON.parse(request.responseText));
       } else {

@@ -1,5 +1,5 @@
 # Change log
-## [0.4.2] - 2017-04-07
+## [0.4.3] - 2017-04-07
 ### Fixed
 - Offline features caching was not working when baseUrl was unreachable. Not using callback correctly.
 ## [0.4.1] - 2017-04-06

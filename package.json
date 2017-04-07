@@ -1,6 +1,6 @@
 {
   "name": "featureflow-client",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Featureflow Javascipt Client",
   "author": "Featureflow <featureflow@featureflow.io>",
   "license": "Apache-2.0",

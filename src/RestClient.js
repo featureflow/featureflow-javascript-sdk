@@ -2,9 +2,9 @@
 import packageJSON from '../package.json';
 type RequestConfig = {
   method: 'GET' | 'POST',
-  body: ?any
+  body?: any
 }
-function request(endpoint: string, config: ConfigType, callback: NodeCallbackType<FeaturesType> = ()=>{}): XMLHttpRequest {
+function request(endpoint: string, config: RequestConfig, callback: NodeCallbackType<FeaturesType> = ()=>{}): XMLHttpRequest {
     let request = new XMLHttpRequest();
     request.addEventListener('load', function() {
       if (request.status === 200 && request.getResponseHeader('Content-type') === "application/json;charset=UTF-8") {

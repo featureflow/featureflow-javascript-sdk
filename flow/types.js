@@ -13,12 +13,12 @@ type FeaturesType = {
 
 type ContextType = {
   key: string,
-  values?: ConfigValuesType
+  values?: ConfigValuesType<*>
 }
 
 type ContextTypeParam = {
   key?: string,
-  values?: ConfigValuesType
+  values?: ConfigValuesType<*>
 }
 
 type ConfigType = {

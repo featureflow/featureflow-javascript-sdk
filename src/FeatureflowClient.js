@@ -38,8 +38,11 @@ export default class FeatureflowClient{
   features: FeaturesType;
   config: ConfigType;
   context: ContextType;
+  emitter: Emitter;
+  on: (string)=>any;
+  off: (string)=>any;
 
-  constructor(apiKey: string, context: ContextTypeParam = {}, config: ConfigTypeParam = {}, callback: NodeCallbackType = ()=>{}){
+  constructor(apiKey: string, context: ContextTypeParam = {}, config: ConfigTypeParam = {}, callback: NodeCallbackType<*> = ()=>{}){
     this.emitter = new Emitter();
     this.apiKey = apiKey;
 
@@ -92,7 +95,7 @@ export default class FeatureflowClient{
     this.off = this.emitter.off.bind(this.emitter);
   }
 
-  updateContext(context: ContextTypeParam = {}, callback: NodeCallbackType = ()=>{}): void{
+  updateContext(context: ContextTypeParam = {}, callback: NodeCallbackType<*> = ()=>{}): void{
     this.context = {
       key: context.key || this.getAnonymousKey(),
       values: context.values
@@ -121,8 +124,9 @@ export default class FeatureflowClient{
     return this.context;
   }
   evaluate(key: string) : Evaluate {
-    RestClient.postEvaluateEvent(this.config.baseUrl, this.apiKey, this.context.key, key, ()=>{})
-    return new Evaluate(this.features[key] || this.config.defaultFeatures[key] || 'off');
+    const evaluate = new Evaluate(this.features[key] || this.config.defaultFeatures[key] || 'off');
+    RestClient.postEvaluateEvent(this.config.baseUrl, this.apiKey, this.context.key, key, evaluate.value(), ()=>{});
+    return evaluate;
   }
 
   goal(goal:string): void {

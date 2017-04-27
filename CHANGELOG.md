@@ -1,7 +1,12 @@
 # Change log
+## [0.5.0] - 2017-04-27
+### Changed
+- Sending `Featureflow.events.LOADED_FROM_CACHE` when the data is loaded from local storage.
+- Now also sending `Featureflow.events.INIT` when the data is first retrieved from the server.
+  - Still sending `Featureflow.events.LOADED` but this is deprecated.
 ## [0.4.4] - 2017-04-18
 ### Fixed
-- Evaluate event wasn't sending the right.
+- Evaluate event wasn't sending the right JSON.
 ## [0.4.3] - 2017-04-07
 ### Fixed
 - Offline features caching was not working when baseUrl was unreachable. Not using callback correctly.

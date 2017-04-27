@@ -260,11 +260,20 @@ Resets the anonymous context key for the user stored in localStorage. This will 
 | `defaultFeatures` | `object` | `undefined` | A flat key-value object representing the default variants a feature should be set to if there is an interrupted connection and no cached value.  <br/> <br/> *e.g. if you set `config.defaultFeatures` to `{'my-feature': 'on'}`, `featureflow.evaluate('my-feature').isOn()` will return `true` when there is an interrupted connection to Featureflow and no locally cached feature features.*|
 
 #### Events
-#### `Featureflow.events.LOADED`
+#### `Featureflow.events.LOADED_FROM_CACHE`
+Fired when features have been loaded from localstorage. 
+Triggered by both `Featureflow.init(...)` and `featureflow.updateContext`.
+
+Callback is fired with one parameter with the value of all evaluated `features`.
+
+#### `Featureflow.events.INIT`
 Fired when features have been evaluated and loaded. 
 Triggered by both `Featureflow.init(...)` and `featureflow.updateContext`.
 
 Callback is fired with one parameter with the value of all evaluated `features`.
+
+#### `Featureflow.events.LOADED` 
+**Deprecated:** Use `Featureflow.events.INIT` instead.
 
 #### `Featureflow.events.UPDATED_FEATURE`
 Only available when streaming is enabled.

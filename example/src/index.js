@@ -92,16 +92,18 @@ function render(){
   }
 }
 
-featureflow.on(Featureflow.events.LOADED, function(data) {
-  console.log('Loaded', data);
-  logEvent('Loaded', data);
-  console.log(featureflow.evaluate('example-feature').isOn())
-  console.log(featureflow.evaluate('example-feature').isOff())
-  logEvent('example-feature isOn()', featureflow.evaluate('example-feature').isOn());
-  logEvent('example-feature isOff()', featureflow.evaluate('example-feature').isOff());
-  logEvent('example-feature is(\'on\')', featureflow.evaluate('example-feature').is('on'));
+featureflow.on(Featureflow.events.LOADED_FROM_CACHE, function(data) {
+  console.log('LOADED_FROM_CACHE', data);
+  logEvent('LOADED_FROM_CACHE', data);
   render();
 });
+
+featureflow.on(Featureflow.events.INIT, function(data) {
+  console.log('Init', data);
+  logEvent('Init', data);
+  render();
+});
+
 
 featureflow.on(Featureflow.events.UPDATED_FEATURE, function(value){
   console.log('Live Update', value);

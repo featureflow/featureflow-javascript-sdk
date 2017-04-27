@@ -57,41 +57,38 @@ export default class FeatureflowClient{
       ...config
     };
 
-    // Put this in timeout so we can listen to all events before it is returned
-    setTimeout(()=>{
-      //3. Load initial data
-      this.updateContext(context);
+    //3. Load initial data
+    this.updateContext(context);
 
-      //4. Set up realtime streaming
-      if (this.config.streaming){
-        let es = new window.EventSource(`${this.config.rtmUrl}/api/js/v1/stream/${this.apiKey}`);
-        es.onmessage = (e) => {
-          let keys = [];
-          try{
-            keys = JSON.parse(e.data);
-          }
-          catch(err){
-            //Ah well, we tried...
-          }
+    //4. Set up realtime streaming
+    if (this.config.streaming){
+      let es = new window.EventSource(`${this.config.rtmUrl}/api/js/v1/stream/${this.apiKey}`);
+      es.onmessage = (e) => {
+        let keys = [];
+        try{
+          keys = JSON.parse(e.data);
+        }
+        catch(err){
+          //Ah well, we tried...
+        }
 
-          RestClient.getFeatures(this.config.baseUrl, this.apiKey, this.context, keys, (error, features)=>{
-            if (!error){
-              this.features = {
-                ...this.features,
-                ...features
-              };
-              saveFeatures(this.apiKey, this.context.key, this.features);
-              this.emitter.emit(Events.UPDATED_FEATURE, features);
-              callback(undefined, features);
-            }
-            else{
-              this.emitter.emit(Events.ERROR, error);
-              callback(error);
-            }
-          })
-        };
-      }
-    },0);
+        RestClient.getFeatures(this.config.baseUrl, this.apiKey, this.context, keys, (error, features)=>{
+          if (!error){
+            this.features = {
+              ...this.features,
+              ...features
+            };
+            saveFeatures(this.apiKey, this.context.key, this.features);
+            this.emitter.emit(Events.UPDATED_FEATURE, features);
+            callback(undefined, features);
+          }
+          else{
+            this.emitter.emit(Events.ERROR, error);
+            callback(error);
+          }
+        })
+      };
+    }
 
 
     //Bind event emitter
@@ -106,22 +103,25 @@ export default class FeatureflowClient{
     };
 
     this.features = loadFeatures(this.apiKey, this.context.key);
-    this.emitter.emit(Events.LOADED_FROM_CACHE, this.features);
+    // Put this in timeout so we can listen to all events before it is returned
+    setTimeout(()=>{
+      this.emitter.emit(Events.LOADED_FROM_CACHE, this.features);
 
-    RestClient.getFeatures(this.config.baseUrl, this.apiKey, this.context, [], (error, features)=>{
-      if (!error){
-        this.features = features || {};
-        saveFeatures(this.apiKey, this.context.key, this.features);
-        this.emitter.emit(Events.INIT, features);
-        this.emitter.emit(Events.LOADED, features);
-        callback(undefined, features);
-      }
-      else{
-        this.emitter.emit(Events.ERROR, error);
-        callback(error);
-      }
-      return this.context;
-    });
+      RestClient.getFeatures(this.config.baseUrl, this.apiKey, this.context, [], (error, features)=>{
+        if (!error){
+          this.features = features || {};
+          saveFeatures(this.apiKey, this.context.key, this.features);
+          this.emitter.emit(Events.INIT, features);
+          this.emitter.emit(Events.LOADED, features);
+          callback(undefined, features);
+        }
+        else{
+          this.emitter.emit(Events.ERROR, error);
+          callback(error);
+        }
+        return this.context;
+      });
+    },0);
   }
   getFeatures(): FeaturesType{
     return this.features;

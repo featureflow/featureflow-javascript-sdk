@@ -1,5 +1,5 @@
 # Change log
-## [0.5.0] - 2017-04-27
+## [0.5.1] - 2017-04-27
 ### Changed
 - Sending `Featureflow.events.LOADED_FROM_CACHE` when the data is loaded from local storage.
 - Now also sending `Featureflow.events.INIT` when the data is first retrieved from the server.

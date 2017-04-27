@@ -47,15 +47,15 @@ export default {
     request(`${baseUrl}/api/js/v1/event/${ apiKey }`,
       {
         method: 'POST',
-        body: {
+        body: [{
           type: 'goal',
-          data: [{
+          data: {
             contextKey,
             goalKey,
             hits: 1,
             evaluated: evaluatedFeaturesMap
-          }]
-        }
+          }
+        }]
       },
       callback
     );
@@ -64,15 +64,15 @@ export default {
     request(`${baseUrl}/api/js/v1/event/${ apiKey }`,
       {
         method: 'POST',
-        body: {
+        body: [{
           type: 'evaluate',
-          data: [{
+          data: {
             contextKey,
             featureKey,
             variant,
             hits: 1,
-          }]
-        }
+          }
+        }]
       },
       callback
     );

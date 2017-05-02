@@ -7,7 +7,7 @@ type RequestConfig = {
 function request(endpoint: string, config: RequestConfig, callback: NodeCallbackType<FeaturesType> = ()=>{}): XMLHttpRequest {
     let request = new XMLHttpRequest();
     request.addEventListener('load', function() {
-      if (request.status === 200 && request.getResponseHeader('Content-type') === "application/json;charset=UTF-8") {
+      if (request.status === 200 && request.getResponseHeader('Content-Type') === "application/json;charset=UTF-8") {
         callback(null, JSON.parse(request.responseText));
       } else {
         callback(request.statusText || 'non 200 response status code');
@@ -19,7 +19,7 @@ function request(endpoint: string, config: RequestConfig, callback: NodeCallback
     request.open(config.method, endpoint);
     request.setRequestHeader('X-Featureflow-Client', `javascript-${packageJSON.version}`);
     if (config.body){
-      request.setRequestHeader('ContentType', 'application/json');
+      request.setRequestHeader('Content-Type', 'application/json');
       request.send(JSON.stringify(config.body));
     }
     else{

@@ -41,8 +41,10 @@ export default class FeatureflowClient{
   emitter: Emitter;
   on: (string)=>any;
   off: (string)=>any;
+  receivedInitialResponse: boolean;
 
   constructor(apiKey: string, context: ContextTypeParam = {}, config: ConfigTypeParam = {}, callback: NodeCallbackType<*> = ()=>{}){
+    this.receivedInitialResponse = false;
     this.emitter = new Emitter();
     this.apiKey = apiKey;
 
@@ -113,10 +115,12 @@ export default class FeatureflowClient{
           saveFeatures(this.apiKey, this.context.key, this.features);
           this.emitter.emit(Events.INIT, features);
           this.emitter.emit(Events.LOADED, features);
+          this.receivedInitialResponse = true;
           callback(undefined, features);
         }
         else{
           this.emitter.emit(Events.ERROR, error);
+          this.receivedInitialResponse = true;
           callback(error);
         }
         return this.context;
@@ -152,5 +156,8 @@ export default class FeatureflowClient{
       Cookies.set('ff-anonymous-key', anonymousKey);
     }
     return anonymousKey;
+  }
+  hasReceivedInitialResponse(): boolean{
+    return this.receivedInitialResponse;
   }
 }

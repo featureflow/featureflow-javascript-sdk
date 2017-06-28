@@ -1,8 +1,10 @@
 # Change log
+## [0.6.1] - 2017-06-28
+### Fixed
+- Added initialized flag, can access using `featureflow.hasReceivedInitialResponse()` and returns a boolean if the data has been loaded from featureflow or not, or if an errro has occured
 ## [0.6.1] - 2017-05-02
 ### Fixed
 - Events were not sending the correct content-type
-# Change log
 ## [0.6.0] - 2017-04-27
 ### Changed
 - Sending `Featureflow.events.LOADED_FROM_CACHE` when the data is loaded from local storage.

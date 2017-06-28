@@ -236,6 +236,13 @@ Returns the anonymous context key assigned for the user in localStorage.
 |---------------|----------|--------------|----------------------------------------------------------------|
 | **`return`**  | `string` |  | The string of the anonymous context key in localStorage. |
 
+####`featureflow.hasReceivedInitialResponse()`
+Returns true if an initial response has been returned from the server, regardless of the status code.
+
+| Params | Type | Default | Description |
+|---------------|----------|--------------|----------------------------------------------------------------|
+| **`return`**  | `boolean` | false | `true` if the initial request to featureflow has completed  |
+
 
 ####`featureflow.resetAnonymousKey()`
 Resets the anonymous context key for the user stored in localStorage. This will not re-evaluate the features, you must still call `updateContext()` to evaluate the latest features variants.

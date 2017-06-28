@@ -110,17 +110,16 @@ export default class FeatureflowClient{
       this.emitter.emit(Events.LOADED_FROM_CACHE, this.features);
 
       RestClient.getFeatures(this.config.baseUrl, this.apiKey, this.context, [], (error, features)=>{
+        this.receivedInitialResponse = true;
         if (!error){
           this.features = features || {};
           saveFeatures(this.apiKey, this.context.key, this.features);
           this.emitter.emit(Events.INIT, features);
           this.emitter.emit(Events.LOADED, features);
-          this.receivedInitialResponse = true;
           callback(undefined, features);
         }
         else{
           this.emitter.emit(Events.ERROR, error);
-          this.receivedInitialResponse = true;
           callback(error);
         }
         return this.context;

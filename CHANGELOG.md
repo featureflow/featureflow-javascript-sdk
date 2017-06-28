@@ -1,5 +1,5 @@
 # Change log
-## [0.6.1] - 2017-06-28
+## [0.7.1] - 2017-06-28
 ### Fixed
 - Added initialized flag, can access using `featureflow.hasReceivedInitialResponse()` and returns a boolean if the data has been loaded from featureflow or not, or if an errro has occured
 ## [0.6.1] - 2017-05-02

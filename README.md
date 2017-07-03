@@ -128,7 +128,7 @@ Here are some examples of how you can do this:
 
 ### API and Configuration
 #### Globals
-####`Featureflow.init(apiKey, [context], [config])`
+#### `Featureflow.init(apiKey, [context], [config])`
 Returns a `featureflow` instance, see below
 
 | Params | Type | Default | Description |
@@ -140,9 +140,9 @@ Returns a `featureflow` instance, see below
 
 ####Featureflow Instance
 These properties are available on the return of `Featureflow.init(...)`
-####`featureflow.evaluate(featureKey)`
+#### `featureflow.evaluate(featureKey)`
 Returns an object that can be used to help evaluate feature values in an expressive way.
-#####`featureflow.evaluate(featureKey).is(value)`
+##### `featureflow.evaluate(featureKey).is(value)`
 Evaluates the value of a feature for the given context.
 
 | Params | Type | Default | Description |
@@ -152,7 +152,7 @@ Evaluates the value of a feature for the given context.
 | **`return`** | `boolean` | | `true` if the feature's value is equal to the `value` provided, otherwise `false`  |
 
 
-#####`featureflow.evaluate(featureKey).isOn()`
+##### `featureflow.evaluate(featureKey).isOn()`
 Evaluates the value of a feature for the given context is equal to `'on'`.
 
 | Params | Type | Default | Description |
@@ -161,7 +161,7 @@ Evaluates the value of a feature for the given context is equal to `'on'`.
 | **`return`** | `boolean` | | `true` if the feature's value is equal to `'on'` provided, otherwise `false`  |
 
 
-#####`featureflow.evaluate(featureKey).isOff()`
+##### `featureflow.evaluate(featureKey).isOff()`
 Evaluates the value of a feature for the given context is equal to `'off'`.
 
 | Params | Type | Default | Description |
@@ -169,7 +169,7 @@ Evaluates the value of a feature for the given context is equal to `'off'`.
 | `featureKey*`  | `string` | **`Required`** | The feature key you are targeting |
 | **`return`** | `boolean` | | `true` if the feature's value is equal to `'off'` provided, otherwise `false`  |
 
-#####`featureflow.evaluate(featureKey).value()`
+##### `featureflow.evaluate(featureKey).value()`
 Returns the value of a feature for the given context.
 
 | Params | Type | Default | Description |
@@ -177,14 +177,14 @@ Returns the value of a feature for the given context.
 | `featureKey*`  | `string` | **`Required`** | The feature key you are targeting |
 | **`return`** | `string` | | The value of the feature, or the default feature value from `config.defaultFeatures[featureKey]` if present, or `'off'`  |
 
-####`featureflow.goal(goalKey)`
+#### `featureflow.goal(goalKey)`
 Sends a goal event, along with the current evaluated features to **featureflow.io**. Use with experiments in the admin console.
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `goalKey*` | `string` |  | The key of the goal you want to target. |
 
-####`featureflow.updateContext(context, [callback])`
+#### `featureflow.updateContext(context, [callback])`
 Updates the current `context` of the instance and reevaluates all feature features using the new `context`. 
 
 | Params | Type | Default | Description |
@@ -195,14 +195,14 @@ Fires a `Featureflow.events.LOADED` event when the features have been evaluated.
 Also Fires the callback if provided with the newly evaluated features.
 
 
-####`featureflow.getFeatures()`
+#### `featureflow.getFeatures()`
 Returns the current evaluated `features` as flat key-value map
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | **`return`**  | `object` |  | The current `features` object |
 
-####`featureflow.getContext()`
+#### `featureflow.getContext()`
 Returns the current `context`
 
 | Params | Type | Default | Description |
@@ -210,7 +210,7 @@ Returns the current `context`
 | **`return`**  | `context` |  | The current `context`  |
 
 
-####`featureflow.on(event, callback, [bindContext])`
+#### `featureflow.on(event, callback, [bindContext])`
 Listen to events when the `featureflow` instance is updated
 
 | Params | Type | Default | Description |
@@ -220,7 +220,7 @@ Listen to events when the `featureflow` instance is updated
 | `bindContext`  | `any` | `undefined` | The context to bind the event callback to.  |
 
 
-####`featureflow.off(event, [callback])`
+#### `featureflow.off(event, [callback])`
 Listen to events when the `featureflow` instance is updated
 
 | Params | Type | Default | Description |
@@ -229,14 +229,14 @@ Listen to events when the `featureflow` instance is updated
 | `callback`  | `function` | **`Required`** | The callback used when binding the object  |
 
 
-####`featureflow.getAnonymousKey()`
+#### `featureflow.getAnonymousKey()`
 Returns the anonymous context key assigned for the user in localStorage.
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | **`return`**  | `string` |  | The string of the anonymous context key in localStorage. |
 
-####`featureflow.hasReceivedInitialResponse()`
+#### `featureflow.hasReceivedInitialResponse()`
 Returns true if an initial response has been returned from the server, regardless of the status code.
 
 | Params | Type | Default | Description |
@@ -244,7 +244,7 @@ Returns true if an initial response has been returned from the server, regardles
 | **`return`**  | `boolean` | false | `true` if the initial request to featureflow has completed  |
 
 
-####`featureflow.resetAnonymousKey()`
+#### `featureflow.resetAnonymousKey()`
 Resets the anonymous context key for the user stored in localStorage. This will not re-evaluate the features, you must still call `updateContext()` to evaluate the latest features variants.
 
 
@@ -253,13 +253,13 @@ Resets the anonymous context key for the user stored in localStorage. This will 
 | **`return`**  | `string` |  | The string of the **new** anonymous context key. |
 
 #### Object Types
-####`context`
+#### `context`
 | Property | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `key` | `string` | `'anonymous:**********'` | Uniquely identifies the current user. Also used to calculate split variants. If not provided a random string prefixed with `'anonymous:'` will be used. This will set a cookie that can be used to link the anonymous user with your server's Featureflow SDK. |
 | `values` | `object` | `undefined` | Flat key-value object containing extra meta about the current user. Used to serve different features for specifically targeted attributes.
 
-####`config`
+#### `config`
 | Property | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `streaming` | `boolean` | `true` | Set to `true` when calling `Featureflow.init(..., ..., config)` to listen for realtime updates |

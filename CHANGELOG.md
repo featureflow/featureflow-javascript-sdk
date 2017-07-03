@@ -1,4 +1,7 @@
 # Change log
+## [0.7.2] - 2017-07-03
+### Fixed
+- Using rollup for bower/web releases.
 ## [0.7.1] - 2017-06-28
 ### Fixed
 - Added initialized flag, can access using `featureflow.hasReceivedInitialResponse()` and returns a boolean if the data has been loaded from featureflow or not, or if an errro has occured

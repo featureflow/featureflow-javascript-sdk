@@ -17,7 +17,7 @@ function request(endpoint: string, config: RequestConfig, callback: NodeCallback
       callback('error connecting with server');
     });
     request.open(config.method, endpoint);
-    request.setRequestHeader('X-Featureflow-Client', `javascript-${packageJSON.version}`);
+    request.setRequestHeader('X-Featureflow-Client', `JavascriptClient/${packageJSON.version}`);
     if (config.body){
       request.setRequestHeader('Content-Type', 'application/json');
       request.send(JSON.stringify(config.body));

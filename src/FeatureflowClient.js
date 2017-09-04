@@ -147,7 +147,7 @@ export default class FeatureflowClient{
   }
 
   resetAnonymousId(): string{
-    let anonymousId = 'anonymous:'+Math.random().toString(36).substring(10);
+    let anonymousId = 'anonymous:'+Math.random().toString(36).substring(2);
     localStorage.setItem(`ff-anonymous-id`, anonymousId);
 
     if (this.config.useCookies){

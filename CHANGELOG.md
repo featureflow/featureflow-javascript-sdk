@@ -1,4 +1,7 @@
 # Change log
+## [1.1.0] - 2017-09-04
+- Use Featureflow User object instead of context
+
 ## [0.7.2] - 2017-07-03
 ### Fixed
 - Using rollup for bower/web releases.

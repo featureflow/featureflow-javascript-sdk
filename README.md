@@ -113,28 +113,28 @@ if(featureflow.evaluate('my-feature-key').isOff()){
 Further documentation can be found [here](http://docs.featureflow.io/docs)
 
 
-#### Anonymous Context and Featureflow Server SDKs
+#### Anonymous User and Featureflow Server SDKs
 In some instances you will want to split test a feature with anonymous users that spans both client and server code.
 The `featureflow` client generates a unique anonymous key for the user which can be shared with your server requests. 
 There are a couple of ways you can do this.
-##### 1. Access the cookie `ff-anonymous-key`
-Anytime the anonymous context is updated the `featureflow` client will set the `ff-anonymous-key` cookie. 
-If request server is on the same \[sub\]domain and it doesn't have a context key you should use this cookie.
+##### 1. Access the cookie `ff-anonymous-id`
+Anytime the anonymous user is updated the `featureflow` client will set the `ff-anonymous-id` cookie. 
+If request server is on the same \[sub\]domain and it doesn't have a user id you should use this cookie.
 ##### 2. Pass the value into the request yourself
-If you cannot use cookies (e.g. api on a separate \[sub\]domain), you can pass the anonymous key directly into the request.
+If you cannot use cookies (e.g. api on a separate \[sub\]domain), you can pass the anonymous id directly into the request.
 Here are some examples of how you can do this:
-1. Using HTTP Header: `headers["X-Featureflow-Anonymous-Key"] = featureflow.getAnonymousKey()`
-2. Adding a query param: `'?ff-anonymouskey='+featureflow.getAnonymousKey()`
+1. Using HTTP Header: `headers["X-Featureflow-Anonymous-Id"] = featureflow.getAnonymousId()`
+2. Adding a query param: `'?ff-anonymousid='+featureflow.getAnonymousId()`
 
 ### API and Configuration
 #### Globals
-#### `Featureflow.init(apiKey, [context], [config])`
+#### `Featureflow.init(apiKey, [user], [config])`
 Returns a `featureflow` instance, see below
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `apiKey*` | `string` | **`Required`** | The Featureflow Javascript API key for the environment or project you are targeting |
-| `context` | `context` |  | See the `context` object below |
+| `user` | `user` |  | See the `user` object below |
 | `config` | `config` |  | See the `config` object below |
 | **`return`** | `featureflow` |  | See Featureflow Instance below |
 
@@ -143,7 +143,7 @@ These properties are available on the return of `Featureflow.init(...)`
 #### `featureflow.evaluate(featureKey)`
 Returns an object that can be used to help evaluate feature values in an expressive way.
 ##### `featureflow.evaluate(featureKey).is(value)`
-Evaluates the value of a feature for the given context.
+Evaluates the value of a feature for the given user.
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
@@ -153,7 +153,7 @@ Evaluates the value of a feature for the given context.
 
 
 ##### `featureflow.evaluate(featureKey).isOn()`
-Evaluates the value of a feature for the given context is equal to `'on'`.
+Evaluates the value of a feature for the given user is equal to `'on'`.
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
@@ -162,7 +162,7 @@ Evaluates the value of a feature for the given context is equal to `'on'`.
 
 
 ##### `featureflow.evaluate(featureKey).isOff()`
-Evaluates the value of a feature for the given context is equal to `'off'`.
+Evaluates the value of a feature for the given user is equal to `'off'`.
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
@@ -170,7 +170,7 @@ Evaluates the value of a feature for the given context is equal to `'off'`.
 | **`return`** | `boolean` | | `true` if the feature's value is equal to `'off'` provided, otherwise `false`  |
 
 ##### `featureflow.evaluate(featureKey).value()`
-Returns the value of a feature for the given context.
+Returns the value of a feature for the given user.
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
@@ -184,12 +184,12 @@ Sends a goal event, along with the current evaluated features to **featureflow.i
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `goalKey*` | `string` |  | The key of the goal you want to target. |
 
-#### `featureflow.updateContext(context, [callback])`
-Updates the current `context` of the instance and reevaluates all feature features using the new `context`. 
+#### `featureflow.updateUser(user, [callback])`
+Updates the current `user` of the instance and reevaluates all feature features using the new `user`. 
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| `context` | `context` | ... | See the `context` object below |
+| `user` | `user` | ... | See the `user` object below |
 
 Fires a `Featureflow.events.LOADED` event when the features have been evaluated.
 Also Fires the callback if provided with the newly evaluated features.
@@ -202,22 +202,22 @@ Returns the current evaluated `features` as flat key-value map
 |---------------|----------|--------------|----------------------------------------------------------------|
 | **`return`**  | `object` |  | The current `features` object |
 
-#### `featureflow.getContext()`
-Returns the current `context`
+#### `featureflow.getUser()`
+Returns the current `user`
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| **`return`**  | `context` |  | The current `context`  |
+| **`return`**  | `user` |  | The current `user`  |
 
 
-#### `featureflow.on(event, callback, [bindContext])`
+#### `featureflow.on(event, callback, [bindUser])`
 Listen to events when the `featureflow` instance is updated
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `event*`  | `string` | **`Required`** | The name of the event to subscribe to. See `Events` section below for available events. |
 | `callback*`  | `function` | **`Required`** | The function to call when the event is emitted.  |
-| `bindContext`  | `any` | `undefined` | The context to bind the event callback to.  |
+| `bindUser`  | `any` | `undefined` | The user to bind the event callback to.  |
 
 
 #### `featureflow.off(event, [callback])`
@@ -229,12 +229,12 @@ Listen to events when the `featureflow` instance is updated
 | `callback`  | `function` | **`Required`** | The callback used when binding the object  |
 
 
-#### `featureflow.getAnonymousKey()`
-Returns the anonymous context key assigned for the user in localStorage.
+#### `featureflow.getAnonymousId()`
+Returns the anonymous user id assigned for the user in localStorage.
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| **`return`**  | `string` |  | The string of the anonymous context key in localStorage. |
+| **`return`**  | `string` |  | The string of the anonymous user id in localStorage. |
 
 #### `featureflow.hasReceivedInitialResponse()`
 Returns true if an initial response has been returned from the server, regardless of the status code.
@@ -244,20 +244,20 @@ Returns true if an initial response has been returned from the server, regardles
 | **`return`**  | `boolean` | false | `true` if the initial request to featureflow has completed  |
 
 
-#### `featureflow.resetAnonymousKey()`
-Resets the anonymous context key for the user stored in localStorage. This will not re-evaluate the features, you must still call `updateContext()` to evaluate the latest features variants.
+#### `featureflow.resetAnonymousId()`
+Resets the anonymous user id for the user stored in localStorage. This will not re-evaluate the features, you must still call `updateUser()` to evaluate the latest features variants.
 
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| **`return`**  | `string` |  | The string of the **new** anonymous context key. |
+| **`return`**  | `string` |  | The string of the **new** anonymous user id. |
 
 #### Object Types
-#### `context`
+#### `user`
 | Property | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| `key` | `string` | `'anonymous:**********'` | Uniquely identifies the current user. Also used to calculate split variants. If not provided a random string prefixed with `'anonymous:'` will be used. This will set a cookie that can be used to link the anonymous user with your server's Featureflow SDK. |
-| `values` | `object` | `undefined` | Flat key-value object containing extra meta about the current user. Used to serve different features for specifically targeted attributes.
+| `id` | `string` | `'anonymous:**********'` | Uniquely identifies the current user. Also used to calculate split variants. If not provided a random string prefixed with `'anonymous:'` will be used. This will set a cookie that can be used to link the anonymous user with your server's Featureflow SDK. |
+| `attributes` | `object` | `undefined` | Flat key-value object containing extra meta about the current user. Used to serve different features for specifically targeted attributes.
 
 #### `config`
 | Property | Type | Default | Description |
@@ -269,13 +269,13 @@ Resets the anonymous context key for the user stored in localStorage. This will 
 #### Events
 #### `Featureflow.events.LOADED_FROM_CACHE`
 Fired when features have been loaded from localstorage. 
-Triggered by both `Featureflow.init(...)` and `featureflow.updateContext`.
+Triggered by both `Featureflow.init(...)` and `featureflow.updateUser`.
 
 Callback is fired with one parameter with the value of all evaluated `features`.
 
 #### `Featureflow.events.INIT`
 Fired when features have been evaluated and loaded. 
-Triggered by both `Featureflow.init(...)` and `featureflow.updateContext`.
+Triggered by both `Featureflow.init(...)` and `featureflow.updateUser`.
 
 Callback is fired with one parameter with the value of all evaluated `features`.
 
@@ -289,7 +289,7 @@ Fired when a feature has been changed.
 Callback is fired with one parameter with the value of only the updated `features` returned by the stream. In the majority of cases, this object will only contain one property.
 
 #### `Featureflow.events.ERROR`
-Fired when an error has occurred evaluating the feature features for the given context.
+Fired when an error has occurred evaluating the feature features for the given user.
 
 Callback is fired with one parameter with the error message.
 

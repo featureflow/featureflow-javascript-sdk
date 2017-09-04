@@ -30,27 +30,27 @@ function request(endpoint: string, config: RequestConfig, callback: NodeCallback
 
 
 
-function base64URLEncode(context: ContextType): string {
-  return btoa(JSON.stringify(context));
+function base64URLEncode(user: UserType): string {
+  return btoa(JSON.stringify(user));
 }
 
 export default {
-  getFeatures: (baseUrl: string, apiKey: string, context: any, keys: string[] = [], callback: NodeCallbackType<FeaturesType>): void => {
+  getFeatures: (baseUrl: string, apiKey: string, user: any, keys: string[] = [], callback: NodeCallbackType<FeaturesType>): void => {
     let query = ( keys.length > 0 ) ? `?keys=${ keys.join(',') }` : '';
     request(
-      `${baseUrl}/api/js/v1/evaluate/${ apiKey }/context/${ encodeURI(base64URLEncode(context)) }${ query }`,
+      `${baseUrl}/api/js/v1/evaluate/${ apiKey }/user/${ encodeURI(base64URLEncode(user)) }${ query }`,
       { method: 'GET' },
       callback
     );
   },
-  postGoalEvent: (baseUrl: string, apiKey:string, contextKey: string, goalKey: string, evaluatedFeaturesMap: FeaturesType, callback: NodeCallbackType<FeaturesType>): void => {
+  postGoalEvent: (baseUrl: string, apiKey:string, userId: string, goalKey: string, evaluatedFeaturesMap: FeaturesType, callback: NodeCallbackType<FeaturesType>): void => {
     request(`${baseUrl}/api/js/v1/event/${ apiKey }`,
       {
         method: 'POST',
         body: [{
           type: 'goal',
           data: {
-            contextKey,
+            userId,
             goalKey,
             hits: 1,
             evaluated: evaluatedFeaturesMap
@@ -60,14 +60,14 @@ export default {
       callback
     );
   },
-  postEvaluateEvent: (baseUrl: string, apiKey:string, contextKey: string, featureKey: string, variant: string, callback: NodeCallbackType<FeaturesType>): void => {
+  postEvaluateEvent: (baseUrl: string, apiKey:string, userId: string, featureKey: string, variant: string, callback: NodeCallbackType<FeaturesType>): void => {
     request(`${baseUrl}/api/js/v1/event/${ apiKey }`,
       {
         method: 'POST',
         body: [{
           type: 'evaluate',
           data: {
-            contextKey,
+            userId,
             featureKey,
             variant,
             hits: 1,

@@ -9,15 +9,15 @@
     <ul id="features">...</ul>
     <script>
       var apiKey = 'env-de55e0df8070427e88da31d3906010d9';
-      var context = {
-        key: 'user1',
-          values: {
-              tier: 'gold',
-              country: 'australia'
+      var user = {
+        id: 'user1',
+        attributes: {
+            tier: 'gold',
+            country: 'australia'
           }
       };
       var config = { streaming: true };
-      var featureflow = Featureflow.init(apiKey, context, config);
+      var featureflow = Featureflow.init(apiKey, user, config);
 
       function renderControl(key, failoverValue){
         var value = featureflow.evaluate(key, failoverValue);

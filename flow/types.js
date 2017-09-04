@@ -3,7 +3,7 @@
 type NodeCallbackType<T=*, RET=any> = (error: any, ...rest: Array<T>)=>RET
 type EventCallbackType<T=*, RET=any> = (...rest: Array<T>)=>RET
 
-type ConfigValuesType<T=string|number> = {
+type UserAttributesType<T=string|number> = {
   [key:string]: T | T[]
 }
 
@@ -11,14 +11,14 @@ type FeaturesType = {
   [key: string]: string
 }
 
-type ContextType = {
-  key: string,
-  values?: ConfigValuesType<*>
+type UserType = {
+  id: string,
+  attributes?: UserAttributesType<*>
 }
 
-type ContextTypeParam = {
-  key?: string,
-  values?: ConfigValuesType<*>
+type UserTypeParam = {
+  id?: string,
+  attributes?: UserAttributesType<*>
 }
 
 type ConfigType = {
@@ -46,9 +46,9 @@ interface EvaluateInterface {
 
 
 type FeatureflowInstance = {
-  updateContext: (context: ContextTypeParam) => ContextType,
+  updateUser: (user: UserTypeParam) => UserType,
   getFeatures: () => FeaturesType,
-  getContext: () => ContextType,
+  getUser: () => UserType,
   evaluate: (key: string) => any,
   on: (event: string, callback: EventCallbackType<*>)=>any,
   off: (event: string, callback: EventCallbackType<*>)=>any

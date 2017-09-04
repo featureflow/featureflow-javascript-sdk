@@ -20,30 +20,30 @@ const DEFAULT_CONFIG: ConfigType = {
 
 const INIT_MODULE_ERROR = new Error('init() has not been called with a valid apiKey');
 
-function loadFeatures(apiKey: string, contextKey: string): FeaturesType{
+function loadFeatures(apiKey: string, userId: string): FeaturesType{
   try{
-    return JSON.parse(localStorage.getItem(`ff:${contextKey}:${apiKey}`) || '{}');
+    return JSON.parse(localStorage.getItem(`ff:${userId}:${apiKey}`) || '{}');
   }
   catch(err){
     return {};
   }
 }
 
-function saveFeatures(apiKey: string, contextKey: string, features: FeaturesType): void{
-  return localStorage.setItem(`ff:${contextKey}:${apiKey}`, JSON.stringify(features));
+function saveFeatures(apiKey: string, userId: string, features: FeaturesType): void{
+  return localStorage.setItem(`ff:${userId}:${apiKey}`, JSON.stringify(features));
 }
 
 export default class FeatureflowClient{
   apiKey: string;
   features: FeaturesType;
   config: ConfigType;
-  context: ContextType;
+  user: UserType;
   emitter: Emitter;
   on: (string)=>any;
   off: (string)=>any;
   receivedInitialResponse: boolean;
 
-  constructor(apiKey: string, context: ContextTypeParam = {}, config: ConfigTypeParam = {}, callback: NodeCallbackType<*> = ()=>{}){
+  constructor(apiKey: string, user: UserTypeParam = {}, config: ConfigTypeParam = {}, callback: NodeCallbackType<*> = ()=>{}){
     this.receivedInitialResponse = false;
     this.emitter = new Emitter();
     this.apiKey = apiKey;
@@ -60,7 +60,7 @@ export default class FeatureflowClient{
     };
 
     //3. Load initial data
-    this.updateContext(context);
+    this.updateUser(user);
 
     //4. Set up realtime streaming
     if (this.config.streaming){
@@ -74,13 +74,13 @@ export default class FeatureflowClient{
           //Ah well, we tried...
         }
 
-        RestClient.getFeatures(this.config.baseUrl, this.apiKey, this.context, keys, (error, features)=>{
+        RestClient.getFeatures(this.config.baseUrl, this.apiKey, this.user, keys, (error, features)=>{
           if (!error){
             this.features = {
               ...this.features,
               ...features
             };
-            saveFeatures(this.apiKey, this.context.key, this.features);
+            saveFeatures(this.apiKey, this.user.id, this.features);
             this.emitter.emit(Events.UPDATED_FEATURE, features);
             callback(undefined, features);
           }
@@ -98,22 +98,22 @@ export default class FeatureflowClient{
     this.off = this.emitter.off.bind(this.emitter);
   }
 
-  updateContext(context: ContextTypeParam = {}, callback: NodeCallbackType<*> = ()=>{}): void{
-    this.context = {
-      key: context.key || this.getAnonymousKey(),
-      values: context.values
+  updateUser(user: UserTypeParam = {}, callback: NodeCallbackType<*> = ()=>{}): void{
+    this.user = {
+      id: user.id || this.getAnonymousId(),
+      attributes: user.attributes
     };
 
-    this.features = loadFeatures(this.apiKey, this.context.key);
+    this.features = loadFeatures(this.apiKey, this.user.id);
     // Put this in timeout so we can listen to all events before it is returned
     setTimeout(()=>{
       this.emitter.emit(Events.LOADED_FROM_CACHE, this.features);
 
-      RestClient.getFeatures(this.config.baseUrl, this.apiKey, this.context, [], (error, features)=>{
+      RestClient.getFeatures(this.config.baseUrl, this.apiKey, this.user, [], (error, features)=>{
         this.receivedInitialResponse = true;
         if (!error){
           this.features = features || {};
-          saveFeatures(this.apiKey, this.context.key, this.features);
+          saveFeatures(this.apiKey, this.user.id, this.features);
           this.emitter.emit(Events.INIT, features);
           this.emitter.emit(Events.LOADED, features);
           callback(undefined, features);
@@ -122,39 +122,39 @@ export default class FeatureflowClient{
           this.emitter.emit(Events.ERROR, error);
           callback(error);
         }
-        return this.context;
+        return this.user;
       });
     },0);
   }
   getFeatures(): FeaturesType{
     return this.features;
   }
-  getContext(): ContextType{
-    return this.context;
+  getUser(): UserType{
+    return this.user;
   }
   evaluate(key: string) : Evaluate {
     const evaluate = new Evaluate(this.features[key] || this.config.defaultFeatures[key] || 'off');
-    RestClient.postEvaluateEvent(this.config.baseUrl, this.apiKey, this.context.key, key, evaluate.value(), ()=>{});
+    RestClient.postEvaluateEvent(this.config.baseUrl, this.apiKey, this.user.id, key, evaluate.value(), ()=>{});
     return evaluate;
   }
 
   goal(goal:string): void {
-    return RestClient.postGoalEvent(this.config.baseUrl, this.apiKey, this.context.key, goal, this.getFeatures(),()=>{});
+    return RestClient.postGoalEvent(this.config.baseUrl, this.apiKey, this.user.id, goal, this.getFeatures(),()=>{});
   }
 
-  getAnonymousKey(): string{
-    return localStorage.getItem(`ff-anonymous-key`) || this.resetAnonymousKey();
+  getAnonymousId(): string{
+    return localStorage.getItem(`ff-anonymous-id`) || this.resetAnonymousId();
   }
 
-  resetAnonymousKey(): string{
-    let anonymousKey = 'anonymous:'+Math.random().toString(36).substring(10);
-    localStorage.setItem(`ff-anonymous-key`, anonymousKey);
+  resetAnonymousId(): string{
+    let anonymousId = 'anonymous:'+Math.random().toString(36).substring(10);
+    localStorage.setItem(`ff-anonymous-id`, anonymousId);
 
     if (this.config.useCookies){
       //Set the anonymous key cookie for potential future usage with Server SDK
-      Cookies.set('ff-anonymous-key', anonymousKey);
+      Cookies.set('ff-anonymous-id', anonymousId);
     }
-    return anonymousKey;
+    return anonymousId;
   }
   hasReceivedInitialResponse(): boolean{
     return this.receivedInitialResponse;

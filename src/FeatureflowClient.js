@@ -99,9 +99,19 @@ export default class FeatureflowClient{
   }
 
   updateUser(user: UserTypeParam = {}, callback: NodeCallbackType<*> = ()=>{}): void{
+    var d = new Date();
+    //these could be event or session attributes ie not persisted directly to user but added to a seperate attributes map
+    const featureflowAttributes = {
+      'featureflow.date': new Date(),
+      'featureflow.hourofday': d.getHours()
+    };
+    const attributes = {
+        ...user.attributes,
+        ...featureflowAttributes
+    };
     this.user = {
       id: user.id || this.getAnonymousId(),
-      attributes: user.attributes
+      attributes: attributes
     };
 
     this.features = loadFeatures(this.apiKey, this.user.id);
@@ -134,12 +144,12 @@ export default class FeatureflowClient{
   }
   evaluate(key: string) : Evaluate {
     const evaluate = new Evaluate(this.features[key] || this.config.defaultFeatures[key] || 'off');
-    RestClient.postEvaluateEvent(this.config.baseUrl, this.apiKey, this.user.id, key, evaluate.value(), ()=>{});
+    RestClient.postEvaluateEvent(this.config.baseUrl, this.apiKey, this.user, key, evaluate.value(), ()=>{});
     return evaluate;
   }
 
   goal(goal:string): void {
-    return RestClient.postGoalEvent(this.config.baseUrl, this.apiKey, this.user.id, goal, this.getFeatures(),()=>{});
+    return RestClient.postGoalEvent(this.config.baseUrl, this.apiKey, this.user, goal, this.getFeatures(),()=>{});
   }
 
   getAnonymousId(): string{

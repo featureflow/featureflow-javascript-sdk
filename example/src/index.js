@@ -1,15 +1,18 @@
 import Featureflow from '../../src/index';
-const FF_KEY = 'env-7ee02f8bbf2f4b8eadb135f22650274f';
+const FF_KEY = 'js-env-8cf4511b5c0543de8cf5d7aaf538fe9b';
 
 var user = {
   attributes:{
     tier: 'gold',
-    country: 'australia'
+    country: 'australia',
+      roles: ['role1', 'role2']
   }
 };
 
 var featureflow = Featureflow.init(FF_KEY, user, {
-  streaming: true
+  streaming: true,
+  baseUrl: 'http://app.featureflow.dev',
+  rtmUrl: 'http://app.featureflow.dev'
 });
 
 document.querySelector('#user').innerHTML = JSON.stringify(user, false, 2);

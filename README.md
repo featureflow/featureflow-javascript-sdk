@@ -210,14 +210,14 @@ Returns the current `user`
 | **`return`**  | `user` |  | The current `user`  |
 
 
-#### `featureflow.on(event, callback, [bindUser])`
+#### `featureflow.on(event, callback, [bindContext])`
 Listen to events when the `featureflow` instance is updated
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `event*`  | `string` | **`Required`** | The name of the event to subscribe to. See `Events` section below for available events. |
 | `callback*`  | `function` | **`Required`** | The function to call when the event is emitted.  |
-| `bindUser`  | `any` | `undefined` | The user to bind the event callback to.  |
+| `bindContext`  | `any` | `undefined` | The context to bind the event callback to.  |
 
 
 #### `featureflow.off(event, [callback])`
@@ -263,7 +263,7 @@ Resets the anonymous user id for the user stored in localStorage. This will not 
 | Property | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `streaming` | `boolean` | `true` | Set to `true` when calling `Featureflow.init(..., ..., config)` to listen for realtime updates |
-| `useCookies` | `boolean` | `true` | Set to `false` if you do not want to use cookies (you will have to pass the result of `featureflow.getAnonymousKey()` to any future requests if you wish for the server to match the client anonymous key)  |
+| `useCookies` | `boolean` | `true` | Set to `false` if you do not want to use cookies (you will have to pass the result of `featureflow.getAnonymousId()` to any future requests if you wish for the server to match the client anonymous key)  |
 | `defaultFeatures` | `object` | `undefined` | A flat key-value object representing the default variants a feature should be set to if there is an interrupted connection and no cached value.  <br/> <br/> *e.g. if you set `config.defaultFeatures` to `{'my-feature': 'on'}`, `featureflow.evaluate('my-feature').isOn()` will return `true` when there is an interrupted connection to Featureflow and no locally cached feature features.*|
 
 #### Events

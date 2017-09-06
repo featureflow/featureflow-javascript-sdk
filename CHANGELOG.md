@@ -1,6 +1,11 @@
 # Change log
+
+## [1.1.1] - 2017-09-05
+Events Object Improvements
+
 ## [1.1.0] - 2017-09-04
 - Use Featureflow User object instead of context
+- Breaking changes - Migrated to FeatureflowUser
 
 ## [0.7.2] - 2017-07-03
 ### Fixed
@@ -76,7 +81,7 @@ apply the changes to the features object, even though it didn't exist
 - `Featureflow.init()` now returns a new instance each time it is called
 - Updated README.md with the changes made to the core library, added API section
 - Added server sent events for realtime streaming of feature updates
-  - Set `{ streaming: true }` in your config, and listen to `featureflow.on(Featureflow.events.UPDATED_CONTROL, <callback>)`
+  - Set `{ streaming: true }` in your config, and listen to `- featureflow.on(Featureflow.events.UPDATED_CONTROL, <callback>)`
 ### Breaking Changes
 - Removed `featureflow.context` and `featureflow.controls`
   - Replaced by `featureflow.getControls()` and `featureflow.getContext()`

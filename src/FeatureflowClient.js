@@ -102,8 +102,6 @@ export default class FeatureflowClient{
     var d = new Date();
     //these could be event or session attributes ie not persisted directly to user but added to a seperate attributes map
     const featureflowAttributes = {
-      'featureflow.date': new Date(),
-      'featureflow.hourofday': d.getHours()
     };
     const attributes = {
         ...user.attributes,

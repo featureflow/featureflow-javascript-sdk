@@ -12,7 +12,11 @@ Get your Featureflow account at [featureflow.io](http://www.featureflow.io)
 
 The easiest way to get started is to follow the [Featureflow quick start guides](http://docs.featureflow.io/docs)
 
-> Alternatively clone this repository and run `$ npm install` and `$ npm run example`
+> Alternatively you can run the example in this repo:
+1. Clone this repository
+2. Update example/src/index.js ```const FF_KEY = 'your-javascript-environment-sdk-key';``` 
+3. Run `$ npm install` and `$ npm run example`
+
 
 ## Change Log
 

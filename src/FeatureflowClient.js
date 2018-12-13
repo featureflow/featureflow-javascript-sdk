@@ -69,16 +69,14 @@ export default class FeatureflowClient{
     this.updateUser(user);
 
     //4. Set up realtime streaming
-    if (this.config.streaming){
+    if (!this.config.offline && this.config.streaming){
       let es = new window.EventSource(`${this.config.rtmUrl}/api/js/v1/stream/${this.apiKey}`);
       es.onmessage = (e) => {
         let keys = [];
         try{
           keys = JSON.parse(e.data);
         }
-        catch(err){
-          //Ah well, we tried...
-        }
+        catch(err){}
 
         RestClient.getFeatures(this.config.baseUrl, this.apiKey, this.user, keys, (error, features)=>{
           if (!error){
@@ -120,21 +118,32 @@ export default class FeatureflowClient{
     setTimeout(()=>{
       this.emitter.emit(Events.LOADED_FROM_CACHE, this.features);
 
-      RestClient.getFeatures(this.config.baseUrl, this.apiKey, this.user, [], (error, features)=>{
-        this.receivedInitialResponse = true;
-        if (!error){
-          this.features = features || {};
-          saveFeatures(this.apiKey, this.user.id, this.features);
-          this.emitter.emit(Events.INIT, features);
-          this.emitter.emit(Events.LOADED, features);
-          callback(undefined, features);
+        if(this.config.offline) {
+            setTimeout(()=> {
+                this.features = this.config.defaultFeatures;
+                saveFeatures(this.apiKey, this.user.id, this.features);
+                this.emitter.emit(Events.INIT, this.features);
+                this.emitter.emit(Events.LOADED, this.features);
+                callback(undefined, this.features);
+                return this.user;
+            });
+        }else{
+            RestClient.getFeatures(this.config.baseUrl, this.apiKey, this.user, [], (error, features)=>{
+                this.receivedInitialResponse = true;
+                if (!error){
+                    this.features = features || {};
+                    saveFeatures(this.apiKey, this.user.id, this.features);
+                    this.emitter.emit(Events.INIT, features);
+                    this.emitter.emit(Events.LOADED, features);
+                    callback(undefined, features);
+                }
+                else{
+                    this.emitter.emit(Events.ERROR, error);
+                    callback(error);
+                }
+                return this.user;
+            });
         }
-        else{
-          this.emitter.emit(Events.ERROR, error);
-          callback(error);
-        }
-        return this.user;
-      });
     },0);
   }
   getFeatures(): FeaturesType{

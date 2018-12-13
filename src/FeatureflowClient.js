@@ -8,14 +8,17 @@ import Emitter from 'tiny-emitter';
 import Cookies from 'js-cookie';
 
 const DEFAULT_BASE_URL = 'https://app.featureflow.io';
+const DEFAULT_EVENTS_URL = 'https://events.featureflow.io';
 const DEFAULT_RTM_URL = 'https://rtm.featureflow.io';
 
 const DEFAULT_CONFIG: ConfigType = {
   baseUrl: DEFAULT_BASE_URL,
+  eventsUrl: DEFAULT_EVENTS_URL,
   rtmUrl: DEFAULT_RTM_URL,
   streaming: true,
   defaultFeatures: {},
-  useCookies: true
+  useCookies: true,
+  offline: true
 };
 
 const INIT_MODULE_ERROR = new Error('init() has not been called with a valid apiKey');
@@ -44,6 +47,9 @@ export default class FeatureflowClient{
   receivedInitialResponse: boolean;
 
   constructor(apiKey: string, user: UserTypeParam = {}, config: ConfigTypeParam = {}, callback: NodeCallbackType<*> = ()=>{}){
+
+    //if we are offline then just return the default
+
     this.receivedInitialResponse = false;
     this.emitter = new Emitter();
     this.apiKey = apiKey;
@@ -91,16 +97,13 @@ export default class FeatureflowClient{
         })
       };
     }
-
-
     //Bind event emitter
     this.on = this.emitter.on.bind(this.emitter);
     this.off = this.emitter.off.bind(this.emitter);
   }
 
   updateUser(user: UserTypeParam = {}, callback: NodeCallbackType<*> = ()=>{}): void{
-    var d = new Date();
-    //these could be event or session attributes ie not persisted directly to user but added to a seperate attributes map
+    //these could be event or session attributes ie not persisted directly to user but added to a separate attributes map
     const featureflowAttributes = {
     };
     const attributes = {
@@ -135,19 +138,27 @@ export default class FeatureflowClient{
     },0);
   }
   getFeatures(): FeaturesType{
+    if(this.config.offline){
+        return this.config.defaultFeatures;
+    }
     return this.features;
   }
   getUser(): UserType{
     return this.user;
   }
   evaluate(key: string) : Evaluate {
+    if(this.config.offline){
+      const evaluate = new Evaluate(this.config.defaultFeatures[key] || 'off');
+      return evaluate
+    }
     const evaluate = new Evaluate(this.features[key] || this.config.defaultFeatures[key] || 'off');
-    RestClient.postEvaluateEvent(this.config.baseUrl, this.apiKey, this.user, key, evaluate.value(), ()=>{});
+    RestClient.postEvaluateEvent(this.config.eventsUrl, this.apiKey, this.user, key, evaluate.value(), ()=>{});
     return evaluate;
   }
 
   goal(goal:string): void {
-    return RestClient.postGoalEvent(this.config.baseUrl, this.apiKey, this.user, goal, this.getFeatures(),()=>{});
+    if(this.config.offline) return;
+    return RestClient.postGoalEvent(this.config.eventsUrl, this.apiKey, this.user, goal, this.getFeatures(),()=>{});
   }
 
   getAnonymousId(): string{

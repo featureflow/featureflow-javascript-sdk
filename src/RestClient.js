@@ -37,16 +37,16 @@ function base64URLEncode(user: UserType): string {
 }
 
 export default {
-    getFeatures: (baseUrl: string, apiKey: string, user: any, keys: string[] = [], callback: NodeCallbackType<FeaturesType>): void => {
+    getFeatures: (eventsUrl: string, apiKey: string, user: any, keys: string[] = [], callback: NodeCallbackType<FeaturesType>): void => {
         let query = ( keys.length > 0 ) ? `?keys=${ keys.join(',') }` : '';
         request(
-            `${baseUrl}/api/js/v1/evaluate/${ apiKey }/user/${ encodeURI(base64URLEncode(user)) }${ query }`,
+            `${eventsUrl}/api/js/v1/evaluate/${ apiKey }/user/${ encodeURI(base64URLEncode(user)) }${ query }`,
             {method: 'GET'},
             callback
         );
     },
-    postGoalEvent: (baseUrl: string, apiKey: string, user: UserType, goalKey: string, evaluatedFeaturesMap: FeaturesType, callback: NodeCallbackType<FeaturesType>): void => {
-        request(`${baseUrl}/api/js/v1/event/${ apiKey }`,
+    postGoalEvent: (eventsUrl: string, apiKey: string, user: UserType, goalKey: string, evaluatedFeaturesMap: FeaturesType, callback: NodeCallbackType<FeaturesType>): void => {
+        request(`${eventsUrl}/api/js/v1/event/${ apiKey }`,
             {
                 method: 'POST',
                 body: [{
@@ -61,8 +61,8 @@ export default {
             callback
         );
     },
-    postEvaluateEvent: (baseUrl: string, apiKey: string, user: UserType, featureKey: string, variant: string, callback: NodeCallbackType<FeaturesType>): void => {
-        request(`${baseUrl}/api/js/v1/event/${ apiKey }`,
+    postEvaluateEvent: (eventsUrl: string, apiKey: string, user: UserType, featureKey: string, variant: string, callback: NodeCallbackType<FeaturesType>): void => {
+        request(`${eventsUrl}/api/js/v1/event/${ apiKey }`,
             {
                 method: 'POST',
                 body: [{

@@ -24,14 +24,17 @@ type UserTypeParam = {
 type ConfigType = {
   rtmUrl : string,
   baseUrl : string,
+  eventsUrl: string,
   streaming: boolean,
   defaultFeatures: FeaturesType,
-  useCookies: boolean
+  useCookies: boolean,
+  offline: boolean
 }
 
 type ConfigTypeParam = {
   rtmUrl?: string,
   baseUrl?: string,
+  eventsUrl?: string,
   streaming?: boolean,
   defaultFeatures?: FeaturesType,
   useCookies?: boolean

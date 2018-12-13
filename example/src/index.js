@@ -1,5 +1,5 @@
 import Featureflow from '../../src/index';
-const FF_KEY = 'your-javascript-environment-sdk-key';
+const FF_KEY = '';
 
 var user = {
   attributes:{
@@ -9,8 +9,17 @@ var user = {
   }
 };
 
+/*var featureflow = Featureflow.init(FF_KEY, user, {
+    streaming: true
+});*/
+
 var featureflow = Featureflow.init(FF_KEY, user, {
-  streaming: true
+    offline: false,
+    defaultFeatures: {
+      'feature-1': 'on',
+      'feature-2': 'red',
+      'test': 'off'
+    },
 });
 
 document.querySelector('#user').innerHTML = JSON.stringify(user, false, 2);

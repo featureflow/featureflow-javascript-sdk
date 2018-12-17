@@ -18,7 +18,7 @@ const DEFAULT_CONFIG: ConfigType = {
   streaming: true,
   defaultFeatures: {},
   useCookies: true,
-  offline: true
+  offline: false
 };
 
 const INIT_MODULE_ERROR = new Error('init() has not been called with a valid apiKey');

@@ -15,7 +15,7 @@ const DEFAULT_CONFIG: ConfigType = {
   baseUrl: DEFAULT_BASE_URL,
   eventsUrl: DEFAULT_EVENTS_URL,
   rtmUrl: DEFAULT_RTM_URL,
-  streaming: true,
+  streaming: false,
   defaultFeatures: {},
   useCookies: true,
   offline: false

@@ -1,7 +1,26 @@
 # Change log
+## [1.3.0]
+- Smart Evaluations. Dates are evaluated locally to improve response and CDN
+- Target by hour of day 
+- Target by date
+- Default Streaming option to false
+
+## [1.2.2]
+- Bug Fixes 
+- New Events URL
+
+## [1.2.1]
+- Bug Fixes
+
+## [1.2.0]
+- Events API Improvements
+- Bug Fixes
 
 ## [1.1.1] - 2017-09-05
-Events Object Improvements
+- Events Object Improvements
+
+## [1.1.1] - 2017-09-05
+- Events Object Improvements
 
 ## [1.1.0] - 2017-09-04
 - Use Featureflow User object instead of context

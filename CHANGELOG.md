@@ -1,4 +1,7 @@
 # Change log
+## [1.3.1]
+- Fix edge case for old version cached variants in browser to ensure smooth upgrade to 1.3.1
+
 ## [1.3.0]
 - Smart Evaluations. Dates are evaluated locally to improve response and CDN
 - Target by hour of day 

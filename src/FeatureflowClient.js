@@ -190,6 +190,7 @@ export default class FeatureflowClient {
     }
 
     evalRules(evaluatedFeature) {
+        if(typeof evaluatedFeature === 'string') return evaluatedFeature; //we may have old cache
         for (let ruleKey in evaluatedFeature.rules) {
             let rule = evaluatedFeature.rules[ruleKey];
             if (this.ruleMatches(rule)) {

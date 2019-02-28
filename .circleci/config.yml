@@ -3,7 +3,7 @@ version: 2 # See https://circleci.com/blog/publishing-npm-packages-using-circlec
 defaults: &defaults
   working_directory: ~/repo
   docker:
-    - image: circleci/node:6.7.0
+    - image: circleci/node:6.16.0-browsers-legacy
 
 jobs:
   test:

@@ -1,0 +1,55 @@
+version: 2 # See https://circleci.com/blog/publishing-npm-packages-using-circleci-2-0/
+
+defaults: &defaults
+  working_directory: ~/repo
+  docker:
+    - image: circleci/node:6.7.0
+
+jobs:
+  test:
+        <<: *defaults
+        steps:
+            - checkout
+
+            - restore_cache:
+                keys:
+                  - v1-dependencies-{{ checksum "package.json" }}
+                  # fallback to using the latest cache if no exact match is found
+                  - v1-dependencies-
+
+            - run: npm install -g karma-cli
+            - run: npm install
+            - run: mvn dependency:go-offline # gets the project dependencies
+
+            - save_cache:
+                paths:
+                  - node_modules
+                key: v1-dependencies-{{ checksum "package.json" }}
+
+            - persist_to_workspace:
+                root: ~/repo
+                paths: .
+
+    deploy:
+      <<: *defaults
+      steps:
+        - attach_workspace:
+            at: ~/repo
+        - run: chmod +x ./deploy_prod_s3.sh
+        - run: ./deploy_prod_s3.sh
+workflows:
+  version: 2
+  test-deploy:
+    jobs:
+      - test:
+          filters:
+            tags:
+              only: /^v.*/
+      - deploy:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/

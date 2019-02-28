@@ -268,7 +268,7 @@ Resets the anonymous user id for the user stored in localStorage. This will not 
 #### `config`
 | Property | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| `streaming` | `boolean` | `true` | Set to `true` when calling `Featureflow.init(..., ..., config)` to listen for realtime updates |
+| `streaming` | `boolean` | `false` | Set to `true` when calling `Featureflow.init(..., ..., config)` to listen for realtime updates via SSE |
 | `useCookies` | `boolean` | `true` | Set to `false` if you do not want to use cookies (you will have to pass the result of `featureflow.getAnonymousId()` to any future requests if you wish for the server to match the client anonymous key)  |
 | `defaultFeatures` | `object` | `undefined` | A flat key-value object representing the default variants a feature should be set to if there is an interrupted connection and no cached value.  <br/> <br/> *e.g. if you set `config.defaultFeatures` to `{'my-feature': 'on'}`, `featureflow.evaluate('my-feature').isOn()` will return `true` when there is an interrupted connection to Featureflow and no locally cached feature features.*|
 | `offline` | `boolean` | `false` | Set to `true` to run in offline mode, this is for testing purposes. Featureflow will not attempt and calls and will use the defaultFeatures values only  |

@@ -7,36 +7,44 @@ defaults: &defaults
 
 jobs:
   test:
-        <<: *defaults
-        steps:
-            - checkout
+    <<: *defaults
+    steps:
+      - checkout
 
-            - restore_cache:
-                keys:
-                  - v1-dependencies-{{ checksum "package.json" }}
-                  # fallback to using the latest cache if no exact match is found
-                  - v1-dependencies-
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
 
-            - run: npm install -g karma-cli
-            - run: npm install
-            - run: mvn dependency:go-offline # gets the project dependencies
+      - run: npm install -g karma-cli
+      - run: npm install
+      - run:
+          name: Run tests
+          command: npm test
 
-            - save_cache:
-                paths:
-                  - node_modules
-                key: v1-dependencies-{{ checksum "package.json" }}
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
 
-            - persist_to_workspace:
-                root: ~/repo
-                paths: .
+      - persist_to_workspace:
+          root: ~/repo
+          paths: .
+  deploy:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Authenticate with registry
+          command: echo "//registry.npmjs.org/:_authToken=$npm_TOKEN" > ~/repo/.npmrc
+      - run:
+          name: Publish package
+          command: npm publish
+      - run: chmod +x ./deploy_prod_s3.sh
+      - run: ./deploy_prod_s3.sh
 
-    deploy:
-      <<: *defaults
-      steps:
-        - attach_workspace:
-            at: ~/repo
-        - run: chmod +x ./deploy_prod_s3.sh
-        - run: ./deploy_prod_s3.sh
 workflows:
   version: 2
   test-deploy:

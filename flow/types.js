@@ -8,7 +8,7 @@ type UserAttributesType<T=string|number> = {
 }
 
 type FeaturesType = {
-  [key: string]: string
+  rules: RulesType
 }
 
 type UserType = {
@@ -47,6 +47,26 @@ interface EvaluateInterface {
   value: () => string;
 }
 
+type EvalResultType = {
+  variant : string,
+  rules : RulesType,
+  requiresEval: boolean
+}
+
+type RulesType = {
+  audience?: AudienceType,
+  variant: string
+}
+
+type AudienceType = {
+  conditions: ConditionsType
+}
+
+type ConditionsType = {
+  target: string,
+  operator: string,
+  values: any
+}
 
 type FeatureflowInstance = {
   updateUser: (user: UserTypeParam) => UserType,

@@ -182,6 +182,7 @@ export default class FeatureflowClient {
         }
 
         let evaluatedFeature = this.features[key];
+        if(typeof evaluatedFeature === 'undefined') return new Evaluate('off'); //we dont know this feature
         const variant = this.evalRules(evaluatedFeature);
 
         const evaluate = new Evaluate(variant);

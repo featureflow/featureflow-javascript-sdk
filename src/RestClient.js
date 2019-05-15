@@ -45,7 +45,7 @@ export default {
             callback
         );
     },
-    postGoalEvent: (eventsUrl: string, apiKey: string, user: UserType, goalKey: string, evaluatedFeaturesMap: FeaturesType, callback: NodeCallbackType<FeaturesType>): void => {
+    postGoalEvent: (eventsUrl: string, apiKey: string, user: UserType, goalKey: string, evaluatedFeaturesMap: EvaluatedFeaturesType, callback: NodeCallbackType<FeaturesType>): void => {
         request(`${eventsUrl}/api/js/v1/event/${ apiKey }`,
             {
                 method: 'POST',

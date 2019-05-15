@@ -162,12 +162,13 @@ export default class FeatureflowClient {
         }, 0);
     }
 
-    getFeatures(): FeaturesType {
+    getFeatures(): EvaluatedFeaturesType {
         if (this.config.offline) {
-            return this.config.defaultFeatures;
+            return this.evalAll(this.config.defaultFeatures);
         }
-        return this.features;
+        return this.evalAll(this.features);
     }
+
 
     getUser(): UserType {
         return this.user;
@@ -189,6 +190,15 @@ export default class FeatureflowClient {
         return evaluate;
     }
 
+    evalAll(features) {
+        let evaluated = {};
+        for (let k in features) {
+            if (features.hasOwnProperty(k)) {
+                evaluated[k] = this.evalRules(features[k]);
+            }
+        }
+        return evaluated;
+    }
     evalRules(evaluatedFeature) {
         if(typeof evaluatedFeature === 'string') return evaluatedFeature; //we may have old cache
         for (let ruleKey in evaluatedFeature.rules) {

@@ -10,6 +10,9 @@ type UserAttributesType<T=string|number> = {
 type FeaturesType = {
   rules: RulesType
 }
+type EvaluatedFeaturesType = {
+  [key: string]: string
+}
 
 type UserType = {
   id: string,

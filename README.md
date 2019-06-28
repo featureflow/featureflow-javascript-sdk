@@ -61,7 +61,7 @@ Please see the [bower website](https://bower.io/#use-packages) for more details.
 ##### CDN
 Include the following script in HTML file. This will expose the global variable `Featureflow`
 ```html
-<script crossorigin="anonymous" src="https://features.featureflow.io/featureflow.js"></script>
+<script crossorigin="anonymous" src="https://cdn.featureflow.io/featureflow.js"></script>
 ```
 
 ##### Realtime events and EventSource 

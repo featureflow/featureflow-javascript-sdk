@@ -1,10 +1,43 @@
 // @flow
 import packageJSON from '../package.json';
 
-type RequestConfig = {
+type
+RequestConfig = {
     method: 'GET' | 'POST',
-    body?: any
+    body? : any
 }
+let eventsUrl = 'https://events.featureflow.io';
+let baseUrl = 'https://app.featureflow.io';
+let apiKey = '';
+
+let timer;
+const queues = {
+    events: []
+};
+
+const flush = () => {
+    let queue = [];
+    if (queues.events.length > 0) {
+        queue.push(...queues.events);
+        queues.events = [];
+        request(`${this.eventsUrl}/api/js/v1/event/${this.apiKey}`,
+            {
+                method: 'POST',
+                body: queue
+            }
+        );
+    }
+    timer = null;
+};
+
+// eslint-disable-next-line no-unused-vars
+const flushable = () => {
+    if (!timer) {
+        timer = setTimeout(flush, 4000);
+    }
+};
+
+
 
 function request(endpoint: string, config: RequestConfig, callback: NodeCallbackType<FeaturesType> = () => {
 }): XMLHttpRequest {
@@ -24,8 +57,7 @@ function request(endpoint: string, config: RequestConfig, callback: NodeCallback
     if (config.body) {
         request.setRequestHeader('Content-Type', 'application/json');
         request.send(JSON.stringify(config.body));
-    }
-    else {
+    } else {
         request.send();
     }
     return request;
@@ -37,44 +69,39 @@ function base64URLEncode(user: UserType): string {
 }
 
 export default {
-    getFeatures: (eventsUrl: string, apiKey: string, user: any, keys: string[] = [], callback: NodeCallbackType<FeaturesType>): void => {
-        let query = ( keys.length > 0 ) ? `?keys=${ keys.join(',') }` : '';
+    setBaseUrl: (baseUrl: string): void => {
+        this.baseUrl = baseUrl;
+    },
+    setEventsUrl: (eventsUrl: string): void => {
+        this.eventsUrl = eventsUrl;
+    },
+    setApiKey: (apiKey: string): void => {
+        this.apiKey = apiKey;
+    },
+    getFeatures: (baseUrl: string, apiKey: string, user: any, keys: string[] = [], callback: NodeCallbackType<FeaturesType>): void => {
+        let query = (keys.length > 0) ? `?keys=${keys.join(',')}` : '';
         request(
-            `${eventsUrl}/api/js/v1/evaluate/${ apiKey }/user/${ encodeURI(base64URLEncode(user)) }${ query }`,
+            `${baseUrl}/api/js/v1/evaluate/${apiKey}/user/${encodeURI(base64URLEncode(user))}${query}`,
             {method: 'GET'},
             callback
         );
     },
-    postGoalEvent: (eventsUrl: string, apiKey: string, user: UserType, goalKey: string, evaluatedFeaturesMap: EvaluatedFeaturesType, callback: NodeCallbackType<FeaturesType>): void => {
-        request(`${eventsUrl}/api/js/v1/event/${ apiKey }`,
-            {
-                method: 'POST',
-                body: [{
-                    type: 'goal',
-                    goalKey,
-                    impressions: 1,
-                    evaluatedFeatures: evaluatedFeaturesMap,
-                    timestamp: new Date(),
-                    user
-                }]
-            },
-            callback
-        );
-    },
-    postEvaluateEvent: (eventsUrl: string, apiKey: string, user: UserType, featureKey: string, variant: string, callback: NodeCallbackType<FeaturesType>): void => {
-        request(`${eventsUrl}/api/js/v1/event/${ apiKey }`,
-            {
-                method: 'POST',
-                body: [{
-                    type: 'evaluate',
-                    featureKey,
-                    evaluatedVariant: variant,
-                    impressions: 1,
-                    user,
-                    timestamp: new Date()
-                }]
-            },
-            callback
-        );
-    }
+    postGoalEvent: (user: UserType, goalKey: string, evaluatedFeaturesMap: EvaluatedFeaturesType): void => flushable(
+        queues.events.push({
+            type: 'goal',
+            goalKey,
+            impressions: 1,
+            evaluatedFeatures: evaluatedFeaturesMap,
+            timestamp: new Date(),
+            user
+        })),
+    postEvaluateEvent: (user: UserType, featureKey: string, variant: string): void => flushable(
+        queues.events.push({
+            type: 'evaluate',
+            featureKey,
+            evaluatedVariant: variant,
+            impressions: 1,
+            user,
+            timestamp: new Date()
+        }))
 };

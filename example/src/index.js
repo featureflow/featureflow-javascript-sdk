@@ -1,5 +1,5 @@
 import Featureflow from '../../src/index';
-const FF_KEY = '';
+const FF_KEY = 'js-env-abc123';
 
 var user = {
   attributes:{

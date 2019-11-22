@@ -67,6 +67,10 @@ export default class FeatureflowClient {
             ...config
         };
 
+        RestClient.setBaseUrl(this.config.baseUrl);
+        RestClient.setEventsUrl(this.config.eventsUrl);
+        RestClient.setApiKey(this.apiKey);
+
         //3. Load initial data
         this.updateUser(user);
 
@@ -186,8 +190,7 @@ export default class FeatureflowClient {
         const variant = this.evalRules(evaluatedFeature);
 
         const evaluate = new Evaluate(variant);
-        RestClient.postEvaluateEvent(this.config.eventsUrl, this.apiKey, this.user, key, evaluate.value(), () => {
-        });
+        RestClient.postEvaluateEvent(this.user, key, evaluate.value());
         return evaluate;
     }
 
@@ -237,7 +240,7 @@ export default class FeatureflowClient {
 
     goal(goal: string): void {
         if (this.config.offline) return;
-        return RestClient.postGoalEvent(this.config.eventsUrl, this.apiKey, this.user, goal, this.getFeatures(), () => {
+        return RestClient.postGoalEvent(this.user, goal, this.getFeatures(), () => {
         });
     }
 

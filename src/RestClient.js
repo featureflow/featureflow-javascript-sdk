@@ -1,5 +1,6 @@
 // @flow
 import packageJSON from '../package.json';
+import * as base64 from 'base64-js';
 
 type
 RequestConfig = {
@@ -65,7 +66,16 @@ function request(endpoint: string, config: RequestConfig, callback: NodeCallback
 
 
 function base64URLEncode(user: UserType): string {
-    return btoa(JSON.stringify(user));
+    const escaped = unescape(encodeURIComponent(JSON.stringify(user)));
+    return base64.fromByteArray(stringToBytes(escaped));
+}
+
+function stringToBytes(s) {
+    const b = [];
+    for (let i = 0; i < s.length; i++) {
+        b.push(s.charCodeAt(i));
+    }
+    return b;
 }
 
 export default {

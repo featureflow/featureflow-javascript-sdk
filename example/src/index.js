@@ -1,7 +1,8 @@
 import Featureflow from '../../src/index';
-const FF_KEY = 'js-env-abc123';
+const FF_KEY = 'js-env-YOUR_KEY_HERE';
 
 var user = {
+  id: 'bob1',
   attributes:{
     tier: 'gold',
     country: 'australia',

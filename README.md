@@ -17,7 +17,9 @@ The easiest way to get started is to follow the [Featureflow quick start guides]
 2. Update example/src/index.js ```const FF_KEY = 'your-javascript-environment-sdk-key';``` 
 3. Run `$ npm install` and `$ npm run example`
 
+## Examples
 
+Codepen: https://codepen.io/featureflow/pen/BboreK
 
 
 ## Change Log

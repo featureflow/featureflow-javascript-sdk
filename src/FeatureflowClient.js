@@ -46,6 +46,7 @@ export default class FeatureflowClient {
     on: (string)=>any;
     off: (string)=>any;
     receivedInitialResponse: boolean;
+    restClient: RestClient;
 
     constructor(apiKey: string, user: UserTypeParam = {}, config: ConfigTypeParam = {}, callback: NodeCallbackType<*> = () => {
     }) {
@@ -54,6 +55,7 @@ export default class FeatureflowClient {
 
         this.receivedInitialResponse = false;
         this.emitter = new Emitter();
+
         this.apiKey = apiKey;
 
         //1. They must have an api key
@@ -66,10 +68,8 @@ export default class FeatureflowClient {
             ...DEFAULT_CONFIG,
             ...config
         };
-
-        RestClient.setBaseUrl(this.config.baseUrl);
-        RestClient.setEventsUrl(this.config.eventsUrl);
-        RestClient.setApiKey(this.apiKey);
+        //Create the rest client
+        this.restClient = new RestClient(apiKey, this.config);
 
         //3. Load initial data
         this.updateUser(user);
@@ -84,7 +84,7 @@ export default class FeatureflowClient {
                 } catch (err) {
                 }
 
-                RestClient.getFeatures(this.config.baseUrl, this.apiKey, this.user, keys, (error, features) => {
+                this.restClient.getFeatures(this.user, keys, (error, features) => {
                     if (!error) {
                         this.features = {
                             ...this.features,
@@ -148,7 +148,7 @@ export default class FeatureflowClient {
                     return this.user;
                 });
             } else {
-                RestClient.getFeatures(this.config.baseUrl, this.apiKey, this.user, [], (error, features) => {
+                this.restClient.getFeatures(this.user, [], (error, features) => {
                     this.receivedInitialResponse = true;
                     if (!error) {
                         this.features = features || {};
@@ -190,7 +190,7 @@ export default class FeatureflowClient {
         const variant = this.evalRules(evaluatedFeature);
 
         const evaluate = new Evaluate(variant);
-        RestClient.postEvaluateEvent(this.user, key, evaluate.value());
+        this.restClient.postEvaluateEvent(this.user, key, evaluate.value());
         return evaluate;
     }
 
@@ -240,7 +240,7 @@ export default class FeatureflowClient {
 
     goal(goal: string): void {
         if (this.config.offline) return;
-        return RestClient.postGoalEvent(this.user, goal, this.getFeatures(), () => {
+        return this.restClient.postGoalEvent(this.user, goal, this.getFeatures(), () => {
         });
     }
 

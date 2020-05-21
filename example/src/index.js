@@ -1,12 +1,17 @@
 import Featureflow from '../../src/index';
-const FF_KEY = 'js-env-YOUR_KEY_HERE';
+const FF_KEY = 'js-env-bbb659960a3344c5a31681282c0c4bdf';
 
+var first = 'Bob'
+var last = 'Bärdot';
 var user = {
   id: 'bob1',
   attributes:{
     tier: 'gold',
+    name: `${first} ${last}`,
     country: 'australia',
-      roles: ['role1', 'role2']
+    roles: ['role1', 'role2'],
+    favouriteNumber: 17,
+    dob: new Date()
   }
 };
 
@@ -15,7 +20,6 @@ var user = {
 });*/
 
 var featureflow = Featureflow.init(FF_KEY, user, {
-    offline: false,
     defaultFeatures: {
       'feature-1': 'on',
       'feature-2': 'red',

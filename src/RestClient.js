@@ -67,7 +67,7 @@ export default class RestClient {
 // eslint-disable-next-line no-unused-vars
     flushable() {
         if (!this.timer) {
-            this.timer = setTimeout(this.flush.bind(this), 4000);
+            this.timer = setTimeout(this.flush.bind(this), 2000);
         }
     };
 

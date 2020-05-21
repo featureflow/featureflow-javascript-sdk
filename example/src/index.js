@@ -1,13 +1,11 @@
 import Featureflow from '../../src/index';
 const FF_KEY = 'js-env-YOUR_KEY_HERE';
 
-var first = 'Bob'
-var last = 'Bärdot';
 var user = {
   id: 'bob1',
   attributes:{
     tier: 'gold',
-    name: `${first} ${last}`,
+    name: 'Bob Hope',
     country: 'australia',
     roles: ['role1', 'role2'],
     favouriteNumber: 17,

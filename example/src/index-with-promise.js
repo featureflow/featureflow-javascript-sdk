@@ -1,5 +1,5 @@
 import Featureflow, { initPromise } from '../../src/index';
-const FF_KEY = 'js-env-bbb659960a3344c5a31681282c0c4bdf';
+const FF_KEY = 'js-env-YOUR_KEY_HERE';
 
 var user = {
   id: 'bob1',

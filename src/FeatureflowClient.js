@@ -14,13 +14,13 @@ const DEFAULT_EVENTS_URL = 'https://events.featureflow.io';
 const DEFAULT_RTM_URL = 'https://rtm.featureflow.io';
 
 const DEFAULT_CONFIG: ConfigType = {
-    baseUrl: DEFAULT_BASE_URL,
-    eventsUrl: DEFAULT_EVENTS_URL,
-    rtmUrl: DEFAULT_RTM_URL,
-    streaming: true,
-    defaultFeatures: {},
-    useCookies: true,
-    offline: false
+  baseUrl: DEFAULT_BASE_URL,
+  eventsUrl: DEFAULT_EVENTS_URL,
+  rtmUrl: DEFAULT_RTM_URL,
+  streaming: false,
+  defaultFeatures: {},
+  useCookies: true,
+  offline: false
 };
 
 const KEY_PREFIX = "ff:v138";

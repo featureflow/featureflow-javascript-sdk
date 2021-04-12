@@ -12,8 +12,8 @@ PACKAGE_VERSION=$(cat package.json \
   | sed 's/[",]//g' \
   | tr -d '[[:space:]]')
 
-aws s3 cp dist/featureflow.js s3://cdn.featureflow.io/featureflow.js
-aws s3 cp dist/featureflow.min.js s3://cdn.featureflow.io/featureflow.min.js
+#aws s3 cp dist/featureflow.js s3://cdn.featureflow.io/featureflow.js
+#aws s3 cp dist/featureflow.min.js s3://cdn.featureflow.io/featureflow.min.js
 aws s3 cp dist/featureflow.js s3://cdn.featureflow.io/v$PACKAGE_VERSION/featureflow.js
 aws s3 cp dist/featureflow.min.js s3://cdn.featureflow.io/v$PACKAGE_VERSION/featureflow.min.js
 aws configure set preview.cloudfront true

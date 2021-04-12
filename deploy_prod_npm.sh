@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
-echo "Nothing Yet"
+npm run build
+npm publish

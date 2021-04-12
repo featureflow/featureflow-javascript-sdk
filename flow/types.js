@@ -8,6 +8,9 @@ type UserAttributesType<T=string|number> = {
 }
 
 type FeaturesType = {
+  rules: RulesType
+}
+type EvaluatedFeaturesType = {
   [key: string]: string
 }
 
@@ -37,7 +40,8 @@ type ConfigTypeParam = {
   eventsUrl?: string,
   streaming?: boolean,
   defaultFeatures?: FeaturesType,
-  useCookies?: boolean
+  useCookies?: boolean,
+  initOnCache?: boolean //whether to return init promise early on cache load (alpha)
 }
 
 interface EvaluateInterface {
@@ -47,6 +51,26 @@ interface EvaluateInterface {
   value: () => string;
 }
 
+type EvalResultType = {
+  variant : string,
+  rules : RulesType,
+  requiresEval: boolean
+}
+
+type RulesType = {
+  audience?: AudienceType,
+  variant: string
+}
+
+type AudienceType = {
+  conditions: ConditionsType
+}
+
+type ConditionsType = {
+  target: string,
+  operator: string,
+  values: any
+}
 
 type FeatureflowInstance = {
   updateUser: (user: UserTypeParam) => UserType,

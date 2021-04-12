@@ -1,4 +1,4 @@
-# featureflow-client
+# featureflow-javascript-sdk
 
 [![][npm-img]][npm-url]
 
@@ -17,7 +17,9 @@ The easiest way to get started is to follow the [Featureflow quick start guides]
 2. Update example/src/index.js ```const FF_KEY = 'your-javascript-environment-sdk-key';``` 
 3. Run `$ npm install` and `$ npm run example`
 
+## Examples
 
+Codepen: https://codepen.io/featureflow/pen/BboreK
 
 
 ## Change Log
@@ -61,7 +63,7 @@ Please see the [bower website](https://bower.io/#use-packages) for more details.
 ##### CDN
 Include the following script in HTML file. This will expose the global variable `Featureflow`
 ```html
-<script crossorigin="anonymous" src="https://features.featureflow.io/featureflow.js"></script>
+<script crossorigin="anonymous" src="https://cdn.featureflow.io/featureflow.js"></script>
 ```
 
 ##### Realtime events and EventSource 
@@ -268,7 +270,7 @@ Resets the anonymous user id for the user stored in localStorage. This will not 
 #### `config`
 | Property | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| `streaming` | `boolean` | `true` | Set to `true` when calling `Featureflow.init(..., ..., config)` to listen for realtime updates |
+| `streaming` | `boolean` | `false` | Set to `true` when calling `Featureflow.init(..., ..., config)` to listen for realtime updates via SSE |
 | `useCookies` | `boolean` | `true` | Set to `false` if you do not want to use cookies (you will have to pass the result of `featureflow.getAnonymousId()` to any future requests if you wish for the server to match the client anonymous key)  |
 | `defaultFeatures` | `object` | `undefined` | A flat key-value object representing the default variants a feature should be set to if there is an interrupted connection and no cached value.  <br/> <br/> *e.g. if you set `config.defaultFeatures` to `{'my-feature': 'on'}`, `featureflow.evaluate('my-feature').isOn()` will return `true` when there is an interrupted connection to Featureflow and no locally cached feature features.*|
 | `offline` | `boolean` | `false` | Set to `true` to run in offline mode, this is for testing purposes. Featureflow will not attempt and calls and will use the defaultFeatures values only  |
@@ -308,6 +310,11 @@ Callback is fired with one parameter with the error message.
 - [x] Automate release to bower on `npm prepublish`
 - [ ] Automate release script to cdn on `npm prepublish`
 
+## Publishing 
+```
+./deploy_prod_npm.sh
+./deploy_prod_s3.sh
+```
 ## License
 
 Apache-2.0

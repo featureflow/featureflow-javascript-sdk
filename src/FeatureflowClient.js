@@ -23,6 +23,8 @@ const DEFAULT_CONFIG: ConfigType = {
     offline: false
 };
 
+const KEY_PREFIX = "ff:v138";
+
 const INIT_MODULE_ERROR = new Error('init() has not been called with a valid apiKey');
 
 function loadFeatures(apiKey: string, userId: string): FeaturesType {
@@ -33,8 +35,16 @@ function loadFeatures(apiKey: string, userId: string): FeaturesType {
     }
 }
 
+function hasCachedFeatures(apiKey: string, userId: string): boolean {
+    try {
+        return localStorage.getItem(`${KEY_PREFIX}:${userId}:${apiKey}`) !== null;
+    } catch (err) {
+        return false;
+    }
+}
+
 function saveFeatures(apiKey: string, userId: string, features: FeaturesType): void {
-    return localStorage.setItem(`ff:v130:${userId}:${apiKey}`, JSON.stringify(features));
+    return localStorage.setItem(`${KEY_PREFIX}:${userId}:${apiKey}`, JSON.stringify(features));
 }
 
 export default class FeatureflowClient {
@@ -50,7 +60,7 @@ export default class FeatureflowClient {
 
     constructor(apiKey: string, user: UserTypeParam = {}, config: ConfigTypeParam = {}, callback: NodeCallbackType<*> = () => {
     }) {
-
+        console.log(user);
         //if we are offline then just return the default
 
         this.receivedInitialResponse = false;
@@ -72,7 +82,7 @@ export default class FeatureflowClient {
         this.restClient = new RestClient(apiKey, this.config);
 
         //3. Load initial data
-        this.updateUser(user);
+        this.updateUser(user, config.initOnCache, callback);
 
         //4. Set up realtime streaming
         if (!this.config.offline && this.config.streaming) {
@@ -105,8 +115,11 @@ export default class FeatureflowClient {
         this.off = this.emitter.off.bind(this.emitter);
     }
 
+    updateUser(user: UserTypeParam = {}, callback: NodeCallbackType<*> = () => {}): void {
+        return this.updateUser(user, false, callback);
+    };
 
-    updateUser(user: UserTypeParam = {}, callback: NodeCallbackType<*> = () => {
+    updateUser(user: UserTypeParam = {}, initOnCache: boolean, callback: NodeCallbackType<*> = () => {
     }): void {
         //these could be event or session attributes ie not persisted directly to user but added to a separate attributes map
         const featureflowAttributes = {};
@@ -134,9 +147,16 @@ export default class FeatureflowClient {
         };
 
         this.features = loadFeatures(this.apiKey, this.user.id);
+        if(hasCachedFeatures(this.apiKey, this.user.id)) {
+            this.emitter.emit(Events.LOADED_FROM_CACHE, this.features);
+            /*if(initOnCache) {
+                callback(undefined, this.features);
+            }*/
+        }
+
         // Put this in timeout so we can listen to all events before it is returned
         setTimeout(() => {
-            this.emitter.emit(Events.LOADED_FROM_CACHE, this.features);
+
 
             if (this.config.offline) {
                 setTimeout(() => {

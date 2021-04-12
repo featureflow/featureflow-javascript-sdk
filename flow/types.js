@@ -40,7 +40,8 @@ type ConfigTypeParam = {
   eventsUrl?: string,
   streaming?: boolean,
   defaultFeatures?: FeaturesType,
-  useCookies?: boolean
+  useCookies?: boolean,
+  initOnCache?: boolean //whether to return init promise early on cache load (alpha)
 }
 
 interface EvaluateInterface {

@@ -27,6 +27,7 @@ module.exports = {
       }
     ]
   },
+  devtool: 'inline-source-map',
   plugins: [
     HTMLWebpackPluginConfig,
     new webpack.optimize.CommonsChunkPlugin({

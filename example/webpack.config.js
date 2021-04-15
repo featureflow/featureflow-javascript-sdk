@@ -10,7 +10,7 @@ var HTMLWebpackPluginConfig = new HtmlWebpackPlugin({
 
 module.exports = {
   devtool: 'eval',
-  entry: [path.join(__dirname, "/src/index.js")],
+  entry: [path.join(__dirname, "/src/indexes6.js")],
   output: {
     path: path.join(__dirname,'/dist'),
     publicPath: '',
@@ -19,11 +19,16 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.js$/,
+        test: /\.m?js$/,
         exclude: /node_modules/,
-        use: [
-          'babel-loader'
-        ],
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-env', { targets: "defaults" }]
+            ]
+          }
+        }
       }
     ]
   },

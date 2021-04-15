@@ -1,8 +1,8 @@
-import uglify from 'rollup-plugin-uglify';
-import babel from 'rollup-plugin-babel';
-import json from 'rollup-plugin-json';
-import nodeResolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
+import { terser } from "rollup-plugin-terser";
+import babel from '@rollup/plugin-babel';
+import json from '@rollup/plugin-json';
+import nodeResolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 
 const plugins = [
   json(),
@@ -12,21 +12,18 @@ const plugins = [
     main: true,
     browser: true,
   }),
-  commonjs()
+  commonjs(),
+  terser()
 ];
 
-export default [{
-  entry: 'src/index.js',
-  dest: 'dist/featureflow.js',
-  moduleName: 'Featureflow',
-  format: 'iife',
-  plugins: plugins
-}, {
-  entry: 'src/index.js',
-  dest: 'dist/featureflow.min.js',
-  moduleName: 'Featureflow',
-  format: 'iife',
-  plugins:plugins.concat(
-    uglify()
-  )
-}];
+export default [
+  {
+    input: 'src/index.js',
+    output: {
+      file: 'dist/featureflow.js',
+      format: 'iife',
+      name: 'Featureflow',
+      plugins: plugins
+    }
+  }
+]

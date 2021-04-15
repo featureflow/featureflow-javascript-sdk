@@ -23,6 +23,7 @@ export const events = Events;
 
 export default {
   init,
+  initPromise,
   events
 }
 

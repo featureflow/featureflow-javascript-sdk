@@ -23,13 +23,13 @@ const DEFAULT_CONFIG: ConfigType = {
   offline: false
 };
 
-const KEY_PREFIX = "ff:v138";
+const KEY_PREFIX = "ff:v139";
 
 const INIT_MODULE_ERROR = new Error('init() has not been called with a valid apiKey');
 
 function loadFeatures(apiKey: string, userId: string): FeaturesType {
     try {
-        return JSON.parse(localStorage.getItem(`ff:v130:${userId}:${apiKey}`) || '{}');
+        return JSON.parse(localStorage.getItem(`${KEY_PREFIX}:${userId}:${apiKey}`) || '{}');
     } catch (err) {
         return {};
     }

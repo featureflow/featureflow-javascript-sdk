@@ -23,7 +23,7 @@ const DEFAULT_CONFIG: ConfigType = {
   offline: false
 };
 
-const KEY_PREFIX = "ff:v139";
+const KEY_PREFIX = "ff:v1310";
 
 const INIT_MODULE_ERROR = new Error('init() has not been called with a valid apiKey');
 

@@ -23,13 +23,13 @@ const DEFAULT_CONFIG: ConfigType = {
   offline: false
 };
 
-const KEY_PREFIX = "ff:v138";
+const KEY_PREFIX = "ff:v1311";
 
 const INIT_MODULE_ERROR = new Error('init() has not been called with a valid apiKey');
 
 function loadFeatures(apiKey: string, userId: string): FeaturesType {
     try {
-        return JSON.parse(localStorage.getItem(`ff:v130:${userId}:${apiKey}`) || '{}');
+        return JSON.parse(localStorage.getItem(`${KEY_PREFIX}:${userId}:${apiKey}`) || '{}');
     } catch (err) {
         return {};
     }
@@ -60,9 +60,6 @@ export default class FeatureflowClient {
 
     constructor(apiKey: string, user: UserTypeParam = {}, config: ConfigTypeParam = {}, callback: NodeCallbackType<*> = () => {
     }) {
-        console.log(user);
-        //if we are offline then just return the default
-
         this.receivedInitialResponse = false;
         this.emitter = new Emitter();
 

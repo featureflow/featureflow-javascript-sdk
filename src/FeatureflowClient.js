@@ -79,7 +79,7 @@ export default class FeatureflowClient {
         this.restClient = new RestClient(apiKey, this.config);
 
         //3. Load initial data
-        this.updateUser(user, config.initOnCache, callback);
+        this.updateUserWithCache(user, config.initOnCache, callback);
 
         //4. Set up realtime streaming
         if (!this.config.offline && this.config.streaming) {
@@ -113,10 +113,10 @@ export default class FeatureflowClient {
     }
 
     updateUser(user: UserTypeParam = {}, callback: NodeCallbackType<*> = () => {}): void {
-        return this.updateUser(user, false, callback);
+        return this.updateUserWithCache(user, false, callback);
     };
 
-    updateUser(user: UserTypeParam = {}, initOnCache: boolean, callback: NodeCallbackType<*> = () => {
+    updateUserWithCache(user: UserTypeParam = {}, initOnCache: boolean, callback: NodeCallbackType<*> = () => {
     }): void {
         //these could be event or session attributes ie not persisted directly to user but added to a separate attributes map
         const featureflowAttributes = {};

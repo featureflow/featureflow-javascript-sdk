@@ -32,6 +32,8 @@ type ConfigType = {
   defaultFeatures: FeaturesType,
   useCookies: boolean,
   offline: boolean
+  delayInit: boolean
+  uniqueEvals: boolean //we will only count unique evaluation impressions
 }
 
 type ConfigTypeParam = {
@@ -42,6 +44,8 @@ type ConfigTypeParam = {
   defaultFeatures?: FeaturesType,
   useCookies?: boolean,
   initOnCache?: boolean //whether to return init promise early on cache load (alpha)
+  delayInit?: boolean //whether to delay intialisation until requested later (for example for SSR apps)
+  uniqueEvals?: boolean //we will only count unique evaluation impressions
 }
 
 interface EvaluateInterface {

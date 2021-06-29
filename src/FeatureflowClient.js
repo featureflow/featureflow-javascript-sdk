@@ -14,13 +14,15 @@ const DEFAULT_EVENTS_URL = 'https://events.featureflow.io';
 const DEFAULT_RTM_URL = 'https://rtm.featureflow.io';
 
 const DEFAULT_CONFIG: ConfigType = {
-  baseUrl: DEFAULT_BASE_URL,
-  eventsUrl: DEFAULT_EVENTS_URL,
-  rtmUrl: DEFAULT_RTM_URL,
-  streaming: false,
-  defaultFeatures: {},
-  useCookies: true,
-  offline: false
+    baseUrl: DEFAULT_BASE_URL,
+    eventsUrl: DEFAULT_EVENTS_URL,
+    rtmUrl: DEFAULT_RTM_URL,
+    streaming: false,
+    defaultFeatures: {},
+    useCookies: true,
+    offline: false,
+    delayInit: false,
+    uniqueEvals: true
 };
 
 const KEY_PREFIX = "ff:v1311";
@@ -28,6 +30,9 @@ const KEY_PREFIX = "ff:v1311";
 const INIT_MODULE_ERROR = new Error('init() has not been called with a valid apiKey');
 
 function loadFeatures(apiKey: string, userId: string): FeaturesType {
+    if (typeof window == "undefined") {
+        return {};
+    }
     try {
         return JSON.parse(localStorage.getItem(`${KEY_PREFIX}:${userId}:${apiKey}`) || '{}');
     } catch (err) {
@@ -36,6 +41,9 @@ function loadFeatures(apiKey: string, userId: string): FeaturesType {
 }
 
 function hasCachedFeatures(apiKey: string, userId: string): boolean {
+    if (typeof window == "undefined") {
+        return false;
+    }
     try {
         return localStorage.getItem(`${KEY_PREFIX}:${userId}:${apiKey}`) !== null;
     } catch (err) {
@@ -44,12 +52,16 @@ function hasCachedFeatures(apiKey: string, userId: string): boolean {
 }
 
 function saveFeatures(apiKey: string, userId: string, features: FeaturesType): void {
+    if (typeof window == "undefined") {
+        return {};
+    }
     return localStorage.setItem(`${KEY_PREFIX}:${userId}:${apiKey}`, JSON.stringify(features));
 }
 
 export default class FeatureflowClient {
     apiKey: string;
     features: FeaturesType;
+    evaluatedFeatures: EvaluatedFeaturesType;
     config: ConfigType;
     user: UserType;
     emitter: Emitter;
@@ -60,9 +72,10 @@ export default class FeatureflowClient {
 
     constructor(apiKey: string, user: UserTypeParam = {}, config: ConfigTypeParam = {}, callback: NodeCallbackType<*> = () => {
     }) {
+        this.initialised = false;
         this.receivedInitialResponse = false;
+        this.evaluatedFeatures = {};
         this.emitter = new Emitter();
-
         this.apiKey = apiKey;
 
         //1. They must have an api key
@@ -78,11 +91,25 @@ export default class FeatureflowClient {
         //Create the rest client
         this.restClient = new RestClient(apiKey, this.config);
 
+        if(!config.delayInit){
+            this.initialise(callback);
+        }
+
+        //Bind event emitter
+        this.on = this.emitter.on.bind(this.emitter);
+        this.off = this.emitter.off.bind(this.emitter);
+
+        this.on('UPDATED_FEATURE', (item: any) => {
+            this.evaluatedFeatures.delete(item)
+        });
+    }
+
+    initialise(callback: NodeCallbackType<*> = () => {}){
         //3. Load initial data
-        this.updateUserWithCache(user, config.initOnCache, callback);
+        this.updateUserWithCache(this.user, false, callback);
 
         //4. Set up realtime streaming
-        if (!this.config.offline && this.config.streaming) {
+        if (!this.config.offline && this.config.streaming && typeof window !== "undefined") {
             let es = new window.EventSource(`${this.config.rtmUrl}/api/js/v1/stream/${this.apiKey}`);
             es.onmessage = (e) => {
                 let keys = [];
@@ -107,12 +134,10 @@ export default class FeatureflowClient {
                 })
             };
         }
-        //Bind event emitter
-        this.on = this.emitter.on.bind(this.emitter);
-        this.off = this.emitter.off.bind(this.emitter);
     }
 
-    updateUser(user: UserTypeParam = {}, callback: NodeCallbackType<*> = () => {}): void {
+    updateUser(user: UserTypeParam = {}, callback: NodeCallbackType<*> = () => {
+    }): void {
         return this.updateUserWithCache(user, false, callback);
     };
 
@@ -144,7 +169,7 @@ export default class FeatureflowClient {
         };
 
         this.features = loadFeatures(this.apiKey, this.user.id);
-        if(hasCachedFeatures(this.apiKey, this.user.id)) {
+        if (hasCachedFeatures(this.apiKey, this.user.id)) {
             this.emitter.emit(Events.LOADED_FROM_CACHE, this.features);
             /*if(initOnCache) {
                 callback(undefined, this.features);
@@ -154,11 +179,12 @@ export default class FeatureflowClient {
         // Put this in timeout so we can listen to all events before it is returned
         setTimeout(() => {
 
-
             if (this.config.offline) {
                 setTimeout(() => {
                     this.features = this.config.defaultFeatures;
                     saveFeatures(this.apiKey, this.user.id, this.features);
+                    this.receivedInitialResponse = true;
+                    this.initialised = true;
                     this.emitter.emit(Events.INIT, this.features);
                     this.emitter.emit(Events.LOADED, this.features);
                     callback(undefined, this.features);
@@ -167,6 +193,7 @@ export default class FeatureflowClient {
             } else {
                 this.restClient.getFeatures(this.user, [], (error, features) => {
                     this.receivedInitialResponse = true;
+                    this.initialised = true;
                     if (!error) {
                         this.features = features || {};
                         saveFeatures(this.apiKey, this.user.id, this.features);
@@ -203,11 +230,15 @@ export default class FeatureflowClient {
         }
 
         let evaluatedFeature = this.features[key];
-        if(typeof evaluatedFeature === 'undefined') return new Evaluate('off'); //we dont know this feature
+        if (typeof evaluatedFeature === 'undefined') return new Evaluate('off'); //we dont know this feature
         const variant = this.evalRules(evaluatedFeature);
 
         const evaluate = new Evaluate(variant);
-        this.restClient.postEvaluateEvent(this.user, key, evaluate.value());
+        if(!this.config.uniqueEvals || (this.config.uniqueEvals && !this.evaluatedFeatures[key])){
+            this.evaluatedFeatures[key] = evaluate;
+            this.restClient.postEvaluateEvent(this.user, key, evaluate.value());
+        }
+
         return evaluate;
     }
 
@@ -216,12 +247,17 @@ export default class FeatureflowClient {
         for (let k in features) {
             if (features.hasOwnProperty(k)) {
                 evaluated[k] = this.evalRules(features[k]);
+                if(this.config.uniqueEvals && !this.evaluatedFeatures[k]){
+                    this.evaluatedFeatures[k] = evaluated[k];
+                    this.restClient.postEvaluateEvent(this.user, k, evaluated[k]);
+                }
             }
         }
         return evaluated;
     }
+
     evalRules(evaluatedFeature) {
-        if(typeof evaluatedFeature === 'string') return evaluatedFeature; //we may have old cache
+        if (typeof evaluatedFeature === 'string') return evaluatedFeature; //we may have old cache
         for (let ruleKey in evaluatedFeature.rules) {
             let rule = evaluatedFeature.rules[ruleKey];
             if (this.ruleMatches(rule)) {
@@ -232,7 +268,7 @@ export default class FeatureflowClient {
 
 
     ruleMatches(rule) {
-        if(!rule.audience){
+        if (!rule.audience) {
             return true;
         }
         for (let cKey in rule.audience.conditions) {
@@ -262,11 +298,14 @@ export default class FeatureflowClient {
     }
 
     getAnonymousId(): string {
-        return localStorage.getItem(`ff-anonymous-id`) || this.resetAnonymousId();
+        return typeof window !== "undefined" && localStorage.getItem(`ff-anonymous-id`) || this.resetAnonymousId();
     }
 
     resetAnonymousId(): string {
         let anonymousId = 'anonymous:' + Math.random().toString(36).substring(2);
+        if (typeof window == "undefined") {
+            return anonymousId;
+        }
         localStorage.setItem(`ff-anonymous-id`, anonymousId);
 
         if (this.config.useCookies) {
@@ -279,4 +318,10 @@ export default class FeatureflowClient {
     hasReceivedInitialResponse(): boolean {
         return this.receivedInitialResponse;
     }
+
+    initialised(): boolean {
+        return this.initialised;
+    }
+
+
 }

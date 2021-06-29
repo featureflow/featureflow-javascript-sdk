@@ -103,6 +103,10 @@ function render(){
       renderFeature(property, 'OFF');
     }
   }
+  renderFeature("example-feature");
+  renderFeature("example-feature");
+  renderFeature("example-feature");
+
 }
 
 featureflow.on(Featureflow.events.LOADED_FROM_CACHE, function(data) {

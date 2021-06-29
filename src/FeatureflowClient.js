@@ -99,9 +99,7 @@ export default class FeatureflowClient {
         this.on = this.emitter.on.bind(this.emitter);
         this.off = this.emitter.off.bind(this.emitter);
 
-        this.on('UPDATED_FEATURE', (item: any) => {
-            this.evaluatedFeatures.delete(item)
-        });
+
     }
 
     initialise(callback: NodeCallbackType<*> = () => {}){
@@ -125,6 +123,7 @@ export default class FeatureflowClient {
                             ...features
                         };
                         saveFeatures(this.apiKey, this.user.id, this.features);
+                        this.evaluatedFeatures = {}
                         this.emitter.emit(Events.UPDATED_FEATURE, features);
                         callback(undefined, features);
                     } else {

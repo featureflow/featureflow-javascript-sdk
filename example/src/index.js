@@ -1,5 +1,5 @@
 import Featureflow from '../../src/index';
-const FF_KEY = 'js-env-YOUR_KEY_HERE';
+const FF_KEY = 'js-env-bbb659960a3344c5a31681282c0c4bdf';
 
 var user = {
   id: 'bob1',
@@ -18,7 +18,9 @@ var user = {
 });*/
 
 var featureflow = Featureflow.init(FF_KEY, user, {
+    streaming: true,
     defaultFeatures: {
+      'example-feature': 'default-variant',
       'feature-1': 'on',
       'feature-2': 'red',
       'test': 'off'

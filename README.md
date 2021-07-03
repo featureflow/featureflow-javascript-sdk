@@ -118,6 +118,34 @@ if(featureflow.evaluate('my-feature-key').isOff()){
 }
 ```
 
+You can include user context information when you initialise featureflow, these attributes can be used in feature targeting rules:
+
+```js
+var user = {
+  id: 'user123',
+  attributes:{
+    tier: 'gold',
+    country: 'australia',
+      roles: ['role1', 'role3']
+  }
+};
+var featureflow = Featureflow.init(FF_KEY, user);
+
+```
+
+Additional configuration can be set during init also. You can set offline mode for test environments or local development and provide a default set of feature values, for example:
+
+```js
+var featureflow = Featureflow.init(FF_KEY, user, {
+    offline: true,
+    defaultFeatures: {
+      'feature-1': 'on',
+      'feature-2': 'red',
+      'test': 'off'
+    },
+});
+```
+
 Further documentation can be found [here](http://docs.featureflow.io/docs)
 
 

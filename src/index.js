@@ -26,6 +26,6 @@ export default {
   events
 }
 
-if(window.VERSION !== undefined) {
+if (typeof window !== "undefined" && window.VERSION !== undefined) {
   module.exports.version = window.VERSION;
 }

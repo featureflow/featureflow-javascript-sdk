@@ -59,7 +59,7 @@
     "karma-sinon": "1.0.5",
     "karma-sourcemap-loader": "0.3.7",
     "karma-webpack": "2.0.2",
-    "mocha": "2.5.3",
+    "mocha": "10.1.0",
     "phantomjs": "^1.9.20",
     "pretty-bytes": "3.0.1",
     "readline-sync": "1.4.4",

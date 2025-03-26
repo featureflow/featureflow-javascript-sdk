@@ -1,5 +1,5 @@
 import Featureflow from '../../src/index';
-const FF_KEY = 'js-env-bbb659960a3344c5a31681282c0c4bdf';
+const FF_KEY = 'sdk-js-env-5f5a4c466e61460fa14e685cbb4abe40';
 
 var user = {
   id: 'bob1',

@@ -108,7 +108,10 @@ export default class FeatureflowClient {
 
         //4. Set up realtime streaming
         if (!this.config.offline && this.config.streaming && typeof window !== "undefined") {
-            let es = new window.EventSource(`${this.config.rtmUrl}/api/js/v1/stream/${this.apiKey}`);
+            const pendingKeys = new Set();
+            let debounceTimeout = null;
+
+            const es = new window.EventSource(`${this.config.rtmUrl}/api/js/v1/stream/${this.apiKey}`);
             es.onmessage = (e) => {
                 let keys = [];
                 try {
@@ -116,21 +119,37 @@ export default class FeatureflowClient {
                 } catch (err) {
                 }
 
-                this.restClient.getFeatures(this.user, keys, (error, features) => {
-                    if (!error) {
-                        this.features = {
-                            ...this.features,
-                            ...features
-                        };
-                        saveFeatures(this.apiKey, this.user.id, this.features);
-                        this.evaluatedFeatures = {}
-                        this.emitter.emit(Events.UPDATED_FEATURE, features);
-                        callback(undefined, features);
-                    } else {
-                        this.emitter.emit(Events.ERROR, error);
-                        callback(error);
-                    }
-                })
+                // Add new keys to pending set
+                for (const key of keys) {
+                    pendingKeys.add(key);
+                }
+
+                // Clear existing timeout if any
+                if (debounceTimeout) {
+                    clearTimeout(debounceTimeout);
+                }
+
+                // Set new timeout
+                debounceTimeout = setTimeout(() => {
+                    const keysToFetch = Array.from(pendingKeys);
+                    pendingKeys.clear();
+                    
+                    this.restClient.getFeatures(this.user, keysToFetch, (error, features) => {
+                        if (!error) {
+                            this.features = {
+                                ...this.features,
+                                ...features
+                            };
+                            saveFeatures(this.apiKey, this.user.id, this.features);
+                            this.evaluatedFeatures = {}
+                            this.emitter.emit(Events.UPDATED_FEATURE, features);
+                            callback(undefined, features);
+                        } else {
+                            this.emitter.emit(Events.ERROR, error);
+                            callback(error);
+                        }
+                    });
+                }, 5000); // 5 second debounce
             };
         }
     }

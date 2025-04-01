@@ -70,7 +70,7 @@ export default class FeatureflowClient {
     receivedInitialResponse: boolean;
     restClient: RestClient;
 
-    constructor(apiKey: string, user: UserTypeParam = {}, config: ConfigTypeParam = {}, callback: NodeCallbackType<*> = () => {
+    constructor(apiKey: string, user: UserTypeParam = {}, config?: ConfigTypeParam = {}, callback: NodeCallbackType<*> = () => {
     }) {
         this.initialised = false;
         this.receivedInitialResponse = false;

@@ -22,7 +22,7 @@ function ready(fn: () => void) {
 // Your Featureflow API key
 const FF_KEY: string = 'sdk-js-env-5f5a4c466e61460fa14e685cbb4abe40';
 
-// Define a user with proper typing
+// Define a user
 const user: UserParam = {
   id: 'user123',
   attributes: {
@@ -32,11 +32,10 @@ const user: UserParam = {
   }
 };
 
-// Configuration with types
+// Configuration
 const config: ConfigParam = {
-  streaming: false,
   defaultFeatures: {
-    'my-feature': 'off',
+    'example-feature': 'off',
     'new-ui': 'on'
   }
 };
@@ -51,13 +50,13 @@ ready(() => {
     const example1El = document.getElementById('example1');
     if (!example1El) return;
     
-    const featureValue: string = featureflow.evaluate('my-feature').value();
-    const isOn: boolean = featureflow.evaluate('my-feature').isOn();
-    const isOff: boolean = featureflow.evaluate('my-feature').isOff();
-    const isOnVariant: boolean = featureflow.evaluate('my-feature').is('on');
+    const featureValue: string = featureflow.evaluate('example-feature').value();
+    const isOn: boolean = featureflow.evaluate('example-feature').isOn();
+    const isOff: boolean = featureflow.evaluate('example-feature').isOff();
+    const isOnVariant: boolean = featureflow.evaluate('example-feature').is('on');
     
     example1El.innerHTML = `
-      <p><strong>Feature 'my-feature':</strong></p>
+      <p><strong>Feature 'example-feature':</strong></p>
       <p>Value: <span class="feature-value ${isOn ? '' : 'off'}">${featureValue}</span></p>
       <p>isOn(): ${isOn}</p>
       <p>isOff(): ${isOff}</p>
@@ -160,8 +159,8 @@ ready(() => {
         updateExample3();
         updateUserDisplay();
 
-        const myFeature: string = featureflow.evaluate('my-feature').value();
-        console.log('My feature value:', myFeature);
+        const exampleFeature: string = featureflow.evaluate('example-feature').value();
+        console.log('Example feature value:', exampleFeature);
       });
 
       featureflow.on(events.LOADED_FROM_CACHE, (features: EvaluatedFeatures) => {
@@ -211,8 +210,8 @@ ready(() => {
           updateExample3();
           updateUserDisplay();
 
-          const myFeature: string = featureflow.evaluate('my-feature').value();
-          console.log('Feature value after user update:', myFeature);
+          const exampleFeature: string = featureflow.evaluate('example-feature').value();
+          console.log('Example feature value after user update:', exampleFeature);
         });
   }, 5000);
 });

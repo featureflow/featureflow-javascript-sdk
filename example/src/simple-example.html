@@ -37,6 +37,23 @@
       .feature-value.off {
         background-color: #d9534f;
       }
+      .attributes-list {
+        list-style-type: none;
+        padding-left: 0;
+        margin: 10px 0;
+      }
+      .attributes-list li {
+        padding: 5px 0;
+        border-bottom: 1px solid #eee;
+      }
+      .attribute-value {
+        color: #2196F3;
+        font-weight: 500;
+      }
+      .no-attributes {
+        color: #999;
+        font-style: italic;
+      }
     </style>
   </head>
 <body>
@@ -58,6 +75,11 @@
       <div class="example-section">
         <h3>Example 3: All Features</h3>
         <div id="example3" class="result">Loading...</div>
+      </div>
+      
+      <div class="example-section">
+        <h3>Current User Context</h3>
+        <div id="user-display" class="result">Loading...</div>
       </div>
       
       <div class="example-section">

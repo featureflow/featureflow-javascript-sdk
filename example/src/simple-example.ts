@@ -7,8 +7,8 @@
 // ============================================
 // TypeScript/ES Module Import
 // ============================================
-import Featureflow, { init, initPromise, events, FeatureflowClient } from '../../dist/index.esm.js';
-import type { User, UserParam, Config, ConfigParam, EvaluatedFeatures } from '../../dist/index.d.ts';
+import Featureflow, { init, events, FeatureflowClient } from '../../dist/index.esm.js';
+import type { UserParam, ConfigParam, EvaluatedFeatures } from '../../dist/index.d.ts';
 
 // Wait for DOM to be ready
 function ready(fn: () => void) {
@@ -86,26 +86,55 @@ ready(() => {
     console.log('Show new UI:', showNewUI);
   }
 
-  function updateExample3() {
-    const example3El = document.getElementById('example3');
-    if (!example3El) return;
-    
-    const allFeatures: EvaluatedFeatures = featureflow.getFeatures();
-    
-    let html = '<p><strong>All Evaluated Features:</strong></p>';
-    if (Object.keys(allFeatures).length === 0) {
-      html += '<p>No features loaded yet...</p>';
-    } else {
-      for (const featureKey of Object.keys(allFeatures)) {
-        const value: string = allFeatures[featureKey];
-        html += `<p>Feature <code>${featureKey}</code>: <span class="feature-value ${value === 'on' ? '' : 'off'}">${value}</span></p>`;
+      function updateExample3() {
+        const example3El = document.getElementById('example3');
+        if (!example3El) return;
+
+        const allFeatures = featureflow.getFeatures();
+
+        let html = '<p><strong>All Evaluated Features:</strong></p>';
+        if (Object.keys(allFeatures).length === 0) {
+          html += '<p>No features loaded yet...</p>';
+        } else {
+          for (const featureKey of Object.keys(allFeatures)) {
+            const value: string = allFeatures[featureKey];
+            html += `<p>Feature <code>${featureKey}</code>: <span class="feature-value ${value === 'on' ? '' : 'off'}">${value}</span></p>`;
+          }
+        }
+        example3El.innerHTML = html;
+
+        console.log('=== Example 3: All Features ===');
+        console.log('All evaluated features:', allFeatures);
       }
-    }
-    example3El.innerHTML = html;
-    
-    console.log('=== Example 3: All Features ===');
-    console.log('All evaluated features:', allFeatures);
-  }
+
+      function updateUserDisplay() {
+        const userDisplayEl = document.getElementById('user-display');
+        if (!userDisplayEl) return;
+
+        const currentUser = featureflow.getUser();
+        const attributes = currentUser.attributes || {};
+
+        let html = '<p><strong>Current User Context:</strong></p>';
+        html += `<p><strong>User ID:</strong> <code>${currentUser.id}</code></p>`;
+        html += '<p><strong>Attributes:</strong></p>';
+        
+        if (Object.keys(attributes).length === 0) {
+          html += '<p class="no-attributes">No attributes set</p>';
+        } else {
+          html += '<ul class="attributes-list">';
+          for (const key of Object.keys(attributes)) {
+            const value = attributes[key];
+            const valueStr = Array.isArray(value) ? value.join(', ') : String(value);
+            html += `<li><code>${key}</code>: <span class="attribute-value">${valueStr}</span></li>`;
+          }
+          html += '</ul>';
+        }
+
+        userDisplayEl.innerHTML = html;
+
+        console.log('=== Current User ===');
+        console.log('User:', currentUser);
+      }
 
   function addEventLog(message: string) {
     const eventsList = document.getElementById('events-list');
@@ -116,46 +145,50 @@ ready(() => {
     eventsList.appendChild(li);
     
     // Keep only last 20 events
-    while (eventsList.children.length > 20) {
-      eventsList.removeChild(eventsList.firstChild!);
+    while (eventsList.children.length > 20 && eventsList.firstChild) {
+      eventsList.removeChild(eventsList.firstChild);
     }
   }
 
   // Event listeners
-  featureflow.on(events.INIT, (features: EvaluatedFeatures) => {
-    addEventLog('✅ Features initialized');
-    console.log('✅ Features initialized:', features);
-    
-    updateExample1();
-    updateExample2();
-    updateExample3();
-    
-    const myFeature: string = featureflow.evaluate('my-feature').value();
-    console.log('My feature value:', myFeature);
-  });
+      featureflow.on(events.INIT, (features: EvaluatedFeatures) => {
+        addEventLog('✅ Features initialized');
+        console.log('✅ Features initialized:', features);
 
-  featureflow.on(events.LOADED_FROM_CACHE, (features: EvaluatedFeatures) => {
-    addEventLog('📦 Features loaded from cache');
-    console.log('📦 Features loaded from cache:', features);
-    
-    updateExample1();
-    updateExample2();
-    updateExample3();
-  });
+        updateExample1();
+        updateExample2();
+        updateExample3();
+        updateUserDisplay();
 
-  featureflow.on(events.ERROR, (error: any) => {
-    addEventLog(`❌ Featureflow error: ${error}`);
+        const myFeature: string = featureflow.evaluate('my-feature').value();
+        console.log('My feature value:', myFeature);
+      });
+
+      featureflow.on(events.LOADED_FROM_CACHE, (features: EvaluatedFeatures) => {
+        addEventLog('📦 Features loaded from cache');
+        console.log('📦 Features loaded from cache:', features);
+
+        updateExample1();
+        updateExample2();
+        updateExample3();
+        updateUserDisplay();
+      });
+
+  featureflow.on(events.ERROR, (error: unknown) => {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    addEventLog(`❌ Featureflow error: ${errorMessage}`);
     console.error('❌ Featureflow error:', error);
   });
 
-  featureflow.on(events.UPDATED_FEATURE, (features: EvaluatedFeatures) => {
-    addEventLog('🔄 Features updated');
-    console.log('🔄 Features updated:', features);
-    
-    updateExample1();
-    updateExample2();
-    updateExample3();
-  });
+      featureflow.on(events.UPDATED_FEATURE, (features: EvaluatedFeatures) => {
+        addEventLog('🔄 Features updated');
+        console.log('🔄 Features updated:', features);
+
+        updateExample1();
+        updateExample2();
+        updateExample3();
+        updateUserDisplay();
+      });
 
   // Example: Update user after 5 seconds
   setTimeout(() => {
@@ -168,18 +201,19 @@ ready(() => {
       }
     };
 
-    addEventLog('🔄 Updating user context...');
-    featureflow.updateUser(newUser, () => {
-      addEventLog('✅ User updated');
-      console.log('User updated');
-      
-      updateExample1();
-      updateExample2();
-      updateExample3();
-      
-      const myFeature: string = featureflow.evaluate('my-feature').value();
-      console.log('Feature value after user update:', myFeature);
-    });
+        addEventLog('🔄 Updating user context...');
+        featureflow.updateUser(newUser, () => {
+          addEventLog('✅ User updated');
+          console.log('User updated');
+
+          updateExample1();
+          updateExample2();
+          updateExample3();
+          updateUserDisplay();
+
+          const myFeature: string = featureflow.evaluate('my-feature').value();
+          console.log('Feature value after user update:', myFeature);
+        });
   }, 5000);
 });
 

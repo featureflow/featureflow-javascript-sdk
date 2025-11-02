@@ -21,25 +21,22 @@ jobs:
       - run:
           name: Setup Chrome for testing
           command: |
-            # The cimg/node:24.0-browsers image should have Chrome, but let's find it
-            CHROME_PATH=$(which google-chrome || which chromium || which chromium-browser || echo "")
+            # Check if Chrome/Chromium is already available
+            CHROME_PATH=$(which google-chrome || which chromium || echo "")
+            
             if [ -z "$CHROME_PATH" ]; then
-              echo "Chrome not in PATH, checking common locations..."
-              if [ -f /usr/bin/google-chrome ]; then
-                CHROME_PATH=/usr/bin/google-chrome
-              elif [ -f /usr/bin/chromium ]; then
-                CHROME_PATH=/usr/bin/chromium
-              elif [ -f /usr/bin/chromium-browser ]; then
-                CHROME_PATH=/usr/bin/chromium-browser
-              else
-                echo "Installing Chromium..."
-                sudo apt-get update
-                sudo apt-get install -y chromium-browser
-                CHROME_PATH=$(which chromium-browser || echo "/usr/bin/chromium-browser")
-              fi
+              echo "Installing Google Chrome..."
+              # Install Google Chrome stable via official repository
+              curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
+              echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+              sudo apt-get update
+              sudo apt-get install -y google-chrome-stable
+              CHROME_PATH=$(which google-chrome || echo "/usr/bin/google-chrome")
             fi
+            
             echo "export CHROME_BIN=$CHROME_PATH" >> $BASH_ENV
             echo "Chrome binary found at: $CHROME_PATH"
+            $CHROME_PATH --version || echo "Chrome version check failed"
       - run:
           name: Run tests
           command: npm test

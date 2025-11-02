@@ -1,9 +1,7 @@
 {
   "presets": [
-    ["es2015", { "modules": false }]
-  ],
-  "plugins": [
-    "transform-flow-strip-types",
-    "transform-object-rest-spread"
+    ["@babel/preset-env", {
+      "targets": "defaults"
+    }]
   ]
 }

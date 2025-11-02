@@ -1,4 +1,14 @@
-import Featureflow, { initPromise } from '../../src/index';
+// ============================================
+// ES Module Import (Modern JavaScript)
+// ============================================
+import Featureflow, { initPromise } from '../../dist/index.esm.js';
+
+// ============================================
+// CommonJS Import (Alternative - for Node.js without ES modules)
+// ============================================
+// const Featureflow = require('../../dist/index.js');
+// const { initPromise } = require('../../dist/index.js');
+
 const FF_KEY = 'js-env-YOUR_KEY_HERE';
 
 var user = {
@@ -34,7 +44,15 @@ initPromise(FF_KEY, user, {
       'test': 'off'
     },
 }).then((featureflow) => {
-  console.log("Init Complete")
+  console.log("Init Complete");
+  
+  // Example: Evaluate feature flags
+  console.log('=== Feature Evaluation Examples ===');
+  console.log('feature-1 value:', featureflow.evaluate('feature-1').value());
+  console.log('Is feature-1 ON?', featureflow.evaluate('feature-1').isOn());
+  console.log('Is feature-2 red?', featureflow.evaluate('feature-2').is('red'));
+  console.log('Is test OFF?', featureflow.evaluate('test').isOff());
+  
   render();
 
 

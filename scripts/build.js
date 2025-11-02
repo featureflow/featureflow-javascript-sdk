@@ -12,9 +12,7 @@ function exec(command) {
   execSync(command, { stdio: 'inherit' });
 }
 
-exec('npm run build-lib');
-exec('npm run build-min');
-exec('npm run build-bower');
+exec('npm run build');
 
 console.log(
   '\ngzipped, the UMD build is ' + prettyBytes(

@@ -42,6 +42,24 @@ $ bower install featureflow-client
 
 ### Adding Featureflow
 
+The SDK supports multiple integration patterns:
+
+#### Using CommonJS (for Node.js environments without ES modules)
+```js
+const Featureflow = require('featureflow-client');
+```
+
+#### Using ES2015 modules (modern JavaScript environments and most bundlers)
+```js
+import Featureflow from 'featureflow-client';
+```
+
+#### Using TypeScript (same as ES modules, with type support)
+```ts
+import Featureflow, { init, initPromise, events, FeatureflowClient } from 'featureflow-client';
+import type { User, UserParam, Config, ConfigParam } from 'featureflow-client';
+```
+
 ##### Webpack
 If you are using `webpack`, you can require the code using
 ```js

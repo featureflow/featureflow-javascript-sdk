@@ -1,4 +1,4 @@
-const operators = {
+const operators: { [key: string]: (a: any, b: any) => boolean } = {
   equals: (a, b) => {
     return a === b;
   },
@@ -17,11 +17,11 @@ const operators = {
   },
   in: (a, b) => {
     return typeof a === 'string' && Array.isArray(b)
-      && b.indexOf(a) > -1
+      && b.indexOf(a) > -1;
   },
   notIn: (a, b) => {
     return typeof a === 'string' && Array.isArray(b)
-      && b.indexOf(a) < 0
+      && b.indexOf(a) < 0;
   },
   before: (a, b) => {
     a = dateParse(a);
@@ -53,21 +53,22 @@ const operators = {
   }
 };
 
-function dateParse(date){
-  if( typeof date === 'string'){
+function dateParse(date: string | Date | number): number | string | Date {
+  if (typeof date === 'string') {
     return Date.parse(date);
   }
-  if(date instanceof Date){
+  if (date instanceof Date) {
     return date.getTime();
   }
   return date;
 }
-const notFound = () => {
+
+const notFound = (): boolean => {
   return false;
 };
 
-export function test(op, a, b){
-  b = ['in','notIn'].indexOf(op) >= 0 ? b : b[0];
+export function test(op: string, a: any, b: any): boolean {
+  b = ['in', 'notIn'].indexOf(op) >= 0 ? b : b[0];
   return (operators[op] || notFound)(a, b);
 }
 

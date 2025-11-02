@@ -1,4 +1,14 @@
-import Featureflow from '../../src/index';
+// ============================================
+// ES Module Import (Modern JavaScript)
+// ============================================
+import Featureflow from '../../dist/index.esm.js';
+// Alternative: import Featureflow, { init, events, FeatureflowClient } from '../../dist/index.esm.js';
+
+// ============================================
+// CommonJS Import (Alternative - for Node.js without ES modules)
+// ============================================
+// const Featureflow = require('../../dist/index.js');
+
 const FF_KEY = 'sdk-js-env-5f5a4c466e61460fa14e685cbb4abe40';
 
 var user = {
@@ -26,6 +36,12 @@ var featureflow = Featureflow.init(FF_KEY, user, {
       'test': 'off'
     },
 });
+
+// Example: Evaluate a feature flag
+console.log('=== Feature Evaluation Examples ===');
+console.log('example-feature value:', featureflow.evaluate('example-feature').value());
+console.log('Is feature-1 ON?', featureflow.evaluate('feature-1').isOn());
+console.log('Is feature-2 red?', featureflow.evaluate('feature-2').is('red'));
 
 document.querySelector('#user').innerHTML = JSON.stringify(user, false, 2);
 

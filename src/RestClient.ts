@@ -88,14 +88,14 @@ export default class RestClient {
   request(endpoint: string, config: RequestConfig, callback: NodeCallback<Features> = () => {
   }): XMLHttpRequest {
     const request = new XMLHttpRequest();
-    request.addEventListener('load', function () {
+    request.addEventListener('load', () => {
       if (request.status === 200 && request.getResponseHeader('Content-Type') === "application/json;charset=UTF-8") {
         callback(null, JSON.parse(request.responseText));
       } else {
         callback(request.statusText || 'non 200 response status code');
       }
     });
-    request.addEventListener('error', function () {
+    request.addEventListener('error', () => {
       callback('error connecting with server');
     });
     request.open(config.method, endpoint);
@@ -110,8 +110,8 @@ export default class RestClient {
   }
 
   base64URLEncode(user: User): string {
-    const escaped = unescape(encodeURIComponent(JSON.stringify(user)));
-    return base64.fromByteArray(this.stringToBytes(escaped));
+    const jsonString = JSON.stringify(user);
+    return base64.fromByteArray(this.stringToBytes(jsonString));
   }
 
   stringToBytes(s: string): Uint8Array {

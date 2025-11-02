@@ -23,11 +23,13 @@ npm run example:ts
 ```
 
 This will:
+
 1. Compile the TypeScript file (`example/src/simple-example.ts`) to JavaScript
 2. Bundle it with webpack
 3. Serve it in the browser at `http://localhost:8182`
 
 The TypeScript example demonstrates:
+
 - TypeScript imports with full type support
 - Feature flag evaluation
 - Event handling
@@ -45,16 +47,19 @@ The TypeScript example demonstrates:
 ## Import Methods Shown
 
 ### CommonJS (Node.js)
+
 ```javascript
 const Featureflow = require('featureflow-client');
 ```
 
 ### ES Modules (Modern JavaScript/Bundlers)
+
 ```javascript
 import Featureflow from 'featureflow-client';
 ```
 
 ### TypeScript (with type support)
+
 ```typescript
 import Featureflow, { init, FeatureflowClient } from 'featureflow-client';
 import type { User, UserParam, Config, ConfigParam } from 'featureflow-client';
@@ -87,6 +92,7 @@ if (featureflow.evaluate('my-feature').is('red')) {
 ## Build Configuration
 
 The examples use webpack with:
+
 - **ts-loader** - For TypeScript compilation
 - **babel-loader** - For JavaScript transpilation
 - **webpack-dev-server** - For development server

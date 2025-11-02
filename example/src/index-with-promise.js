@@ -11,7 +11,7 @@ import Featureflow, { initPromise } from '../../dist/index.esm.js';
 
 const FF_KEY = 'js-env-YOUR_KEY_HERE';
 
-var user = {
+const user = {
   id: 'bob1',
   attributes:{
     tier: 'gold',
@@ -59,7 +59,7 @@ initPromise(FF_KEY, user, {
   document.querySelector('#user').innerHTML = JSON.stringify(user, false, 2);
 
 //Setup the editor
-  var editor = ace.edit("editor");
+  const editor = ace.edit("editor");
   editor.setTheme("ace/theme/github");
   editor.getSession().setMode("ace/mode/json");
   editor.setHighlightActiveLine(false);

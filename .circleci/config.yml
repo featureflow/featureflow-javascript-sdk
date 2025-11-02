@@ -19,9 +19,29 @@ jobs:
 
       - run: npm install
       - run:
+          name: Setup Chrome for testing
+          command: |
+            # The cimg/node:24.0-browsers image should have Chrome, but let's find it
+            CHROME_PATH=$(which google-chrome || which chromium || which chromium-browser || echo "")
+            if [ -z "$CHROME_PATH" ]; then
+              echo "Chrome not in PATH, checking common locations..."
+              if [ -f /usr/bin/google-chrome ]; then
+                CHROME_PATH=/usr/bin/google-chrome
+              elif [ -f /usr/bin/chromium ]; then
+                CHROME_PATH=/usr/bin/chromium
+              elif [ -f /usr/bin/chromium-browser ]; then
+                CHROME_PATH=/usr/bin/chromium-browser
+              else
+                echo "Installing Chromium..."
+                sudo apt-get update
+                sudo apt-get install -y chromium-browser
+                CHROME_PATH=$(which chromium-browser || echo "/usr/bin/chromium-browser")
+              fi
+            fi
+            echo "export CHROME_BIN=$CHROME_PATH" >> $BASH_ENV
+            echo "Chrome binary found at: $CHROME_PATH"
+      - run:
           name: Run tests
-          environment:
-            CHROME_BIN: /usr/bin/google-chrome
           command: npm test
 
       - save_cache:

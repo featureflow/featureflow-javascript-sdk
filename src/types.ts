@@ -10,15 +10,18 @@ export type Rule = {
   variant: string;
 };
 
-export type Audience = {
-  conditions: Conditions;
-};
-
-export type Conditions = {
+export type Condition = {
   target: string;
   operator: string;
   values: (string | number)[];
 };
+
+export type Conditions = Condition[];
+
+export type Audience = {
+  conditions: Conditions;
+};
+
 
 export type Feature = {
   rules: Rule[];
@@ -64,6 +67,7 @@ export type ConfigParam = {
   initOnCache?: boolean;
   delayInit?: boolean;
   uniqueEvals?: boolean;
+  offline?: boolean;
 };
 
 export interface EvaluateInterface {
@@ -90,6 +94,6 @@ export type FeatureflowInstance = {
 
 export type RequestConfig = {
   method: string;
-  body?: string;
+  body?: any; // Can be string, object, array, etc.
 };
 

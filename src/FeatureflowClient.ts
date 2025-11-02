@@ -15,7 +15,9 @@ import {
   NodeCallback,
   EventCallback,
   Feature,
-  Rule
+  Rule,
+  Condition,
+  Conditions
 } from './types';
 
 const DEFAULT_BASE_URL = 'https://app.featureflow.io';
@@ -109,8 +111,11 @@ export default class FeatureflowClient {
     //Create the rest client
     this.restClient = new RestClient(apiKey, this.config);
 
+    // Store user parameter for initialization
+    const initialUser = user;
+
     if (!config.delayInit) {
-      this.initialise(callback);
+      this.initialise(initialUser, callback);
     }
 
     //Bind event emitter
@@ -118,9 +123,9 @@ export default class FeatureflowClient {
     this.off = this.emitter.off.bind(this.emitter);
   }
 
-  initialise(callback: NodeCallback = () => {}): void {
+  initialise(user: UserParam = {}, callback: NodeCallback = () => {}): void {
     //3. Load initial data
-    this.updateUserWithCache(this.user, false, callback);
+    this.updateUserWithCache(user, false, callback);
 
     //4. Set up realtime streaming
     if (!this.config.offline && this.config.streaming && typeof window !== "undefined") {
@@ -304,8 +309,7 @@ export default class FeatureflowClient {
     if (!rule.audience.conditions) {
       return true;
     }
-    for (const cKey in rule.audience.conditions) {
-      const condition = rule.audience.conditions[cKey];
+    for (const condition of rule.audience.conditions) {
       let pass = false;
       //here we only are checking date or hour of day
 

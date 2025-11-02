@@ -16,6 +16,19 @@ module.exports = function(config) {
     
     browsers: ['ChromeHeadless'],
     
+    customLaunchers: {
+      ChromeHeadless: {
+        base: 'Chrome',
+        flags: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--headless',
+          '--disable-gpu'
+        ]
+      }
+    },
+    
     webpack: webpackConfig,
 
     failOnEmptyTestSuite: false,

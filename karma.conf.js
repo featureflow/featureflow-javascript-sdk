@@ -12,16 +12,15 @@ module.exports = function(config) {
     
     reporters: ['mocha'],
     
-    frameworks: ['mocha', 'chai', 'sinon'],
+    frameworks: ['mocha', 'chai', 'webpack'],
     
-    browsers: ['Chrome'],
+    browsers: ['ChromeHeadless'],
     
     webpack: webpackConfig,
 
     failOnEmptyTestSuite: false,
     
-    webpackServer: {
-      noInfo: true
-    }
+    autoWatch: false,
+    singleRun: true
   });
 };

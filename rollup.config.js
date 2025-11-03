@@ -19,7 +19,8 @@ export default [
     output: {
       file: 'dist/index.esm.js',
       format: 'es',
-      banner
+      banner,
+      exports: 'named'
     },
     plugins: [
       resolve(),
@@ -40,7 +41,7 @@ export default [
       file: 'dist/index.js',
       format: 'cjs',
       banner,
-      exports: 'auto'
+      exports: 'named'
     },
     plugins: [
       resolve(),
@@ -59,7 +60,8 @@ export default [
       file: 'dist/featureflow.umd.js',
       format: 'umd',
       name: 'Featureflow',
-      banner
+      banner,
+      exports: 'named'
     },
     plugins: [
       resolve(),
@@ -78,7 +80,8 @@ export default [
       file: 'dist/featureflow.umd.min.js',
       format: 'umd',
       name: 'Featureflow',
-      banner
+      banner,
+      exports: 'named'
     },
     plugins: [
       resolve(),

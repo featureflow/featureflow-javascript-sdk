@@ -4,7 +4,9 @@
 
 [![][dependency-img]][dependency-url]
 
-> Featureflow Javascript Client SDK
+> Featureflow JavaScript/TypeScript Client SDK for Browser Environments
+
+**Note:** This SDK is designed for JavaScript in browser environments. For server-side JavaScript/Node.js applications, please use the [featureflow-node-sdk](https://github.com/featureflow/featureflow-node-sdk).
 
 Get your Featureflow account at [featureflow.io](http://www.featureflow.io)
 

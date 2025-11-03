@@ -22,13 +22,10 @@ import {
 
 const DEFAULT_BASE_URL = 'https://app.featureflow.io';
 const DEFAULT_EVENTS_URL = 'https://events.featureflow.io';
-const DEFAULT_RTM_URL = 'https://rtm.featureflow.io';
 
 const DEFAULT_CONFIG: Config = {
   baseUrl: DEFAULT_BASE_URL,
   eventsUrl: DEFAULT_EVENTS_URL,
-  rtmUrl: DEFAULT_RTM_URL,
-  streaming: false,
   defaultFeatures: {},
   useCookies: true,
   offline: false,
@@ -126,54 +123,6 @@ export default class FeatureflowClient {
   initialise(user: UserParam = {}, callback: NodeCallback = () => {}): void {
     //3. Load initial data
     this.updateUserWithCache(user, false, callback);
-
-    //4. Set up realtime streaming
-    if (!this.config.offline && this.config.streaming && typeof window !== "undefined") {
-      const pendingKeys = new Set<string>();
-      let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
-
-      const es = new (window as any).EventSource(`${this.config.rtmUrl}/api/js/v1/stream/${this.apiKey}`);
-      es.onmessage = (e: MessageEvent) => {
-        let keys: string[] = [];
-        try {
-          keys = JSON.parse(e.data);
-        } catch (err) {
-          // Ignore parse errors
-        }
-
-        // Add new keys to pending set
-        for (const key of keys) {
-          pendingKeys.add(key);
-        }
-
-        // Clear existing timeout if any
-        if (debounceTimeout) {
-          clearTimeout(debounceTimeout);
-        }
-
-        // Set new timeout
-        debounceTimeout = setTimeout(() => {
-          const keysToFetch = Array.from(pendingKeys);
-          pendingKeys.clear();
-
-          this.restClient.getFeatures(this.user, keysToFetch, (error, features) => {
-            if (!error && features) {
-              this.features = {
-                ...this.features,
-                ...features
-              };
-              saveFeatures(this.apiKey, this.user.id, this.features);
-              this.evaluatedFeatures = {};
-              this.emitter.emit(Events.UPDATED_FEATURE, features);
-              callback(undefined, features);
-            } else {
-              this.emitter.emit(Events.ERROR, error);
-              callback(error);
-            }
-          });
-        }, 5000); // 5 second debounce
-      };
-    }
   }
 
   updateUser(user: UserParam = {}, callback: NodeCallback = () => {

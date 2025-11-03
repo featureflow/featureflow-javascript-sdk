@@ -46,10 +46,8 @@ export type UserParam = {
 };
 
 export type Config = {
-  rtmUrl: string;
   baseUrl: string;
   eventsUrl: string;
-  streaming: boolean;
   defaultFeatures: { [key: string]: string };
   useCookies: boolean;
   offline: boolean;
@@ -58,10 +56,8 @@ export type Config = {
 };
 
 export type ConfigParam = {
-  rtmUrl?: string;
   baseUrl?: string;
   eventsUrl?: string;
-  streaming?: boolean;
   defaultFeatures?: { [key: string]: string };
   useCookies?: boolean;
   initOnCache?: boolean;

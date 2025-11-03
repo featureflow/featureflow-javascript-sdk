@@ -181,7 +181,7 @@ export default class FeatureflowClient {
     return this.updateUserWithCache(user, false, callback);
   }
 
-  updateUserWithCache(user: UserParam = {}, initOnCache: boolean, callback: NodeCallback = () => {
+  updateUserWithCache(user: UserParam, initOnCache = false, callback: NodeCallback = () => {
   }): User {
     //these could be event or session attributes ie not persisted directly to user but added to a separate attributes map
     const featureflowAttributes = {};
@@ -196,10 +196,8 @@ export default class FeatureflowClient {
     const now = new Date();
     const hourOfDay = now.getHours();
     const hArray = [hourOfDay];
-    //this is local, just the date details, we don't pass this to featureflow
-    //why? if we keep changing the user context with the current date we would void the CDN cache
-    //its a lot more effective to almost resolve the rules and eval the date here
-
+    
+    //set the current data and hour of day, they are evaluated locally to improve the CDN Cache performance 
     this.currentContext = {
       attributes: {
         "featureflow.date": [now],
@@ -311,10 +309,13 @@ export default class FeatureflowClient {
     }
     for (const condition of rule.audience.conditions) {
       let pass = false;
-      //here we only are checking date or hour of day
+      //if there is a date-based condition we smartly pass it back and eval here instead of in the server, 
+      //they are non-sensitive and when evaluated here, provide greater performance due to caching benefits
 
       const values = this.currentContext.attributes[condition.target];
-      if (!values) continue;
+      if (!values) {
+        continue;
+      }
       for (const vKey in values) {
         const value = values[vKey];
         if (test(condition.operator, value, condition.values)) {
@@ -331,12 +332,12 @@ export default class FeatureflowClient {
 
   goal(goalKey: string): void {
     if (this.config.offline) return;
-    return this.restClient.postGoalEvent(this.user, goalKey, this.getFeatures());
+    this.restClient.postGoalEvent(this.user, goalKey, this.getFeatures());
   }
 
   getAnonymousId(): string {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(`ff-anonymous-id`);
+      const stored = localStorage.getItem("ff-anonymous-id");
       if (stored) {
         return stored;
       }
@@ -345,11 +346,11 @@ export default class FeatureflowClient {
   }
 
   resetAnonymousId(): string {
-    const anonymousId = 'anonymous:' + Math.random().toString(36).substring(2);
+    const anonymousId = `anonymous:${Math.random().toString(36).substring(2)}`;
     if (typeof window === "undefined") {
       return anonymousId;
     }
-    localStorage.setItem(`ff-anonymous-id`, anonymousId);
+    localStorage.setItem("ff-anonymous-id", anonymousId);
 
     if (this.config.useCookies) {
       //Set the anonymous key cookie for potential future usage with Server SDK

@@ -22,7 +22,7 @@ const Featureflow = require('../../dist/index.js');
 // OPTION 3: Using TypeScript (same as ES modules, with type support)
 // ============================================
 // import Featureflow, { init, events, FeatureflowClient } from 'featureflow-client';
-// import type { User, UserParam, Config, ConfigParam } from 'featureflow-client';
+// import type { FeatureflowUser, Config, ConfigParam } from 'featureflow-client';
 
 // Your Featureflow API key
 const FF_KEY = 'YOUR_FEATUREFLOW_API_KEY_HERE';
@@ -39,7 +39,6 @@ const user = {
 
 // Initialize Featureflow
 const featureflow = Featureflow.init(FF_KEY, user, {
-  streaming: false, // Set to true for real-time updates
   defaultFeatures: {
     'my-feature': 'off', // Default value if connection fails
     'new-ui': 'on'
@@ -100,10 +99,10 @@ const allFeatures = featureflow.getFeatures();
 console.log('All evaluated features:', allFeatures);
 
 // Iterate through all features
-Object.keys(allFeatures).forEach((featureKey) => {
+for (const featureKey of Object.keys(allFeatures)) {
   const value = allFeatures[featureKey];
   console.log(`Feature "${featureKey}": ${value}`);
-});
+}
 
 // ============================================
 // Example 4: Event listeners
@@ -124,8 +123,8 @@ featureflow.on(Featureflow.events.ERROR, (error) => {
   console.error('❌ Featureflow error:', error);
 });
 
-// Listen for live updates (when streaming is enabled)
-featureflow.on(Featureflow.events.UPDATED_FEATURE, (features) => {
+// Listen for feature updates (fired when user is updated)
+featureflow.on(Featureflow.events.INIT, (features) => {
   console.log('🔄 Features updated:', features);
 });
 

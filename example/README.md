@@ -62,7 +62,7 @@ import Featureflow from 'featureflow-client';
 
 ```typescript
 import Featureflow, { init, FeatureflowClient } from 'featureflow-client';
-import type { User, UserParam, Config, ConfigParam } from 'featureflow-client';
+import type { FeatureflowUser, Config, ConfigParam } from 'featureflow-client';
 ```
 
 ## Feature Evaluation Examples

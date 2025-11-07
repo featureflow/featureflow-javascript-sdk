@@ -44,7 +44,7 @@ npm install --save featureflow-client
 
 The SDK supports multiple integration patterns:
 
-#### Using CommonJS (for Node.js environments without ES modules)
+#### Using CommonJS (for bundlers that support CommonJS syntax)
 
 ```js
 const Featureflow = require('featureflow-client');
@@ -59,8 +59,8 @@ import Featureflow from 'featureflow-client';
 #### Using TypeScript (same as ES modules, with type support)
 
 ```ts
-import Featureflow, { init, initPromise, events, FeatureflowClient } from 'featureflow-client';
-import type { User, UserParam, Config, ConfigParam } from 'featureflow-client';
+import { init, initPromise, events } from 'featureflow-client';
+import type { FeatureflowClient, FeatureflowUser, Config, EvaluatedFeatures } from 'featureflow-client';
 ```
 
 ##### Webpack
@@ -89,9 +89,12 @@ Include the following script in HTML file. This will expose the global variable 
 Get your environment's Featureflow Javascript API key and initialise a new Featureflow client
 
 ```js
+// Using init() - synchronous initialization
 var FF_JS_API_KEY = '<Your javascript api key goes here>';
-//...
 var featureflow = Featureflow.init(FF_JS_API_KEY);
+
+// Or using initPromise() - Promise-based initialization
+const featureflow = await Featureflow.initPromise(FF_JS_API_KEY);
 ```
 
 This will load the value of each feature for the current environment specified by the api key. These values can be toggled on and off at `https://<your-org-key>.featureflow.io`
@@ -124,16 +127,19 @@ if(featureflow.evaluate('my-feature-key').isOff()){
 You can include user context information when you initialise featureflow, these attributes can be used in feature targeting rules:
 
 ```js
+// User with id (required) and attributes (optional)
 var user = {
   id: 'user123',
-  attributes:{
+  attributes: {
     tier: 'gold',
     country: 'australia',
-      roles: ['role1', 'role3']
+    roles: ['role1', 'role3']
   }
 };
 var featureflow = Featureflow.init(FF_KEY, user);
 
+// Or without user - anonymous user will be auto-generated
+var featureflow = Featureflow.init(FF_KEY);
 ```
 
 Additional configuration can be set during init also. You can set offline mode for test environments or local development and provide a default set of feature values, for example:
@@ -182,13 +188,35 @@ Returns a `featureflow` instance, see below
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `apiKey*` | `string` | **`Required`** | The Featureflow Javascript API key for the environment or project you are targeting |
-| `user` | `user` |  | See the `user` object below |
-| `config` | `config` |  | See the `config` object below |
+| `user` | `FeatureflowUser` | Auto-generated anonymous user | See the `user` object below. If not provided, an anonymous user will be automatically generated |
+| `config` | `Config` | `{}` | See the `config` object below |
 | **`return`** | `featureflow` |  | See Featureflow Instance below |
+
+#### `Featureflow.initPromise(apiKey, [user], [config])`
+
+Returns a `Promise<featureflow>` instance. This is an alternative to `init()` that returns a Promise instead of using callbacks.
+
+| Params | Type | Default | Description |
+|---------------|----------|--------------|----------------------------------------------------------------|
+| `apiKey*` | `string` | **`Required`** | The Featureflow Javascript API key for the environment or project you are targeting |
+| `user` | `FeatureflowUser` | Auto-generated anonymous user | See the `user` object below. If not provided, an anonymous user will be automatically generated |
+| `config` | `Config` | `{}` | See the `config` object below |
+| **`return`** | `Promise<featureflow>` |  | Promise that resolves with a Featureflow Instance (see below) |
+
+**Example:**
+```ts
+// Using async/await
+const featureflow = await Featureflow.initPromise(FF_KEY, user, config);
+
+// Or using .then()
+Featureflow.initPromise(FF_KEY, user, config).then(featureflow => {
+  // use featureflow
+});
+```
 
 #### Featureflow Instance
 
-These properties are available on the return of `Featureflow.init(...)`
+These properties are available on the return of `Featureflow.init(...)` or `Featureflow.initPromise(...)`
 
 #### `featureflow.evaluate(featureKey)`
 
@@ -245,7 +273,7 @@ Updates the current `user` of the instance and reevaluates all feature features 
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| `user` | `user` | ... | See the `user` object below |
+| `user` | `FeatureflowUser` | ... | See the `user` object below. The `id` property is required |
 
 Fires a `Featureflow.events.LOADED` event when the features have been evaluated.
 Also Fires the callback if provided with the newly evaluated features.
@@ -264,7 +292,7 @@ Returns the current `user`
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| **`return`**  | `user` |  | The current `user`  |
+| **`return`**  | `FeatureflowUser` |  | The current `user`  |
 
 #### `featureflow.on(event, callback, [bindContext])`
 
@@ -311,21 +339,26 @@ Resets the anonymous user id for the user stored in localStorage. This will not 
 
 #### Object Types
 
-#### `user`
+#### `user` (FeatureflowUser)
 
 | Property | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| `id` | `string` | `'anonymous:**********'` | Uniquely identifies the current user. Also used to calculate split variants. If not provided a random string prefixed with `'anonymous:'` will be used. This will set a cookie that can be used to link the anonymous user with your server's Featureflow SDK. |
-| `attributes` | `object` | `undefined` | Flat key-value object containing extra meta about the current user. Used to serve different features for specifically targeted attributes. |
+| `id` | `string` | **`Required`** | Uniquely identifies the current user. Also used to calculate split variants. If not provided when calling `init()`, a random string prefixed with `'anonymous:'` will be automatically generated. This will set a cookie that can be used to link the anonymous user with your server's Featureflow SDK. |
+| `attributes` | `object` | `undefined` | Flat key-value object containing extra meta about the current user. Used to serve different features for specifically targeted attributes. Values can be strings, numbers, or arrays of strings/numbers. |
 
-#### `config`
+#### `config` (Config)
+
+All properties are optional. If not provided, sensible defaults will be used.
 
 | Property | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| `streaming` | `boolean` | `false` | Set to `true` when calling `Featureflow.init(..., ..., config)` to listen for realtime updates via SSE |
+| `baseUrl` | `string` | `'https://app.featureflow.io'` | The base URL for the Featureflow API |
+| `eventsUrl` | `string` | `'https://events.featureflow.io'` | The URL for sending events |
 | `useCookies` | `boolean` | `true` | Set to `false` if you do not want to use cookies (you will have to pass the result of `featureflow.getAnonymousId()` to any future requests if you wish for the server to match the client anonymous key)  |
-| `defaultFeatures` | `object` | `undefined` | A flat key-value object representing the default variants a feature should be set to if there is an interrupted connection and no cached value. *e.g. if you set `config.defaultFeatures` to `{'my-feature': 'on'}`, `featureflow.evaluate('my-feature').isOn()` will return `true` when there is an interrupted connection to Featureflow and no locally cached feature features.* |
-| `offline` | `boolean` | `false` | Set to `true` to run in offline mode, this is for testing purposes. Featureflow will not attempt and calls and will use the defaultFeatures values only  |
+| `defaultFeatures` | `object` | `{}` | A flat key-value object representing the default variants a feature should be set to if there is an interrupted connection and no cached value. *e.g. if you set `config.defaultFeatures` to `{'my-feature': 'on'}`, `featureflow.evaluate('my-feature').isOn()` will return `true` when there is an interrupted connection to Featureflow and no locally cached feature features.* |
+| `offline` | `boolean` | `false` | Set to `true` to run in offline mode, this is for testing purposes. Featureflow will not attempt any calls and will use the defaultFeatures values only  |
+| `delayInit` | `boolean` | `false` | Set to `true` to delay initialization. You must call `featureflow.initialise()` manually |
+| `uniqueEvals` | `boolean` | `true` | Set to `false` to allow duplicate evaluation events to be sent |
 
 #### Events
 
@@ -342,17 +375,6 @@ Fired when features have been evaluated and loaded.
 Triggered by both `Featureflow.init(...)` and `featureflow.updateUser`.
 
 Callback is fired with one parameter with the value of all evaluated `features`.
-
-#### `Featureflow.events.LOADED`
-
-**Deprecated:** Use `Featureflow.events.INIT` instead.
-
-#### `Featureflow.events.UPDATED_FEATURE`
-
-Only available when streaming is enabled.
-Fired when a feature has been changed.
-
-Callback is fired with one parameter with the value of only the updated `features` returned by the stream. In the majority of cases, this object will only contain one property.
 
 #### `Featureflow.events.ERROR`
 

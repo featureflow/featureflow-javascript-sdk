@@ -1,5 +1,5 @@
 import * as base64 from 'base64-js';
-import { Config, User, EvaluatedFeatures, Features, NodeCallback, RequestConfig } from './types';
+import type { ConfigInternal, FeatureflowUser, EvaluatedFeatures, Features, NodeCallback, RequestConfig } from './types';
 
 // Read package.json version at build time
 let packageVersion = '2.0.0';
@@ -21,7 +21,7 @@ export default class RestClient {
     events: any[];
   };
 
-  constructor(apiKey: string, config: Config) {
+  constructor(apiKey: string, config: ConfigInternal) {
     this.apiKey = apiKey;
     this.baseUrl = config.baseUrl;
     this.eventsUrl = config.eventsUrl;
@@ -31,7 +31,7 @@ export default class RestClient {
     };
   }
 
-  getFeatures(user: User, keys: string[] = [], callback: NodeCallback<Features>): void {
+  getFeatures(user: FeatureflowUser, keys: string[] = [], callback: NodeCallback<Features>): void {
     const query = (keys.length > 0) ? `?keys=${keys.join(',')}` : '';
     this.request(
       `${this.baseUrl}/api/js/v1/evaluate/${this.apiKey}/user/${encodeURI(this.base64URLEncode(user))}${query}`,
@@ -40,7 +40,7 @@ export default class RestClient {
     );
   }
 
-  postGoalEvent(user: User, goalKey: string, evaluatedFeaturesMap: EvaluatedFeatures): void {
+  postGoalEvent(user: FeatureflowUser, goalKey: string, evaluatedFeaturesMap: EvaluatedFeatures): void {
     this.flushable();
     this.queues.events.push({
       type: 'goal',
@@ -52,7 +52,7 @@ export default class RestClient {
     });
   }
 
-  postEvaluateEvent(user: User, featureKey: string, variant: string): void {
+  postEvaluateEvent(user: FeatureflowUser, featureKey: string, variant: string): void {
     this.flushable();
     this.queues.events.push({
       type: 'evaluate',
@@ -109,7 +109,7 @@ export default class RestClient {
     return request;
   }
 
-  base64URLEncode(user: User): string {
+  base64URLEncode(user: FeatureflowUser): string {
     const jsonString = JSON.stringify(user);
     return base64.fromByteArray(this.stringToBytes(jsonString));
   }

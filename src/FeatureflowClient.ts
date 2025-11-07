@@ -6,16 +6,15 @@ import Emitter from 'tiny-emitter';
 import Cookies from 'js-cookie';
 import type { TinyEmitter } from 'tiny-emitter';
 import {
-  Config,
-  ConfigParam,
-  User,
-  UserParam,
+  type Config,
+  type ConfigInternal,
+  type FeatureflowUser,
   Features,
-  EvaluatedFeatures,
-  NodeCallback,
-  EventCallback,
-  Feature,
-  Rule,
+  type EvaluatedFeatures,
+  type NodeCallback,
+  type EventCallback,
+  type Feature,
+  type Rule,
   Condition,
   Conditions
 } from './types';
@@ -23,7 +22,7 @@ import {
 const DEFAULT_BASE_URL = 'https://app.featureflow.io';
 const DEFAULT_EVENTS_URL = 'https://events.featureflow.io';
 
-const DEFAULT_CONFIG: Config = {
+const DEFAULT_CONFIG: ConfigInternal = {
   baseUrl: DEFAULT_BASE_URL,
   eventsUrl: DEFAULT_EVENTS_URL,
   defaultFeatures: {},
@@ -36,6 +35,14 @@ const DEFAULT_CONFIG: Config = {
 const KEY_PREFIX = "ff:v1311";
 
 const INIT_MODULE_ERROR = new Error('init() has not been called with a valid apiKey');
+
+function generateAnonymousId(): string {
+  return `anonymous:${Math.random().toString(36).substring(2)}`;
+}
+
+function getDefaultUser(): FeatureflowUser {
+  return { id: generateAnonymousId() };
+}
 
 function loadFeatures(apiKey: string, userId: string): { [key: string]: any } {
   if (typeof window === "undefined") {
@@ -70,8 +77,8 @@ export default class FeatureflowClient {
   apiKey: string;
   features: { [key: string]: Feature };
   evaluatedFeatures: EvaluatedFeatures;
-  config: Config;
-  user: User;
+  config: ConfigInternal;
+  user: FeatureflowUser;
   emitter: TinyEmitter;
   on: (event: string, callback: EventCallback, bindContext?: unknown) => void;
   off: (event: string, callback?: EventCallback) => void;
@@ -84,7 +91,7 @@ export default class FeatureflowClient {
     };
   };
 
-  constructor(apiKey: string, user: UserParam = {}, config: ConfigParam = {}, callback: NodeCallback = () => {
+  constructor(apiKey: string, user: FeatureflowUser = getDefaultUser(), config: Config = {}, callback: NodeCallback = () => {
   }) {
     this.initialised = false;
     this.receivedInitialResponse = false;
@@ -104,7 +111,7 @@ export default class FeatureflowClient {
     this.config = {
       ...DEFAULT_CONFIG,
       ...config
-    };
+    } as ConfigInternal;
     //Create the rest client
     this.restClient = new RestClient(apiKey, this.config);
 
@@ -120,18 +127,18 @@ export default class FeatureflowClient {
     this.off = this.emitter.off.bind(this.emitter);
   }
 
-  initialise(user: UserParam = {}, callback: NodeCallback = () => {}): void {
+  initialise(user: FeatureflowUser = getDefaultUser(), callback: NodeCallback = () => {}): void {
     //3. Load initial data
     this.updateUserWithCache(user, false, callback);
   }
 
-  updateUser(user: UserParam = {}, callback: NodeCallback = () => {
-  }): User {
+  updateUser(user: FeatureflowUser = getDefaultUser(), callback: NodeCallback = () => {
+  }): FeatureflowUser {
     return this.updateUserWithCache(user, false, callback);
   }
 
-  updateUserWithCache(user: UserParam, initOnCache = false, callback: NodeCallback = () => {
-  }): User {
+  updateUserWithCache(user: FeatureflowUser, initOnCache = false, callback: NodeCallback = () => {
+  }): FeatureflowUser {
     //these could be event or session attributes ie not persisted directly to user but added to a separate attributes map
     const featureflowAttributes = {};
     const attributes = {
@@ -154,8 +161,9 @@ export default class FeatureflowClient {
       }
     };
 
-    this.features = loadFeatures(this.apiKey, this.user.id);
-    if (hasCachedFeatures(this.apiKey, this.user.id)) {
+    const userId = this.user.id;
+    this.features = loadFeatures(this.apiKey, userId);
+    if (hasCachedFeatures(this.apiKey, userId)) {
       this.emitter.emit(Events.LOADED_FROM_CACHE, this.features);
       /*if(initOnCache) {
           callback(undefined, this.features);
@@ -167,7 +175,7 @@ export default class FeatureflowClient {
       if (this.config.offline) {
         setTimeout(() => {
           this.features = this.config.defaultFeatures;
-          saveFeatures(this.apiKey, this.user.id, this.features);
+          saveFeatures(this.apiKey, userId, this.features);
           this.receivedInitialResponse = true;
           this.initialised = true;
           this.emitter.emit(Events.INIT, this.features);
@@ -180,7 +188,7 @@ export default class FeatureflowClient {
           this.initialised = true;
           if (!error) {
             this.features = features || {};
-            saveFeatures(this.apiKey, this.user.id, this.features);
+            saveFeatures(this.apiKey, userId, this.features);
             this.emitter.emit(Events.INIT, features);
             this.emitter.emit(Events.LOADED, features);
             callback(undefined, features);
@@ -202,7 +210,7 @@ export default class FeatureflowClient {
     return this.evalAll(this.features);
   }
 
-  getUser(): User {
+  getUser(): FeatureflowUser {
     return this.user;
   }
 

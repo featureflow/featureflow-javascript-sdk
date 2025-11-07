@@ -1,14 +1,14 @@
 import FeatureflowClient from './FeatureflowClient';
 import Events from './Events';
-import { UserParam, ConfigParam } from './types';
+import type { FeatureflowUser, Config, Features } from './types';
 
-export function init(apiKey: string, user: UserParam = {}, config: ConfigParam = {}): FeatureflowClient {
+export function init(apiKey: string, user: FeatureflowUser = { id: `anonymous:${Math.random().toString(36).substring(2)}` }, config: Config = {}): FeatureflowClient {
   return new FeatureflowClient(apiKey, user, config);
 }
 
-export function initPromise(apiKey: string, user: UserParam = {}, config: ConfigParam = {}): Promise<FeatureflowClient> {
-  return new Promise(function (resolve, reject) {
-    const client = new FeatureflowClient(apiKey, user, config, function (err: any, data: any) {
+export function initPromise(apiKey: string, user: FeatureflowUser = { id: `anonymous:${Math.random().toString(36).substring(2)}` }, config: Config = {}): Promise<FeatureflowClient> {
+  return new Promise((resolve, reject) => {
+    const client = new FeatureflowClient(apiKey, user, config, (err: unknown, data: Features) => {
       if (err && err !== null) {
         reject(err);
       } else {
@@ -29,10 +29,8 @@ export default Featureflow;
 
 export { FeatureflowClient };
 export type { 
-  User, 
-  UserParam, 
+  FeatureflowUser,
   Config, 
-  ConfigParam, 
   EvaluatedFeatures, 
   EvaluateInterface,
   Features,

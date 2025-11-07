@@ -11,7 +11,7 @@ import Featureflow from '../../dist/index.esm.js';
 
 const FF_KEY = 'sdk-js-env-5f5a4c466e61460fa14e685cbb4abe40';
 
-var user = {
+let user = {
   id: 'bob1',
   attributes:{
     tier: 'gold',
@@ -27,7 +27,7 @@ var user = {
     streaming: true
 });*/
 
-var featureflow = Featureflow.init(FF_KEY, user, {
+const featureflow = Featureflow.init(FF_KEY, user, {
     streaming: true,
     defaultFeatures: {
       'example-feature': 'default-variant',
@@ -46,13 +46,13 @@ console.log('Is feature-2 red?', featureflow.evaluate('feature-2').is('red'));
 document.querySelector('#user').innerHTML = JSON.stringify(user, false, 2);
 
 //Setup the editor
-var editor = ace.edit("editor");
+const editor = ace.edit("editor");
 editor.setTheme("ace/theme/github");
 editor.getSession().setMode("ace/mode/json");
 editor.setHighlightActiveLine(false);
 editor.setShowPrintMargin(false);
 editor.getSession().setTabSize(2);
-editor.$blockScrolling = Infinity;
+editor.$blockScrolling = Number.POSITIVE_INFINITY;
 
 editor.on('change', function(){
   var value = editor.getValue();
@@ -138,13 +138,6 @@ featureflow.on(Featureflow.events.INIT, function(data) {
   logEvent('Init', data);
   render();
 });
-
-
-featureflow.on(Featureflow.events.UPDATED_FEATURE, function(value){
-  console.log('Live Update', value);
-  logEvent('Live Update', value);
-  render();
-})
 
 document.querySelector('#update-button').addEventListener('click', function updateUser(){
   editor.setValue(JSON.stringify(user, null, 2));

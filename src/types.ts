@@ -35,17 +35,23 @@ export type EvaluatedFeatures = {
   [key: string]: string;
 };
 
-export type User = {
+export type FeatureflowUser = {
   id: string;
   attributes?: UserAttributes;
 };
 
-export type UserParam = {
-  id?: string;
-  attributes?: UserAttributes;
+export type Config = {
+  baseUrl?: string;
+  eventsUrl?: string;
+  defaultFeatures?: { [key: string]: string };
+  useCookies?: boolean;
+  initOnCache?: boolean;
+  offline?: boolean;
+  delayInit?: boolean;
+  uniqueEvals?: boolean;
 };
 
-export type Config = {
+export type ConfigInternal = {
   baseUrl: string;
   eventsUrl: string;
   defaultFeatures: { [key: string]: string };
@@ -53,17 +59,6 @@ export type Config = {
   offline: boolean;
   delayInit: boolean;
   uniqueEvals: boolean;
-};
-
-export type ConfigParam = {
-  baseUrl?: string;
-  eventsUrl?: string;
-  defaultFeatures?: { [key: string]: string };
-  useCookies?: boolean;
-  initOnCache?: boolean;
-  delayInit?: boolean;
-  uniqueEvals?: boolean;
-  offline?: boolean;
 };
 
 export interface EvaluateInterface {
@@ -80,9 +75,9 @@ export type EvalResult = {
 };
 
 export type FeatureflowInstance = {
-  updateUser: (user: UserParam) => User;
+  updateUser: (user: FeatureflowUser) => FeatureflowUser;
   getFeatures: () => EvaluatedFeatures;
-  getUser: () => User;
+  getUser: () => FeatureflowUser;
   evaluate: (key: string) => EvaluateInterface;
   on: (event: string, callback: EventCallback) => any;
   off: (event: string, callback: EventCallback) => any;

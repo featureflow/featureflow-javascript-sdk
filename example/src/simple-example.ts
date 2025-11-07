@@ -7,8 +7,8 @@
 // ============================================
 // TypeScript/ES Module Import
 // ============================================
-import Featureflow, { init, events, FeatureflowClient } from '../../dist/index.esm.js';
-import type { UserParam, ConfigParam, EvaluatedFeatures } from '../../dist/index.d.ts';
+import { init, events } from '../../dist/index.esm.js';
+import type { FeatureflowClient, FeatureflowUser, Config, EvaluatedFeatures } from '../../dist/index.d.ts';
 
 // Wait for DOM to be ready
 function ready(fn: () => void) {
@@ -23,7 +23,7 @@ function ready(fn: () => void) {
 const FF_KEY: string = 'sdk-js-env-5f5a4c466e61460fa14e685cbb4abe40';
 
 // Define a user
-const user: UserParam = {
+const user: FeatureflowUser = {
   id: 'user123',
   attributes: {
     tier: 'gold',
@@ -33,7 +33,7 @@ const user: UserParam = {
 };
 
 // Configuration
-const config: ConfigParam = {
+const config: Config = {
   defaultFeatures: {
     'example-feature': 'off',
     'new-ui': 'on'
@@ -43,7 +43,7 @@ const config: ConfigParam = {
 // Wait for DOM to be ready
 ready(() => {
   // Initialize Featureflow
-  const featureflow: FeatureflowClient = init(FF_KEY, user, config);
+  const featureflow = init(FF_KEY, user, config);
   
   // Display results in the DOM
   function updateExample1() {
@@ -179,19 +179,9 @@ ready(() => {
     console.error('❌ Featureflow error:', error);
   });
 
-      featureflow.on(events.UPDATED_FEATURE, (features: EvaluatedFeatures) => {
-        addEventLog('🔄 Features updated');
-        console.log('🔄 Features updated:', features);
-
-        updateExample1();
-        updateExample2();
-        updateExample3();
-        updateUserDisplay();
-      });
-
   // Example: Update user after 5 seconds
   setTimeout(() => {
-    const newUser: UserParam = {
+    const newUser: FeatureflowUser = {
       id: 'user123',
       attributes: {
         tier: 'premium',

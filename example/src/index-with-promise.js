@@ -154,13 +154,6 @@ initPromise(FF_KEY, user, {
     render();
   });
 
-
-  featureflow.on(Featureflow.events.UPDATED_FEATURE, function(value){
-    console.log('Live Update', value);
-    logEvent('Live Update', value);
-    render();
-  })
-
   document.querySelector('#update-button').addEventListener('click', function updateUser(){
     editor.setValue(JSON.stringify(user, null, 2));
     editor.navigateFileStart();

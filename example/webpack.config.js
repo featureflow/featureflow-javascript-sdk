@@ -1,12 +1,12 @@
-var webpack = require('webpack');
-var path = require("path");
+const webpack = require('webpack');
+const path = require("path");
 
-var HtmlWebpackPlugin = require('html-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 // Get entry point from environment variable or default to index.js
-var entryPoint = process.env.ENTRY || 'index.js';
-var htmlTemplate = entryPoint === 'simple-example.ts' ? 'simple-example.html' : 'index.html';
-var HTMLWebpackPluginConfig = new HtmlWebpackPlugin({
+const entryPoint = process.env.ENTRY || 'index.js';
+const htmlTemplate = entryPoint === 'simple-example.ts' ? 'simple-example.html' : 'index.html';
+const HTMLWebpackPluginConfig = new HtmlWebpackPlugin({
   template: path.join(__dirname, '/src', htmlTemplate),
   filename: 'index.html',
   inject: 'body'

@@ -4,15 +4,23 @@ This directory contains example applications demonstrating how to use the Featur
 
 ## Running Examples
 
-### JavaScript Example (ES Modules)
+### JavaScript Example
 
-Run the standard JavaScript example:
+Run the JavaScript example:
 
 ```bash
 npm run example
 ```
 
-This will start a webpack dev server at `http://localhost:8182` with the main example (`example/src/index.js`).
+This will start a webpack dev server at `http://localhost:8182` with the JavaScript example (`example/src/example.js`).
+
+The JavaScript example demonstrates:
+
+- CommonJS and ES Module import patterns
+- Feature flag evaluation
+- Event handling
+- User context updates
+- Promise-based initialization (`initPromise`)
 
 ### TypeScript Example
 
@@ -24,7 +32,7 @@ npm run example:ts
 
 This will:
 
-1. Compile the TypeScript file (`example/src/simple-example.ts`) to JavaScript
+1. Compile the TypeScript file (`example/src/example.ts`) to JavaScript
 2. Bundle it with webpack
 3. Serve it in the browser at `http://localhost:8182`
 
@@ -38,11 +46,9 @@ The TypeScript example demonstrates:
 
 ## Example Files
 
-- **`src/index.js`** - Main JavaScript example with full UI
-- **`src/index-with-promise.js`** - Promise-based initialization example
-- **`src/simple-example.js`** - Simple JavaScript example
-- **`src/simple-example.ts`** - Simple TypeScript example with type safety
-- **`src/simple-example.html`** - HTML template for TypeScript example
+- **`src/example.js`** - JavaScript example with console output
+- **`src/example.ts`** - TypeScript example with DOM manipulation
+- **`src/example.html`** - HTML template for both examples
 
 ## Import Methods Shown
 
@@ -61,8 +67,8 @@ import Featureflow from 'featureflow-client';
 ### TypeScript (with type support)
 
 ```typescript
-import Featureflow, { init, FeatureflowClient } from 'featureflow-client';
-import type { FeatureflowUser, Config, ConfigParam } from 'featureflow-client';
+import { init, initPromise, events } from 'featureflow-client';
+import type { FeatureflowClient, FeatureflowUser, Config, EvaluatedFeatures } from 'featureflow-client';
 ```
 
 ## Feature Evaluation Examples

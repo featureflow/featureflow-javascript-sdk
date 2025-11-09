@@ -1,11 +1,11 @@
 const webpack = require('webpack');
-const path = require("path");
+const path = require("node:path");
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-// Get entry point from environment variable or default to index.js
-const entryPoint = process.env.ENTRY || 'index.js';
-const htmlTemplate = entryPoint === 'simple-example.ts' ? 'simple-example.html' : 'index.html';
+// Get entry point from environment variable or default to example.js
+const entryPoint = process.env.ENTRY || 'example.js';
+const htmlTemplate = 'example.html';
 const HTMLWebpackPluginConfig = new HtmlWebpackPlugin({
   template: path.join(__dirname, '/src', htmlTemplate),
   filename: 'index.html',
@@ -65,9 +65,15 @@ module.exports = {
     }),
   ],
   devServer: {
-    static: {
-      directory: path.join(__dirname, 'dist'),
-    },
+    static: [
+      {
+        directory: path.join(__dirname, 'dist'),
+      },
+      {
+        directory: path.join(__dirname, 'public'),
+        publicPath: '/public',
+      }
+    ],
     compress: true,
     port: 8182,
     hot: true,

@@ -1,5 +1,5 @@
 /**
- * Simple Featureflow Example - TypeScript Version
+ * Featureflow Example - TypeScript Version
  * 
  * This example demonstrates TypeScript usage with full type support
  */
@@ -45,10 +45,115 @@ ready(() => {
   // Initialize Featureflow
   const featureflow = init(FF_KEY, user, config);
   
+  // Initialize user editor
+  let userEditor: unknown = null;
+  try {
+    const ace = (window as { ace?: { edit: (id: string) => unknown } }).ace;
+    if (ace) {
+      userEditor = ace.edit("user-editor");
+      if (userEditor && typeof userEditor === 'object' && userEditor !== null) {
+        const editor = userEditor as {
+          setTheme: (theme: string) => void;
+          getSession: () => { setMode: (mode: string) => void; setTabSize: (size: number) => void };
+          setHighlightActiveLine: (value: boolean) => void;
+          setShowPrintMargin: (value: boolean) => void;
+          setValue: (value: string) => void;
+          on: (event: string, callback: () => void) => void;
+          getValue: () => string;
+          $blockScrolling: number;
+        };
+        editor.setTheme("ace/theme/github");
+        editor.getSession().setMode("ace/mode/json");
+        editor.setHighlightActiveLine(true);
+        editor.setShowPrintMargin(false);
+        editor.getSession().setTabSize(2);
+        editor.$blockScrolling = Number.POSITIVE_INFINITY;
+        editor.setValue(JSON.stringify(user, null, 2));
+        
+        // Set up update user button
+        const updateBtn = document.getElementById('update-user-btn');
+        const resetBtn = document.getElementById('reset-user-btn');
+        const errorsEl = document.getElementById('editor-errors');
+        
+        if (updateBtn) {
+          updateBtn.addEventListener('click', () => {
+            try {
+              const editorValue = editor.getValue();
+              const newUser: FeatureflowUser = JSON.parse(editorValue);
+              
+              // Validate user object
+              if (!newUser.id || typeof newUser.id !== 'string') {
+                throw new Error('User must have an "id" property of type string');
+              }
+              
+              // Update user
+              featureflow.updateUser(newUser, () => {
+                console.log('✅ User updated successfully');
+                console.log('New user:', newUser);
+                
+                // Hide errors
+                if (errorsEl) {
+                  errorsEl.classList.remove('show');
+                  errorsEl.textContent = '';
+                }
+                
+                // Refresh all displays
+                updateExample1();
+                updateExample2();
+                updateExample3();
+                updateUserDisplay();
+                
+                addEventLog('User updated');
+              });
+            } catch (err: unknown) {
+              console.error('❌ Error updating user:', err);
+              if (errorsEl) {
+                errorsEl.classList.add('show');
+                const message = err instanceof Error ? err.message : String(err);
+                errorsEl.textContent = `Error: ${message}`;
+              }
+            }
+          });
+        }
+        
+        if (resetBtn) {
+          resetBtn.addEventListener('click', () => {
+            editor.setValue(JSON.stringify(user, null, 2));
+            if (errorsEl) {
+              errorsEl.classList.remove('show');
+              errorsEl.textContent = '';
+            }
+          });
+        }
+        
+        // Validate JSON on change
+        editor.on('change', () => {
+          try {
+            const value = editor.getValue();
+            JSON.parse(value);
+            if (errorsEl) {
+              errorsEl.classList.remove('show');
+              errorsEl.textContent = '';
+            }
+          } catch (err: unknown) {
+            if (errorsEl) {
+              errorsEl.classList.add('show');
+              const message = err instanceof Error ? err.message : String(err);
+              errorsEl.textContent = `Invalid JSON: ${message}`;
+            }
+          }
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('Could not initialize editor:', err);
+  }
+  
   // Display results in the DOM
   function updateExample1() {
     const example1El = document.getElementById('example1');
     if (!example1El) return;
+    example1El.style.display = 'block';
     
     const featureValue: string = featureflow.evaluate('example-feature').value();
     const isOn: boolean = featureflow.evaluate('example-feature').isOn();
@@ -72,6 +177,7 @@ ready(() => {
   function updateExample2() {
     const example2El = document.getElementById('example2');
     if (!example2El) return;
+    example2El.style.display = 'block';
     
     const showNewUI: boolean = featureflow.evaluate('new-ui').isOn();
     
@@ -88,6 +194,7 @@ ready(() => {
       function updateExample3() {
         const example3El = document.getElementById('example3');
         if (!example3El) return;
+        example3El.style.display = 'block';
 
         const allFeatures = featureflow.getFeatures();
 
@@ -109,6 +216,7 @@ ready(() => {
       function updateUserDisplay() {
         const userDisplayEl = document.getElementById('user-display');
         if (!userDisplayEl) return;
+        userDisplayEl.style.display = 'block';
 
         const currentUser = featureflow.getUser();
         const attributes = currentUser.attributes || {};
@@ -138,6 +246,7 @@ ready(() => {
   function addEventLog(message: string) {
     const eventsList = document.getElementById('events-list');
     if (!eventsList) return;
+    eventsList.style.display = 'block';
     
     const li = document.createElement('li');
     li.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;

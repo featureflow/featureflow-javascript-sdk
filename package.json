@@ -41,7 +41,7 @@
     "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit",
     "example": "webpack serve --config ./example/webpack.config.js --mode development",
-    "example:ts": "cross-env ENTRY=simple-example.ts webpack serve --config ./example/webpack.config.js --mode development"
+    "example:ts": "cross-env ENTRY=example.ts webpack serve --config ./example/webpack.config.js --mode development"
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",

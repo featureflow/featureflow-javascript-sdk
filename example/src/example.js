@@ -1,5 +1,5 @@
 /**
- * Simple Featureflow Example
+ * Featureflow Example
  * 
  * This example demonstrates:
  * 1. CommonJS import pattern
@@ -8,7 +8,7 @@
  */
 
 // ============================================
-// OPTION 1: Using CommonJS (Node.js, Webpack, etc.)
+// OPTION 1: Using CommonJS (for bundlers that support CommonJS syntax)
 // ============================================
 const Featureflow = require('../../dist/index.js');
 
@@ -16,13 +16,7 @@ const Featureflow = require('../../dist/index.js');
 // OPTION 2: Using ES Modules (uncomment to use)
 // ============================================
 // import Featureflow from '../../dist/index.esm.js';
-// import { init, events, FeatureflowClient } from '../../dist/index.esm.js';
-
-// ============================================
-// OPTION 3: Using TypeScript (same as ES modules, with type support)
-// ============================================
-// import Featureflow, { init, events, FeatureflowClient } from 'featureflow-client';
-// import type { FeatureflowUser, Config, ConfigParam } from 'featureflow-client';
+// import { init, initPromise, events } from '../../dist/index.esm.js';
 
 // Your Featureflow API key
 const FF_KEY = 'YOUR_FEATUREFLOW_API_KEY_HERE';
@@ -40,10 +34,96 @@ const user = {
 // Initialize Featureflow
 const featureflow = Featureflow.init(FF_KEY, user, {
   defaultFeatures: {
-    'my-feature': 'off', // Default value if connection fails
+    'example-feature': 'off', // Default value if connection fails
     'new-ui': 'on'
   }
 });
+
+// Initialize user editor (if DOM is available)
+let userEditor = null;
+if (typeof document !== 'undefined' && document.getElementById('user-editor')) {
+  try {
+    userEditor = ace.edit("user-editor");
+    userEditor.setTheme("ace/theme/github");
+    userEditor.getSession().setMode("ace/mode/json");
+    userEditor.setHighlightActiveLine(true);
+    userEditor.setShowPrintMargin(false);
+    userEditor.getSession().setTabSize(2);
+    userEditor.$blockScrolling = Number.POSITIVE_INFINITY;
+    userEditor.setValue(JSON.stringify(user, null, 2));
+    
+    // Set up update user button
+    const updateBtn = document.getElementById('update-user-btn');
+    const resetBtn = document.getElementById('reset-user-btn');
+    const errorsEl = document.getElementById('editor-errors');
+    
+    if (updateBtn) {
+      updateBtn.addEventListener('click', () => {
+        try {
+          const editorValue = userEditor.getValue();
+          const newUser = JSON.parse(editorValue);
+          
+          // Validate user object
+          if (!newUser.id || typeof newUser.id !== 'string') {
+            throw new Error('User must have an "id" property of type string');
+          }
+          
+          // Update user
+          featureflow.updateUser(newUser, () => {
+            console.log('✅ User updated successfully');
+            console.log('New user:', newUser);
+            
+            // Hide errors
+            if (errorsEl) {
+              errorsEl.classList.remove('show');
+              errorsEl.textContent = '';
+            }
+            
+            // Re-run examples
+            console.log('\n=== After User Update ===');
+            const featureValue = featureflow.evaluate('example-feature').value();
+            console.log('example-feature value after update:', featureValue);
+          });
+        } catch (err) {
+          console.error('❌ Error updating user:', err);
+          if (errorsEl) {
+            errorsEl.classList.add('show');
+            errorsEl.textContent = `Error: ${err.message}`;
+          }
+        }
+      });
+    }
+    
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        userEditor.setValue(JSON.stringify(user, null, 2));
+        if (errorsEl) {
+          errorsEl.classList.remove('show');
+          errorsEl.textContent = '';
+        }
+      });
+    }
+    
+    // Validate JSON on change
+    userEditor.on('change', () => {
+      try {
+        const value = userEditor.getValue();
+        JSON.parse(value);
+        if (errorsEl) {
+          errorsEl.classList.remove('show');
+          errorsEl.textContent = '';
+        }
+      } catch (err) {
+        if (errorsEl) {
+          errorsEl.classList.add('show');
+          errorsEl.textContent = `Invalid JSON: ${err.message}`;
+        }
+      }
+    });
+  } catch (err) {
+    console.warn('Could not initialize editor:', err);
+  }
+}
 
 // ============================================
 // Example 1: Simple feature evaluation
@@ -51,27 +131,27 @@ const featureflow = Featureflow.init(FF_KEY, user, {
 console.log('=== Example 1: Basic Evaluation ===');
 
 // Get the value of a feature
-const featureValue = featureflow.evaluate('my-feature').value();
+const featureValue = featureflow.evaluate('example-feature').value();
 console.log('Feature value:', featureValue);
 
 // Check if feature is ON
-if (featureflow.evaluate('my-feature').isOn()) {
+if (featureflow.evaluate('example-feature').isOn()) {
   console.log('Feature is ON - showing new feature');
 } else {
   console.log('Feature is OFF - showing old feature');
 }
 
 // Check if feature is OFF
-if (featureflow.evaluate('my-feature').isOff()) {
+if (featureflow.evaluate('example-feature').isOff()) {
   console.log('Feature is OFF');
 }
 
 // Check for specific variant value
-if (featureflow.evaluate('my-feature').is('on')) {
+if (featureflow.evaluate('example-feature').is('on')) {
   console.log('Feature variant is "on"');
 }
 
-if (featureflow.evaluate('my-feature').is('red')) {
+if (featureflow.evaluate('example-feature').is('red')) {
   console.log('Feature variant is "red"');
 }
 
@@ -114,8 +194,8 @@ featureflow.on(Featureflow.events.INIT, (features) => {
   console.log('✅ Features initialized:', features);
   
   // Now it's safe to evaluate features
-  const myFeature = featureflow.evaluate('my-feature').value();
-  console.log('My feature value:', myFeature);
+  const exampleFeature = featureflow.evaluate('example-feature').value();
+  console.log('Example feature value:', exampleFeature);
 });
 
 // Listen for errors
@@ -123,10 +203,7 @@ featureflow.on(Featureflow.events.ERROR, (error) => {
   console.error('❌ Featureflow error:', error);
 });
 
-// Listen for feature updates (fired when user is updated)
-featureflow.on(Featureflow.events.INIT, (features) => {
-  console.log('🔄 Features updated:', features);
-});
+// Note: INIT event is fired both on initial load and when user is updated
 
 // ============================================
 // Example 5: Updating user context
@@ -147,8 +224,8 @@ featureflow.updateUser(newUser, () => {
   console.log('User updated, features re-evaluated');
   
   // Features may have different values now
-  const myFeature = featureflow.evaluate('my-feature').value();
-  console.log('Feature value after user update:', myFeature);
+  const exampleFeature = featureflow.evaluate('example-feature').value();
+  console.log('Example feature value after user update:', exampleFeature);
 });
 
 // ============================================
@@ -169,15 +246,15 @@ const { initPromise } = require('../../dist/index.js');
 
 initPromise(FF_KEY, user, {
   defaultFeatures: {
-    'my-feature': 'off'
+    'example-feature': 'off'
   }
 })
   .then((featureflowInstance) => {
     console.log('✅ Featureflow initialized via promise');
     
     // Now evaluate features
-    const feature = featureflowInstance.evaluate('my-feature');
-    console.log('Feature value:', feature.value());
+    const feature = featureflowInstance.evaluate('example-feature');
+    console.log('Example feature value:', feature.value());
   })
   .catch((error) => {
     console.error('❌ Failed to initialize Featureflow:', error);

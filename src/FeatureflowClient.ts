@@ -1,16 +1,16 @@
 import RestClient from './RestClient';
-import Evaluate from './Evaluate';
+import createEvaluate from './Evaluate';
 import Events from './Events';
 import { test } from './Conditions';
-import Emitter from 'tiny-emitter';
+import mitt, { type Emitter } from 'mitt';
 import Cookies from 'js-cookie';
-import type { TinyEmitter } from 'tiny-emitter';
 import {
   type Config,
   type ConfigInternal,
   type FeatureflowUser,
   Features,
   type EvaluatedFeatures,
+  type Evaluate,
   type NodeCallback,
   type EventCallback,
   type Feature,
@@ -79,7 +79,8 @@ export default class FeatureflowClient {
   evaluatedFeatures: EvaluatedFeatures;
   config: ConfigInternal;
   user: FeatureflowUser;
-  emitter: TinyEmitter;
+  emitter: Emitter<Record<string, unknown>>;
+  private callbackMap: Map<EventCallback, (event: unknown) => void>;
   on: (event: string, callback: EventCallback, bindContext?: unknown) => void;
   off: (event: string, callback?: EventCallback) => void;
   receivedInitialResponse: boolean;
@@ -87,17 +88,18 @@ export default class FeatureflowClient {
   initialised: boolean;
   currentContext: {
     attributes: {
-      [key: string]: any[];
+      [key: string]: string|number|Date|string[]|number[]|Date[];
     };
   };
 
-  constructor(apiKey: string, user: FeatureflowUser = getDefaultUser(), config: Config = {}, callback: NodeCallback = () => {
+  constructor(apiKey: string, user?: FeatureflowUser, config: Config = {}, callback: NodeCallback = () => {
   }) {
     this.initialised = false;
     this.receivedInitialResponse = false;
     this.evaluatedFeatures = {};
     this.features = {};
-    this.emitter = new (Emitter as any)();
+    this.emitter = mitt<Record<string, unknown>>();
+    this.callbackMap = new Map();
     this.apiKey = apiKey;
     this.user = { id: '', attributes: {} };
     this.currentContext = { attributes: {} };
@@ -122,9 +124,28 @@ export default class FeatureflowClient {
       this.initialise(initialUser, callback);
     }
 
-    //Bind event emitter
-    this.on = this.emitter.on.bind(this.emitter);
-    this.off = this.emitter.off.bind(this.emitter);
+    //Bind event emitter with bindContext support
+    this.on = (event: string, callback: EventCallback, bindContext?: unknown) => {
+      const wrappedCallback: (event: unknown) => void = bindContext 
+        ? ((event: unknown) => callback.apply(bindContext, [event]))
+        : ((event: unknown) => callback(event));
+      
+      // Store mapping for removal
+      this.callbackMap.set(callback, wrappedCallback);
+      this.emitter.on(event, wrappedCallback);
+    };
+    this.off = (event: string, callback?: EventCallback) => {
+      if (callback) {
+        const wrappedCallback = this.callbackMap.get(callback);
+        if (wrappedCallback) {
+          this.emitter.off(event, wrappedCallback);
+          this.callbackMap.delete(callback);
+        }
+      } else {
+        // Remove all handlers for the event if no callback specified
+        this.emitter.all.delete(event);
+      }
+    };
   }
 
   initialise(user: FeatureflowUser = getDefaultUser(), callback: NodeCallback = () => {}): void {
@@ -174,7 +195,16 @@ export default class FeatureflowClient {
     setTimeout(() => {
       if (this.config.offline) {
         setTimeout(() => {
-          this.features = this.config.defaultFeatures;
+          // Convert defaultFeatures to Features format
+          this.features = {};
+          for (const key in this.config.defaultFeatures) {
+            const value = this.config.defaultFeatures[key];
+            if (typeof value === 'string') {
+              this.features[key] = value;
+            } else if (value && typeof value === 'object' && 'rules' in value) {
+              this.features[key] = value as Feature;
+            }
+          }
           saveFeatures(this.apiKey, userId, this.features);
           this.receivedInitialResponse = true;
           this.initialised = true;
@@ -205,7 +235,17 @@ export default class FeatureflowClient {
 
   getFeatures(): EvaluatedFeatures {
     if (this.config.offline) {
-      return this.evalAll(this.config.defaultFeatures);
+      // Convert defaultFeatures to Features format if needed
+      const features: { [key: string]: Feature } = {};
+      for (const key in this.config.defaultFeatures) {
+        const value = this.config.defaultFeatures[key];
+        if (typeof value === 'string') {
+          features[key] = value;
+        } else if (value && typeof value === 'object' && 'rules' in value) {
+          features[key] = value as Feature;
+        }
+      }
+      return this.evalAll(features);
     }
     return this.evalAll(this.features);
   }
@@ -216,15 +256,24 @@ export default class FeatureflowClient {
 
   evaluate(key: string): Evaluate {
     if (this.config.offline) {
-      const evaluate = new Evaluate(this.config.defaultFeatures[key] || 'off');
-      return evaluate;
+      const defaultFeature = this.config.defaultFeatures[key];
+      // Handle both string and Feature object types
+      if (typeof defaultFeature === 'string') {
+        return createEvaluate(defaultFeature);
+      }
+      // If it's a Feature object, evaluate it
+      if (defaultFeature && typeof defaultFeature === 'object' && 'rules' in defaultFeature) {
+        const variant = this.evalRules(defaultFeature);
+        return createEvaluate(variant || 'off');
+      }
+      return createEvaluate('off');
     }
 
     const feature = this.features[key];
-    if (typeof feature === 'undefined') return new Evaluate('off'); //we dont know this feature
+    if (typeof feature === 'undefined') return createEvaluate('off'); //we dont know this feature
     const variant = this.evalRules(feature);
 
-    const evaluate = new Evaluate(variant || 'off');
+    const evaluate = createEvaluate(variant || 'off');
     if (!this.config.uniqueEvals || (this.config.uniqueEvals && !this.evaluatedFeatures[key])) {
       this.evaluatedFeatures[key] = evaluate.value();
       this.restClient.postEvaluateEvent(this.user, key, evaluate.value());
@@ -247,7 +296,7 @@ export default class FeatureflowClient {
   }
 
   evalRules(feature: Feature): string | undefined {
-    if (typeof feature === 'string') return feature; //we may have old cache
+    if (typeof feature === 'string') return feature; //we may have simple string default features
     if (!feature || !feature.rules || !Array.isArray(feature.rules)) return undefined;
     for (const rule of feature.rules) {
       if (this.ruleMatches(rule)) {
@@ -265,7 +314,6 @@ export default class FeatureflowClient {
       return true;
     }
     for (const condition of rule.audience.conditions) {
-      let pass = false;
       //if there is a date-based condition we smartly pass it back and eval here instead of in the server, 
       //they are non-sensitive and when evaluated here, provide greater performance due to caching benefits
 
@@ -273,8 +321,10 @@ export default class FeatureflowClient {
       if (!values) {
         continue;
       }
-      for (const vKey in values) {
-        const value = values[vKey];
+      const valuesArray = Array.isArray(values) ? values : [values];
+      let pass = false;
+      for (let i = 0; i < valuesArray.length; i++) {
+        const value = valuesArray[i];
         if (test(condition.operator, value, condition.values)) {
           pass = true;
           break;

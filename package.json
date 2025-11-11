@@ -73,6 +73,6 @@
   "dependencies": {
     "base64-js": "^1.5.1",
     "js-cookie": "^3.0.5",
-    "tiny-emitter": "^2.1.0"
+    "mitt": "^3.0.1"
   }
 }

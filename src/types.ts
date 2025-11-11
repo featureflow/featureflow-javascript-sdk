@@ -61,7 +61,7 @@ export type ConfigInternal = {
   uniqueEvals: boolean;
 };
 
-export interface EvaluateInterface {
+export interface Evaluate {
   is(value: string): boolean;
   isOn(): boolean;
   isOff(): boolean;
@@ -78,7 +78,7 @@ export type FeatureflowInstance = {
   updateUser: (user: FeatureflowUser) => FeatureflowUser;
   getFeatures: () => EvaluatedFeatures;
   getUser: () => FeatureflowUser;
-  evaluate: (key: string) => EvaluateInterface;
+  evaluate: (key: string) => Evaluate;
   on: (event: string, callback: EventCallback) => any;
   off: (event: string, callback: EventCallback) => any;
 };

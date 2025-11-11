@@ -68,7 +68,10 @@ const notFound = (): boolean => {
 };
 
 export function test(op: string, a: any, b: any): boolean {
-  b = ['in', 'notIn'].indexOf(op) >= 0 ? b : b[0];
-  return (operators[op] || notFound)(a, b);
+  // For 'in' and 'notIn' operators, b is an array
+  // For all other operators (including 'before' and 'after'), b is a single value
+  const isArrayOperator = ['in', 'notIn'].indexOf(op) >= 0;
+  const value = isArrayOperator ? b : (Array.isArray(b) ? b[0] : b);
+  return (operators[op] || notFound)(a, value);
 }
 

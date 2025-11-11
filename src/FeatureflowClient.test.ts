@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import Featureflow from './index';
 import FeatureflowClient from './FeatureflowClient';
-import Evaluate from './Evaluate';
+import type { Evaluate, Feature, Config } from './types';
 
 describe('Featureflow', () => {
   const FF_KEY = 'test-api-key';
   
   describe('init', () => {
     it('should initialize Featureflow with API key', () => {
-      const featureflow = Featureflow.init(FF_KEY, {}, {
+      const featureflow = Featureflow.init(FF_KEY, {
         offline: true,
         defaultFeatures: {
           'test-feature': 'on'
@@ -57,7 +57,7 @@ describe('Featureflow', () => {
     let featureflow: FeatureflowClient;
 
     beforeEach(() => {
-      featureflow = Featureflow.init(FF_KEY, {}, {
+      featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, {
         offline: true,
         defaultFeatures: {
           'feature-on': 'on',
@@ -67,9 +67,16 @@ describe('Featureflow', () => {
       });
     });
 
-    it('should return Evaluate instance', () => {
+    it('should return Evaluate object with correct methods', () => {
       const result = featureflow.evaluate('feature-on');
-      expect(result).toBeInstanceOf(Evaluate);
+      expect(result).toHaveProperty('value');
+      expect(result).toHaveProperty('is');
+      expect(result).toHaveProperty('isOn');
+      expect(result).toHaveProperty('isOff');
+      expect(typeof result.value).toBe('function');
+      expect(typeof result.is).toBe('function');
+      expect(typeof result.isOn).toBe('function');
+      expect(typeof result.isOff).toBe('function');
     });
 
     it('should return correct feature value', () => {
@@ -110,7 +117,7 @@ describe('Featureflow', () => {
 
   describe('getFeatures', () => {
     it('should return all evaluated features', () => {
-      const featureflow = Featureflow.init(FF_KEY, {}, {
+      const featureflow = Featureflow.init(FF_KEY, {
         offline: true,
         defaultFeatures: {
           'feature-1': 'on',
@@ -161,18 +168,315 @@ describe('Featureflow', () => {
 
   describe('events', () => {
     it('should emit INIT event when features are loaded', (done) => {
-      const featureflow = Featureflow.init(FF_KEY, {}, {
+      const featureflow = Featureflow.init(FF_KEY, {
         offline: true,
         defaultFeatures: {
           'test-feature': 'on'
         }
       });
 
-      featureflow.on(Featureflow.events.INIT, (features: any) => {
+      featureflow.on(Featureflow.events.INIT, (features: Record<string, unknown>) => {
         expect(features).toHaveProperty('test-feature');
         expect(features['test-feature']).toBe('on');
         done();
       });
     });
+  });
+
+  describe('date and hour of day evaluation', () => {
+    let mockDate: Date;
+    let originalDate: typeof Date;
+
+    // Helper to create config with Feature objects
+    const createConfigWithFeatures = (features: { [key: string]: Feature }): Config => {
+      return {
+        offline: true,
+        defaultFeatures: features as { [key: string]: string }
+      } as Config;
+    };
+
+    // Helper to advance timers and wait for INIT event
+    const waitForInit = (featureflow: FeatureflowClient, callback: () => void) => {
+      featureflow.on(Featureflow.events.INIT, () => {
+        jest.advanceTimersByTime(0); // Allow any pending timers
+        callback();
+      });
+      jest.advanceTimersByTime(100); // Advance timers to trigger INIT
+    };
+
+    beforeEach(() => {
+      // Mock Date to return a fixed date: 2024-01-15 14:30:00 (2:30 PM) in local timezone
+      mockDate = new Date(2024, 0, 15, 14, 30, 0); // Year, Month (0-indexed), Day, Hour, Minute, Second
+      jest.useFakeTimers();
+      jest.setSystemTime(mockDate);
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+      jest.restoreAllMocks();
+    });
+
+    describe('featureflow.date evaluation', () => {
+      it('should evaluate feature based on date before condition', (done) => {
+        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+          'date-feature': {
+            rules: [{
+              variant: 'on',
+              audience: {
+                conditions: [{
+                  target: 'featureflow.date',
+                  operator: 'before',
+                  // Note: 'before' and 'after' operators use a single value (first element of array)
+                  values: ['2024-01-20T00:00:00.000Z']
+                }]
+              }
+            }]
+          }
+        }));
+
+        waitForInit(featureflow, () => {
+          const result = featureflow.evaluate('date-feature');
+          expect(result.value()).toBe('on');
+          done();
+        });
+      });
+
+      it('should evaluate feature based on date after condition', (done) => {
+        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+          'date-feature': {
+            rules: [{
+              variant: 'on',
+              audience: {
+                conditions: [{
+                  target: 'featureflow.date',
+                  operator: 'after',
+                  // Note: 'before' and 'after' operators use a single value (first element of array)
+                  values: ['2024-01-10T00:00:00.000Z']
+                }]
+              }
+            }]
+          }
+        }));
+
+        waitForInit(featureflow, () => {
+          const result = featureflow.evaluate('date-feature');
+          expect(result.value()).toBe('on');
+          done();
+        });
+      });
+
+      it('should return off when date condition does not match', (done) => {
+        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+          'date-feature': {
+            rules: [{
+              variant: 'on',
+              audience: {
+                conditions: [{
+                  target: 'featureflow.date',
+                  operator: 'after',
+                  // Note: 'before' and 'after' operators use a single value (first element of array)
+                  values: ['2024-01-20T00:00:00.000Z'] // After our mock date
+                }]
+              }
+            }]
+          }
+        }));
+
+        waitForInit(featureflow, () => {
+          const result = featureflow.evaluate('date-feature');
+          expect(result.value()).toBe('off');
+          done();
+        });
+      });
+    });
+
+    describe('featureflow.hourofday evaluation', () => {
+      it('should evaluate feature based on hour of day equals condition', (done) => {
+        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+          'hour-feature': {
+            rules: [{
+              variant: 'on',
+              audience: {
+                conditions: [{
+                  target: 'featureflow.hourofday',
+                  operator: 'equals',
+                  values: [14] // 2 PM (14:30)
+                }]
+              }
+            }]
+          }
+        }));
+
+        waitForInit(featureflow, () => {
+          const result = featureflow.evaluate('hour-feature');
+          expect(result.value()).toBe('on');
+          done();
+        });
+      });
+
+      it('should evaluate feature based on hour of day greaterThan condition', (done) => {
+        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+          'hour-feature': {
+            rules: [{
+              variant: 'on',
+              audience: {
+                conditions: [{
+                  target: 'featureflow.hourofday',
+                  operator: 'greaterThan',
+                  values: [12] // After noon
+                }]
+              }
+            }]
+          }
+        }));
+
+        waitForInit(featureflow, () => {
+          const result = featureflow.evaluate('hour-feature');
+          expect(result.value()).toBe('on');
+          done();
+        });
+      });
+
+      it('should evaluate feature based on hour of day lessThan condition', (done) => {
+        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+          'hour-feature': {
+            rules: [{
+              variant: 'on',
+              audience: {
+                conditions: [{
+                  target: 'featureflow.hourofday',
+                  operator: 'lessThan',
+                  values: [18] // Before 6 PM
+                }]
+              }
+            }]
+          }
+        }));
+
+        waitForInit(featureflow, () => {
+          const result = featureflow.evaluate('hour-feature');
+          expect(result.value()).toBe('on');
+          done();
+        });
+      });
+
+      it('should return off when hour of day condition does not match', (done) => {
+        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+          'hour-feature': {
+            rules: [{
+              variant: 'on',
+              audience: {
+                conditions: [{
+                  target: 'featureflow.hourofday',
+                  operator: 'lessThan',
+                  values: [10] // Before 10 AM (but it's 2:30 PM)
+                }]
+              }
+            }]
+          }
+        }));
+
+        waitForInit(featureflow, () => {
+          const result = featureflow.evaluate('hour-feature');
+          expect(result.value()).toBe('off');
+          done();
+        });
+      });
+
+      it('should evaluate feature with hour range using greaterThanOrEqual and lessThanOrEqual', (done) => {
+        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+          'hour-feature': {
+            rules: [{
+              variant: 'on',
+              audience: {
+                conditions: [
+                  {
+                    target: 'featureflow.hourofday',
+                    operator: 'greaterThanOrEqual',
+                    values: [12] // After or at noon
+                  },
+                  {
+                    target: 'featureflow.hourofday',
+                    operator: 'lessThanOrEqual',
+                    values: [15] // Before or at 3 PM
+                  }
+                ]
+              }
+            }]
+          }
+        }));
+
+        waitForInit(featureflow, () => {
+          const result = featureflow.evaluate('hour-feature');
+          expect(result.value()).toBe('on');
+          done();
+        });
+      });
+    });
+
+    describe('combined date and hour conditions', () => {
+      it('should evaluate feature with both date and hour conditions', (done) => {
+        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+          'combined-feature': {
+            rules: [{
+              variant: 'on',
+              audience: {
+                conditions: [
+                  {
+                    target: 'featureflow.date',
+                    operator: 'after',
+                    // Note: 'before' and 'after' operators use a single value (first element of array)
+                    values: ['2024-01-10T00:00:00.000Z']
+                  },
+                  {
+                    target: 'featureflow.hourofday',
+                    operator: 'greaterThan',
+                    values: [12]
+                  }
+                ]
+              }
+            }]
+          }
+        }));
+
+        waitForInit(featureflow, () => {
+          const result = featureflow.evaluate('combined-feature');
+          expect(result.value()).toBe('on');
+          done();
+        });
+      });
+
+      it('should return off when one condition fails', (done) => {
+        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+          'combined-feature': {
+            rules: [{
+              variant: 'on',
+              audience: {
+                conditions: [
+                  {
+                    target: 'featureflow.date',
+                    operator: 'after',
+                    // Note: 'before' and 'after' operators use a single value (first element of array)
+                    values: ['2024-01-10T00:00:00.000Z']
+                  },
+                  {
+                    target: 'featureflow.hourofday',
+                    operator: 'lessThan',
+                    values: [10] // Before 10 AM (but it's 2:30 PM)
+                  }
+                ]
+              }
+            }]
+          }
+        }));
+
+        waitForInit(featureflow, () => {
+          const result = featureflow.evaluate('combined-feature');
+          expect(result.value()).toBe('off');
+          done();
+        });
+      });
+    });
+
   });
 });

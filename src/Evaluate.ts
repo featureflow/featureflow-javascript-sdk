@@ -1,26 +1,28 @@
-import { EvaluateInterface } from './types';
+import type { Evaluate } from './types';
 
-export default class Evaluate implements EvaluateInterface {
-  private storedValue: string;
+/**
+ * Creates an Evaluate instance for a feature flag value.
+ * This is a factory function that returns a plain object with methods
+ * to check the feature flag state.
+ */
+export default function createEvaluate(value: string): Evaluate {
+  const storedValue = value.toLowerCase();
 
-  constructor(value: string) {
-    this.storedValue = value.toLowerCase();
-  }
+  return {
+    value(): string {
+      return storedValue;
+    },
 
-  value(): string {
-    return this.storedValue;
-  }
+    is(value: string): boolean {
+      return value.toLowerCase() === storedValue;
+    },
 
-  is(value: string): boolean {
-    return value.toLowerCase() === this.value().toLowerCase();
-  }
+    isOn(): boolean {
+      return storedValue === 'on';
+    },
 
-  isOn(): boolean {
-    return this.is('on');
-  }
-
-  isOff(): boolean {
-    return this.is('off');
-  }
+    isOff(): boolean {
+      return storedValue === 'off';
+    }
+  };
 }
-

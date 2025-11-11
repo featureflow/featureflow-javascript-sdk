@@ -19,7 +19,7 @@ const Featureflow = require('../../dist/index.js');
 // import { init, initPromise, events } from '../../dist/index.esm.js';
 
 // Your Featureflow API key
-const FF_KEY = 'YOUR_FEATUREFLOW_API_KEY_HERE';
+const FF_KEY = 'sdk-js-env-5f5a4c466e61460fa14e685cbb4abe40';
 
 // Define a user (optional)
 const user = {

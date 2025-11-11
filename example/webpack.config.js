@@ -21,7 +21,13 @@ module.exports = {
     filename: 'bundle.js'
   },
   resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx', '.json']
+    extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+    // Ensure mitt resolves correctly
+    mainFields: ['main', 'module', 'browser'],
+    alias: {
+      // Ensure mitt resolves to the CommonJS build
+      'mitt': require.resolve('mitt')
+    }
   },
   module: {
     rules: [

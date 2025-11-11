@@ -2,8 +2,15 @@ import RestClient from './RestClient';
 import createEvaluate from './Evaluate';
 import Events from './Events';
 import { test } from './Conditions';
-import mitt, { type Emitter } from 'mitt';
+import mittFactory from 'mitt';
+import type { Emitter } from 'mitt';
 import Cookies from 'js-cookie';
+
+// Handle both ESM and CommonJS exports for mitt
+// mitt exports a function as default, but webpack might wrap it differently
+const mitt = (typeof mittFactory === 'function' 
+  ? mittFactory 
+  : ((mittFactory as any).default || mittFactory)) as <T extends Record<string, unknown> = Record<string, unknown>>() => Emitter<T>;
 import {
   type Config,
   type ConfigInternal,

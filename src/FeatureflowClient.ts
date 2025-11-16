@@ -21,6 +21,7 @@ import {
   type EventCallback,
   type Feature,
   type Rule,
+  type FeatureflowClient as IFeatureflowClient,
   Condition,
   Conditions
 } from './types';
@@ -79,7 +80,7 @@ function saveFeatures(apiKey: string, userId: string, features: { [key: string]:
   localStorage.setItem(`${KEY_PREFIX}:${userId}:${apiKey}`, JSON.stringify(features));
 }
 
-export default class FeatureflowClient {
+export default class FeatureflowClient implements IFeatureflowClient {
   apiKey: string;
   features: { [key: string]: Feature };
   evaluatedFeatures: EvaluatedFeatures;

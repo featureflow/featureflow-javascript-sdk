@@ -47,6 +47,7 @@ const Featureflow = {
 export default Featureflow;
 
 export { FeatureflowClient };
+// Note: FeatureflowClient class is exported above and can be used as both value and type
 export type { 
   FeatureflowUser,
   Config, 

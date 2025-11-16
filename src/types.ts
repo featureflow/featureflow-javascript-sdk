@@ -73,15 +73,76 @@ export type EvalResult = {
   requiresEval: boolean;
 };
 
-export type FeatureflowInstance = {
-  updateUser: (user: FeatureflowUser) => Promise<Features>;
-  getFeatures: () => EvaluatedFeatures;
-  getUser: () => FeatureflowUser;
-  evaluate: (key: string) => Evaluate;
+/**
+ * Public API interface for FeatureflowClient
+ * This defines the public methods available on a Featureflow client instance
+ */
+export interface FeatureflowClient {
+  /**
+   * Initialize the client with a user. Returns a Promise that resolves when initialization is complete.
+   */
+  initialise(user?: FeatureflowUser): Promise<Features>;
+  
+  /**
+   * Update the user context and re-evaluate all features. Returns a Promise that resolves when update is complete.
+   */
+  updateUser(user: FeatureflowUser): Promise<Features>;
+  
+  /**
+   * Get all evaluated features as a map of feature keys to variant values.
+   */
+  getFeatures(): EvaluatedFeatures;
+  
+  /**
+   * Get the current user context.
+   */
+  getUser(): FeatureflowUser;
+  
+  /**
+   * Evaluate a feature by key. Returns an Evaluate object with helper methods.
+   */
+  evaluate(key: string): Evaluate;
+  
+  /**
+   * Send a goal event for A/B testing experiments.
+   */
   goal(goalKey: string): void;
-  on: (event: string, callback: EventCallback) => any;
-  off: (event: string, callback: EventCallback) => any;
-};
+  
+  /**
+   * Subscribe to an event. Supports optional bindContext for binding 'this' in the callback.
+   */
+  on(event: string, callback: EventCallback, bindContext?: unknown): void;
+  
+  /**
+   * Unsubscribe from an event. If no callback is provided, removes all listeners for the event.
+   */
+  off(event: string, callback?: EventCallback): void;
+  
+  /**
+   * Check if the client has received an initial response from the server.
+   */
+  hasReceivedInitialResponse(): boolean;
+  
+  /**
+   * Check if the client has been initialized.
+   */
+  isInitialised(): boolean;
+  
+  /**
+   * Get the anonymous user ID.
+   */
+  getAnonymousId(): string;
+  
+  /**
+   * Reset and generate a new anonymous user ID.
+   */
+  resetAnonymousId(): string;
+}
+
+/**
+ * @deprecated Use FeatureflowClient instead. This type is kept for backwards compatibility.
+ */
+export type FeatureflowInstance = FeatureflowClient;
 
 export type RequestConfig = {
   method: string;

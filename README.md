@@ -96,6 +96,14 @@ var FF_JS_API_KEY = '<Your javascript api key goes here>';
 const featureflow = await Featureflow.init(FF_JS_API_KEY);
 ```
 
+**TypeScript users** can import the type for better autocomplete and type safety:
+
+```ts
+import { init, type FeatureflowClient } from 'featureflow-client';
+
+const featureflow: FeatureflowClient = await init(FF_JS_API_KEY);
+```
+
 This will load the value of each feature for the current environment specified by the api key. These values can be toggled on and off at `https://<your-org-key>.featureflow.io`
 
 ### Note
@@ -139,6 +147,23 @@ const featureflow = await Featureflow.init(FF_KEY, user);
 
 // Or without user - anonymous user will be auto-generated
 const featureflow = await Featureflow.init(FF_KEY);
+```
+
+**TypeScript example:**
+
+```ts
+import { init, type FeatureflowClient, type FeatureflowUser } from 'featureflow-client';
+
+const user: FeatureflowUser = {
+  id: 'user123',
+  attributes: {
+    tier: 'gold',
+    country: 'australia',
+    roles: ['role1', 'role3']
+  }
+};
+
+const featureflow: FeatureflowClient = await init(FF_KEY, user);
 ```
 
 Additional configuration can be set during init also. You can set offline mode for test environments or local development and provide a default set of feature values, for example:
@@ -193,12 +218,14 @@ Returns a `Promise<featureflow>` instance that resolves when initialization is c
 
 **Example:**
 ```ts
-// Using async/await
-const featureflow = await Featureflow.init(FF_KEY, user, config);
+import { init, type FeatureflowClient, type FeatureflowUser, type Config } from 'featureflow-client';
+
+// Using async/await with TypeScript typing
+const featureflow: FeatureflowClient = await init(FF_KEY, user, config);
 
 // Or using .then()
-Featureflow.init(FF_KEY, user, config).then(featureflow => {
-  // use featureflow
+Featureflow.init(FF_KEY, user, config).then((featureflow: FeatureflowClient) => {
+  // use featureflow with full type safety
 });
 ```
 
@@ -209,6 +236,22 @@ These properties are available on the return of `Featureflow.init(...)`
 #### `featureflow.evaluate(featureKey)`
 
 Returns an object that can be used to help evaluate feature values in an expressive way.
+
+| Params | Type | Default | Description |
+|---------------|----------|--------------|----------------------------------------------------------------|
+| `featureKey*`  | `string` | **`Required`** | The feature key you are targeting |
+| **`return`** | `Evaluate` |  | An Evaluate object with helper methods (`.is()`, `.isOn()`, `.isOff()`, `.value()`) |
+
+**TypeScript example:**
+```ts
+import type { Evaluate } from 'featureflow-client';
+
+const evaluation: Evaluate = featureflow.evaluate('my-feature');
+const value: string = evaluation.value(); // 'on' | 'off' | variant string
+const isOn: boolean = evaluation.isOn();
+const isOff: boolean = evaluation.isOff();
+const matches: boolean = evaluation.is('red');
+```
 
 ##### `featureflow.evaluate(featureKey).is(value)`
 
@@ -255,16 +298,34 @@ Sends a goal event, along with the current evaluated features to **featureflow.i
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `goalKey*` | `string` |  | The key of the goal you want to target. |
 
-#### `featureflow.updateUser(user, [callback])`
+#### `featureflow.updateUser(user)`
 
-Updates the current `user` of the instance and reevaluates all feature features using the new `user`.
+Updates the current `user` of the instance and reevaluates all feature features using the new `user`. Returns a Promise that resolves when the update is complete.
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `user` | `FeatureflowUser` | ... | See the `user` object below. The `id` property is required |
+| **`return`** | `Promise<Features>` |  | Promise that resolves with the updated features |
 
 Fires a `Featureflow.events.LOADED` event when the features have been evaluated.
-Also Fires the callback if provided with the newly evaluated features.
+
+**Example:**
+```js
+// JavaScript
+await featureflow.updateUser(newUser);
+```
+
+```ts
+// TypeScript
+import type { FeatureflowUser, Features } from 'featureflow-client';
+
+const newUser: FeatureflowUser = {
+  id: 'user456',
+  attributes: { tier: 'premium' }
+};
+
+const features: Features = await featureflow.updateUser(newUser);
+```
 
 #### `featureflow.getFeatures()`
 
@@ -272,7 +333,15 @@ Returns the current evaluated `features` as flat key-value map
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
-| **`return`**  | `object` |  | The current `features` object |
+| **`return`**  | `EvaluatedFeatures` |  | The current `features` object (map of feature keys to variant values) |
+
+**Example:**
+```ts
+import type { EvaluatedFeatures } from 'featureflow-client';
+
+const features: EvaluatedFeatures = featureflow.getFeatures();
+// features = { 'feature-1': 'on', 'feature-2': 'off', ... }
+```
 
 #### `featureflow.getUser()`
 
@@ -282,6 +351,15 @@ Returns the current `user`
 |---------------|----------|--------------|----------------------------------------------------------------|
 | **`return`**  | `FeatureflowUser` |  | The current `user`  |
 
+**Example:**
+```ts
+import type { FeatureflowUser } from 'featureflow-client';
+
+const user: FeatureflowUser = featureflow.getUser();
+console.log(user.id); // 'user123'
+console.log(user.attributes?.tier); // 'gold'
+```
+
 #### `featureflow.on(event, callback, [bindContext])`
 
 Listen to events when the `featureflow` instance is updated
@@ -289,17 +367,52 @@ Listen to events when the `featureflow` instance is updated
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `event*`  | `string` | **`Required`** | The name of the event to subscribe to. See `Events` section below for available events. |
-| `callback*`  | `function` | **`Required`** | The function to call when the event is emitted.  |
-| `bindContext`  | `any` | `undefined` | The context to bind the event callback to.  |
+| `callback*`  | `EventCallback` | **`Required`** | The function to call when the event is emitted.  |
+| `bindContext`  | `unknown` | `undefined` | The context to bind the event callback to (useful for binding `this` in class methods).  |
+
+**TypeScript example:**
+```ts
+import { events, type EvaluatedFeatures } from 'featureflow-client';
+
+featureflow.on(events.INIT, (features: EvaluatedFeatures) => {
+  console.log('Features initialized:', features);
+});
+
+// With bindContext for class methods
+class MyComponent {
+  handleInit(features: EvaluatedFeatures) {
+    console.log('Features:', features);
+  }
+}
+
+const component = new MyComponent();
+featureflow.on(events.INIT, component.handleInit, component);
+```
 
 #### `featureflow.off(event, [callback])`
 
-Listen to events when the `featureflow` instance is updated
+Unsubscribe from events when the `featureflow` instance is updated
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `event*`  | `string` | **`Required`** | The name of the event to unsubscribe from. |
-| `callback`  | `function` | **`Required`** | The callback used when binding the object  |
+| `callback`  | `EventCallback` | `undefined` | The callback to remove. If not provided, removes all listeners for the event.  |
+
+**TypeScript example:**
+```ts
+import { events, type EvaluatedFeatures } from 'featureflow-client';
+
+const handler = (features: EvaluatedFeatures) => {
+  console.log('Features:', features);
+};
+
+featureflow.on(events.INIT, handler);
+// Later...
+featureflow.off(events.INIT, handler);
+
+// Or remove all listeners for an event
+featureflow.off(events.INIT);
+```
 
 #### `featureflow.getAnonymousId()`
 

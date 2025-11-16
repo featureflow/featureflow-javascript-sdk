@@ -78,6 +78,7 @@ export type FeatureflowInstance = {
   getFeatures: () => EvaluatedFeatures;
   getUser: () => FeatureflowUser;
   evaluate: (key: string) => Evaluate;
+  goal(goalKey: string): void;
   on: (event: string, callback: EventCallback) => any;
   off: (event: string, callback: EventCallback) => any;
 };

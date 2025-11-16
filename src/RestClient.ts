@@ -1,5 +1,5 @@
 import * as base64 from 'base64-js';
-import type { ConfigInternal, FeatureflowUser, EvaluatedFeatures, Features, NodeCallback, RequestConfig } from './types';
+import type { ConfigInternal, FeatureflowUser, EvaluatedFeatures, Features, RequestConfig } from './types';
 
 // Read package.json version at build time
 let packageVersion = '2.0.0';
@@ -31,12 +31,11 @@ export default class RestClient {
     };
   }
 
-  getFeatures(user: FeatureflowUser, keys: string[] = [], callback: NodeCallback<Features>): void {
+  async getFeatures(user: FeatureflowUser, keys: string[] = []): Promise<Features> {    
     const query = (keys.length > 0) ? `?keys=${keys.join(',')}` : '';
-    this.request(
+    return this.request(
       `${this.baseUrl}/api/js/v1/evaluate/${this.apiKey}/user/${encodeURI(this.base64URLEncode(user))}${query}`,
-      { method: 'GET' },
-      callback
+      { method: 'GET' }
     );
   }
 
@@ -69,12 +68,15 @@ export default class RestClient {
     if (this.queues.events.length > 0) {
       queue.push(...this.queues.events);
       this.queues.events = [];
+      // Fire and forget - don't wait for response
       this.request(`${this.eventsUrl}/api/js/v1/event/${this.apiKey}`,
         {
           method: 'POST',
           body: queue
         }
-      );
+      ).catch(() => {
+        // Silently handle errors for event flushing
+      });
     }
     this.timer = null;
   }
@@ -85,28 +87,28 @@ export default class RestClient {
     }
   }
 
-  request(endpoint: string, config: RequestConfig, callback: NodeCallback<Features> = () => {
-  }): XMLHttpRequest {
-    const request = new XMLHttpRequest();
-    request.addEventListener('load', () => {
-      if (request.status === 200 && request.getResponseHeader('Content-Type') === "application/json;charset=UTF-8") {
-        callback(null, JSON.parse(request.responseText));
+  request(endpoint: string, config: RequestConfig): Promise<Features> {
+    return new Promise((resolve, reject) => {
+      const request = new XMLHttpRequest();
+      request.addEventListener('load', () => {
+        if (request.status === 200 && request.getResponseHeader('Content-Type') === "application/json;charset=UTF-8") {
+          resolve(JSON.parse(request.responseText));
+        } else {
+          reject(new Error(request.statusText || 'non 200 response status code'));
+        }
+      });
+      request.addEventListener('error', () => {
+        reject(new Error('error connecting with server'));
+      });
+      request.open(config.method, endpoint);
+      request.setRequestHeader('X-Featureflow-Client', `JavascriptClient/${packageJSON.version}`);
+      if (config.body) {
+        request.setRequestHeader('Content-Type', 'application/json');
+        request.send(JSON.stringify(config.body));
       } else {
-        callback(request.statusText || 'non 200 response status code');
+        request.send();
       }
     });
-    request.addEventListener('error', () => {
-      callback('error connecting with server');
-    });
-    request.open(config.method, endpoint);
-    request.setRequestHeader('X-Featureflow-Client', `JavascriptClient/${packageJSON.version}`);
-    if (config.body) {
-      request.setRequestHeader('Content-Type', 'application/json');
-      request.send(JSON.stringify(config.body));
-    } else {
-      request.send();
-    }
-    return request;
   }
 
   base64URLEncode(user: FeatureflowUser): string {

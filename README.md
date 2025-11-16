@@ -61,7 +61,7 @@ import Featureflow from 'featureflow-client';
 #### Using TypeScript (same as ES modules, with type support)
 
 ```ts
-import { init, initPromise, events } from 'featureflow-client';
+import { init, events } from 'featureflow-client';
 import type { FeatureflowClient, FeatureflowUser, Config, EvaluatedFeatures } from 'featureflow-client';
 ```
 
@@ -91,12 +91,9 @@ Include the following script in HTML file. This will expose the global variable 
 Get your environment's Featureflow Javascript API key and initialise a new Featureflow client
 
 ```js
-// Using init() - synchronous initialization
+// Using init() - Promise-based initialization
 var FF_JS_API_KEY = '<Your javascript api key goes here>';
-var featureflow = Featureflow.init(FF_JS_API_KEY);
-
-// Or using initPromise() - Promise-based initialization
-const featureflow = await Featureflow.initPromise(FF_JS_API_KEY);
+const featureflow = await Featureflow.init(FF_JS_API_KEY);
 ```
 
 This will load the value of each feature for the current environment specified by the api key. These values can be toggled on and off at `https://<your-org-key>.featureflow.io`
@@ -138,16 +135,16 @@ var user = {
     roles: ['role1', 'role3']
   }
 };
-var featureflow = Featureflow.init(FF_KEY, user);
+const featureflow = await Featureflow.init(FF_KEY, user);
 
 // Or without user - anonymous user will be auto-generated
-var featureflow = Featureflow.init(FF_KEY);
+const featureflow = await Featureflow.init(FF_KEY);
 ```
 
 Additional configuration can be set during init also. You can set offline mode for test environments or local development and provide a default set of feature values, for example:
 
 ```js
-var featureflow = Featureflow.init(FF_KEY, user, {
+const featureflow = await Featureflow.init(FF_KEY, user, {
     offline: true,
     defaultFeatures: {
       'feature-1': 'on',
@@ -185,18 +182,7 @@ Here are some examples of how you can do this:
 
 #### `Featureflow.init(apiKey, [user], [config])`
 
-Returns a `featureflow` instance, see below
-
-| Params | Type | Default | Description |
-|---------------|----------|--------------|----------------------------------------------------------------|
-| `apiKey*` | `string` | **`Required`** | The Featureflow Javascript API key for the environment or project you are targeting |
-| `user` | `FeatureflowUser` | Auto-generated anonymous user | See the `user` object below. If not provided, an anonymous user will be automatically generated |
-| `config` | `Config` | `{}` | See the `config` object below |
-| **`return`** | `featureflow` |  | See Featureflow Instance below |
-
-#### `Featureflow.initPromise(apiKey, [user], [config])`
-
-Returns a `Promise<featureflow>` instance. This is an alternative to `init()` that returns a Promise instead of using callbacks.
+Returns a `Promise<featureflow>` instance that resolves when initialization is complete.
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
@@ -208,17 +194,17 @@ Returns a `Promise<featureflow>` instance. This is an alternative to `init()` th
 **Example:**
 ```ts
 // Using async/await
-const featureflow = await Featureflow.initPromise(FF_KEY, user, config);
+const featureflow = await Featureflow.init(FF_KEY, user, config);
 
 // Or using .then()
-Featureflow.initPromise(FF_KEY, user, config).then(featureflow => {
+Featureflow.init(FF_KEY, user, config).then(featureflow => {
   // use featureflow
 });
 ```
 
 #### Featureflow Instance
 
-These properties are available on the return of `Featureflow.init(...)` or `Featureflow.initPromise(...)`
+These properties are available on the return of `Featureflow.init(...)`
 
 #### `featureflow.evaluate(featureKey)`
 

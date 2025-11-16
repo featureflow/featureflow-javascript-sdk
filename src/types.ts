@@ -1,4 +1,3 @@
-export type NodeCallback<T = any> = (error: any, ...rest: T[]) => any;
 export type EventCallback<T = any> = (...rest: T[]) => any;
 
 export type UserAttributes = {
@@ -75,7 +74,7 @@ export type EvalResult = {
 };
 
 export type FeatureflowInstance = {
-  updateUser: (user: FeatureflowUser) => FeatureflowUser;
+  updateUser: (user: FeatureflowUser) => Promise<Features>;
   getFeatures: () => EvaluatedFeatures;
   getUser: () => FeatureflowUser;
   evaluate: (key: string) => Evaluate;

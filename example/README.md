@@ -20,7 +20,7 @@ The JavaScript example demonstrates:
 - Feature flag evaluation
 - Event handling
 - User context updates
-- Promise-based initialization (`initPromise`)
+- Promise-based initialization
 
 ### TypeScript Example
 
@@ -67,7 +67,7 @@ import Featureflow from 'featureflow-client';
 ### TypeScript (with type support)
 
 ```typescript
-import { init, initPromise, events } from 'featureflow-client';
+import { init, events } from 'featureflow-client';
 import type { FeatureflowClient, FeatureflowUser, Config, EvaluatedFeatures } from 'featureflow-client';
 ```
 

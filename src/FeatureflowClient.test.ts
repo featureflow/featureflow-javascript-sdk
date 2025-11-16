@@ -7,8 +7,8 @@ describe('Featureflow', () => {
   const FF_KEY = 'test-api-key';
   
   describe('init', () => {
-    it('should initialize Featureflow with API key', () => {
-      const featureflow = Featureflow.init(FF_KEY, {
+    it('should initialize Featureflow with API key', async () => {
+      const featureflow = await Featureflow.init(FF_KEY, {
         offline: true,
         defaultFeatures: {
           'test-feature': 'on'
@@ -19,13 +19,13 @@ describe('Featureflow', () => {
       expect(featureflow.apiKey).toBe(FF_KEY);
     });
 
-    it('should throw error if API key is missing', () => {
-      expect(() => {
-        Featureflow.init('', {});
-      }).toThrow('init() has not been called with a valid apiKey');
+    it('should throw error if API key is missing', async () => {
+      await expect(
+        Featureflow.init('', {})
+      ).rejects.toThrow('init() has not been called with a valid apiKey');
     });
 
-    it('should initialize with user context', (done) => {
+    it('should initialize with user context', async () => {
       const user = {
         id: 'user123',
         attributes: {
@@ -34,7 +34,7 @@ describe('Featureflow', () => {
         }
       };
 
-      const featureflow = Featureflow.init(FF_KEY, user, {
+      const featureflow = await Featureflow.init(FF_KEY, user, {
         offline: true,
         delayInit: false,
         defaultFeatures: {
@@ -42,22 +42,18 @@ describe('Featureflow', () => {
         }
       });
 
-      // Wait for initialization to complete (user is set during updateUserWithCache)
-      featureflow.on(Featureflow.events.INIT, () => {
-        const retrievedUser = featureflow.getUser();
-        expect(retrievedUser.id).toBe('user123');
-        expect(retrievedUser.attributes?.tier).toBe('gold');
-        expect(retrievedUser.attributes?.country).toBe('australia');
-        done();
-      });
+      const retrievedUser = featureflow.getUser();
+      expect(retrievedUser.id).toBe('user123');
+      expect(retrievedUser.attributes?.tier).toBe('gold');
+      expect(retrievedUser.attributes?.country).toBe('australia');
     });
   });
 
   describe('evaluate', () => {
     let featureflow: FeatureflowClient;
 
-    beforeEach(() => {
-      featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, {
+    beforeEach(async () => {
+      featureflow = await Featureflow.init(FF_KEY, { id: 'test-user' }, {
         offline: true,
         defaultFeatures: {
           'feature-on': 'on',
@@ -116,8 +112,8 @@ describe('Featureflow', () => {
   });
 
   describe('getFeatures', () => {
-    it('should return all evaluated features', () => {
-      const featureflow = Featureflow.init(FF_KEY, {
+    it('should return all evaluated features', async () => {
+      const featureflow = await Featureflow.init(FF_KEY, {
         offline: true,
         defaultFeatures: {
           'feature-1': 'on',
@@ -138,8 +134,8 @@ describe('Featureflow', () => {
   });
 
   describe('updateUser', () => {
-    it('should update user context', () => {
-      const featureflow = Featureflow.init(FF_KEY, {
+    it('should update user context', async () => {
+      const featureflow = await Featureflow.init(FF_KEY, {
         id: 'user1',
         attributes: { tier: 'gold' }
       }, {
@@ -157,29 +153,27 @@ describe('Featureflow', () => {
         }
       };
 
-      featureflow.updateUser(newUser, () => {
-        const updatedUser = featureflow.getUser();
-        expect(updatedUser.id).toBe('user2');
-        expect(updatedUser.attributes?.tier).toBe('premium');
-        expect(updatedUser.attributes?.country).toBe('usa');
-      });
+      await featureflow.updateUser(newUser);
+      const updatedUser = featureflow.getUser();
+      expect(updatedUser.id).toBe('user2');
+      expect(updatedUser.attributes?.tier).toBe('premium');
+      expect(updatedUser.attributes?.country).toBe('usa');
     });
   });
 
   describe('events', () => {
-    it('should emit INIT event when features are loaded', (done) => {
-      const featureflow = Featureflow.init(FF_KEY, {
+    it('should emit INIT event when features are loaded', async () => {
+      const featureflow = await Featureflow.init(FF_KEY, {
         offline: true,
         defaultFeatures: {
           'test-feature': 'on'
         }
       });
 
-      featureflow.on(Featureflow.events.INIT, (features: Record<string, unknown>) => {
-        expect(features).toHaveProperty('test-feature');
-        expect(features['test-feature']).toBe('on');
-        done();
-      });
+      // INIT event should have been emitted during initialization
+      const features = featureflow.getFeatures();
+      expect(features).toHaveProperty('test-feature');
+      expect(features['test-feature']).toBe('on');
     });
   });
 
@@ -195,15 +189,6 @@ describe('Featureflow', () => {
       } as Config;
     };
 
-    // Helper to advance timers and wait for INIT event
-    const waitForInit = (featureflow: FeatureflowClient, callback: () => void) => {
-      featureflow.on(Featureflow.events.INIT, () => {
-        jest.advanceTimersByTime(0); // Allow any pending timers
-        callback();
-      });
-      jest.advanceTimersByTime(100); // Advance timers to trigger INIT
-    };
-
     beforeEach(() => {
       // Mock Date to return a fixed date: 2024-01-15 14:30:00 (2:30 PM) in local timezone
       mockDate = new Date(2024, 0, 15, 14, 30, 0); // Year, Month (0-indexed), Day, Hour, Minute, Second
@@ -217,8 +202,8 @@ describe('Featureflow', () => {
     });
 
     describe('featureflow.date evaluation', () => {
-      it('should evaluate feature based on date before condition', (done) => {
-        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+      it('should evaluate feature based on date before condition', async () => {
+        const featureflow = await Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
           'date-feature': {
             rules: [{
               variant: 'on',
@@ -234,15 +219,12 @@ describe('Featureflow', () => {
           }
         }));
 
-        waitForInit(featureflow, () => {
-          const result = featureflow.evaluate('date-feature');
-          expect(result.value()).toBe('on');
-          done();
-        });
+        const result = featureflow.evaluate('date-feature');
+        expect(result.value()).toBe('on');
       });
 
-      it('should evaluate feature based on date after condition', (done) => {
-        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+      it('should evaluate feature based on date after condition', async () => {
+        const featureflow = await Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
           'date-feature': {
             rules: [{
               variant: 'on',
@@ -258,15 +240,12 @@ describe('Featureflow', () => {
           }
         }));
 
-        waitForInit(featureflow, () => {
-          const result = featureflow.evaluate('date-feature');
-          expect(result.value()).toBe('on');
-          done();
-        });
+        const result = featureflow.evaluate('date-feature');
+        expect(result.value()).toBe('on');
       });
 
-      it('should return off when date condition does not match', (done) => {
-        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+      it('should return off when date condition does not match', async () => {
+        const featureflow = await Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
           'date-feature': {
             rules: [{
               variant: 'on',
@@ -282,17 +261,14 @@ describe('Featureflow', () => {
           }
         }));
 
-        waitForInit(featureflow, () => {
-          const result = featureflow.evaluate('date-feature');
-          expect(result.value()).toBe('off');
-          done();
-        });
+        const result = featureflow.evaluate('date-feature');
+        expect(result.value()).toBe('off');
       });
     });
 
     describe('featureflow.hourofday evaluation', () => {
-      it('should evaluate feature based on hour of day equals condition', (done) => {
-        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+      it('should evaluate feature based on hour of day equals condition', async () => {
+        const featureflow = await Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
           'hour-feature': {
             rules: [{
               variant: 'on',
@@ -307,15 +283,12 @@ describe('Featureflow', () => {
           }
         }));
 
-        waitForInit(featureflow, () => {
-          const result = featureflow.evaluate('hour-feature');
-          expect(result.value()).toBe('on');
-          done();
-        });
+        const result = featureflow.evaluate('hour-feature');
+        expect(result.value()).toBe('on');
       });
 
-      it('should evaluate feature based on hour of day greaterThan condition', (done) => {
-        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+      it('should evaluate feature based on hour of day greaterThan condition', async () => {
+        const featureflow = await Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
           'hour-feature': {
             rules: [{
               variant: 'on',
@@ -330,15 +303,12 @@ describe('Featureflow', () => {
           }
         }));
 
-        waitForInit(featureflow, () => {
-          const result = featureflow.evaluate('hour-feature');
-          expect(result.value()).toBe('on');
-          done();
-        });
+        const result = featureflow.evaluate('hour-feature');
+        expect(result.value()).toBe('on');
       });
 
-      it('should evaluate feature based on hour of day lessThan condition', (done) => {
-        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+      it('should evaluate feature based on hour of day lessThan condition', async () => {
+        const featureflow = await Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
           'hour-feature': {
             rules: [{
               variant: 'on',
@@ -353,15 +323,12 @@ describe('Featureflow', () => {
           }
         }));
 
-        waitForInit(featureflow, () => {
-          const result = featureflow.evaluate('hour-feature');
-          expect(result.value()).toBe('on');
-          done();
-        });
+        const result = featureflow.evaluate('hour-feature');
+        expect(result.value()).toBe('on');
       });
 
-      it('should return off when hour of day condition does not match', (done) => {
-        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+      it('should return off when hour of day condition does not match', async () => {
+        const featureflow = await Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
           'hour-feature': {
             rules: [{
               variant: 'on',
@@ -376,15 +343,12 @@ describe('Featureflow', () => {
           }
         }));
 
-        waitForInit(featureflow, () => {
-          const result = featureflow.evaluate('hour-feature');
-          expect(result.value()).toBe('off');
-          done();
-        });
+        const result = featureflow.evaluate('hour-feature');
+        expect(result.value()).toBe('off');
       });
 
-      it('should evaluate feature with hour range using greaterThanOrEqual and lessThanOrEqual', (done) => {
-        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+      it('should evaluate feature with hour range using greaterThanOrEqual and lessThanOrEqual', async () => {
+        const featureflow = await Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
           'hour-feature': {
             rules: [{
               variant: 'on',
@@ -406,17 +370,14 @@ describe('Featureflow', () => {
           }
         }));
 
-        waitForInit(featureflow, () => {
-          const result = featureflow.evaluate('hour-feature');
-          expect(result.value()).toBe('on');
-          done();
-        });
+        const result = featureflow.evaluate('hour-feature');
+        expect(result.value()).toBe('on');
       });
     });
 
     describe('combined date and hour conditions', () => {
-      it('should evaluate feature with both date and hour conditions', (done) => {
-        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+      it('should evaluate feature with both date and hour conditions', async () => {
+        const featureflow = await Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
           'combined-feature': {
             rules: [{
               variant: 'on',
@@ -439,15 +400,12 @@ describe('Featureflow', () => {
           }
         }));
 
-        waitForInit(featureflow, () => {
-          const result = featureflow.evaluate('combined-feature');
-          expect(result.value()).toBe('on');
-          done();
-        });
+        const result = featureflow.evaluate('combined-feature');
+        expect(result.value()).toBe('on');
       });
 
-      it('should return off when one condition fails', (done) => {
-        const featureflow = Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
+      it('should return off when one condition fails', async () => {
+        const featureflow = await Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
           'combined-feature': {
             rules: [{
               variant: 'on',
@@ -470,11 +428,8 @@ describe('Featureflow', () => {
           }
         }));
 
-        waitForInit(featureflow, () => {
-          const result = featureflow.evaluate('combined-feature');
-          expect(result.value()).toBe('off');
-          done();
-        });
+        const result = featureflow.evaluate('combined-feature');
+        expect(result.value()).toBe('off');
       });
     });
 

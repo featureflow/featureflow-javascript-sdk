@@ -41,9 +41,9 @@ const config: Config = {
 };
 
 // Wait for DOM to be ready
-ready(() => {
-  // Initialize Featureflow
-  const featureflow = init(FF_KEY, user, config);
+ready(async () => {
+  // Initialize Featureflow (now returns a Promise)
+  const featureflow = await init(FF_KEY, user, config);
   
   // Initialize user editor
   let userEditor: unknown = null;
@@ -76,7 +76,7 @@ ready(() => {
         const errorsEl = document.getElementById('editor-errors');
         
         if (updateBtn) {
-          updateBtn.addEventListener('click', () => {
+          updateBtn.addEventListener('click', async () => {
             try {
               const editorValue = editor.getValue();
               const newUser: FeatureflowUser = JSON.parse(editorValue);
@@ -87,24 +87,23 @@ ready(() => {
               }
               
               // Update user
-              featureflow.updateUser(newUser, () => {
-                console.log('✅ User updated successfully');
-                console.log('New user:', newUser);
-                
-                // Hide errors
-                if (errorsEl) {
-                  errorsEl.classList.remove('show');
-                  errorsEl.textContent = '';
-                }
-                
-                // Refresh all displays
-                updateExample1();
-                updateExample2();
-                updateExample3();
-                updateUserDisplay();
-                
-                addEventLog('User updated');
-              });
+              await featureflow.updateUser(newUser);
+              console.log('✅ User updated successfully');
+              console.log('New user:', newUser);
+              
+              // Hide errors
+              if (errorsEl) {
+                errorsEl.classList.remove('show');
+                errorsEl.textContent = '';
+              }
+              
+              // Refresh all displays
+              updateExample1();
+              updateExample2();
+              updateExample3();
+              updateUserDisplay();
+              
+              addEventLog('User updated');
             } catch (err: unknown) {
               console.error('❌ Error updating user:', err);
               if (errorsEl) {
@@ -289,7 +288,7 @@ ready(() => {
   });
 
   // Example: Update user after 5 seconds
-  setTimeout(() => {
+  setTimeout(async () => {
     const newUser: FeatureflowUser = {
       id: 'user123',
       attributes: {
@@ -299,10 +298,11 @@ ready(() => {
       }
     };
 
-        addEventLog('🔄 Updating user context...');
-        featureflow.updateUser(newUser, () => {
-          addEventLog('✅ User updated');
-          console.log('User updated');
+        addEventLog('🔄 Updating user context after 5 seconds to premium user...');
+        try {
+          await featureflow.updateUser(newUser);
+          addEventLog(`✅ User updated to premium user ${JSON.stringify(newUser)}`);
+          console.log(`User updated to premium user ${JSON.stringify(newUser)}`);
 
           updateExample1();
           updateExample2();
@@ -311,7 +311,11 @@ ready(() => {
 
           const exampleFeature: string = featureflow.evaluate('example-feature').value();
           console.log('Example feature value after user update:', exampleFeature);
-        });
+        } catch (err: unknown) {
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          addEventLog(`❌ Error updating user: ${errorMessage}`);
+          console.error('Error updating user:', err);
+        }
   }, 5000);
 });
 

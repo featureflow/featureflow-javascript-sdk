@@ -15,10 +15,9 @@ import {
   type Config,
   type ConfigInternal,
   type FeatureflowUser,
-  Features,
+  type Features,
   type EvaluatedFeatures,
   type Evaluate,
-  type NodeCallback,
   type EventCallback,
   type Feature,
   type Rule,
@@ -99,8 +98,7 @@ export default class FeatureflowClient {
     };
   };
 
-  constructor(apiKey: string, user?: FeatureflowUser, config: Config = {}, callback: NodeCallback = () => {
-  }) {
+  constructor(apiKey: string, user?: FeatureflowUser, config: Config = {}) {
     this.initialised = false;
     this.receivedInitialResponse = false;
     this.evaluatedFeatures = {};
@@ -124,12 +122,8 @@ export default class FeatureflowClient {
     //Create the rest client
     this.restClient = new RestClient(apiKey, this.config);
 
-    // Store user parameter for initialization
-    const initialUser = user;
-
-    if (!config.delayInit) {
-      this.initialise(initialUser, callback);
-    }
+    // Note: Initialization is now handled by the init() function, not the constructor
+    // This allows init() to await the initialization Promise before returning
 
     //Bind event emitter with bindContext support
     this.on = (event: string, callback: EventCallback, bindContext?: unknown) => {
@@ -155,18 +149,16 @@ export default class FeatureflowClient {
     };
   }
 
-  initialise(user: FeatureflowUser = getDefaultUser(), callback: NodeCallback = () => {}): void {
+  async initialise(user: FeatureflowUser = getDefaultUser()): Promise<Features> {
     //3. Load initial data
-    this.updateUserWithCache(user, false, callback);
+    return this.updateUserWithCache(user, false);
   }
 
-  updateUser(user: FeatureflowUser = getDefaultUser(), callback: NodeCallback = () => {
-  }): FeatureflowUser {
-    return this.updateUserWithCache(user, false, callback);
+  async updateUser(user: FeatureflowUser = getDefaultUser()): Promise<Features> {
+    return this.updateUserWithCache(user, false);
   }
 
-  updateUserWithCache(user: FeatureflowUser, initOnCache = false, callback: NodeCallback = () => {
-  }): FeatureflowUser {
+  async updateUserWithCache(user: FeatureflowUser, initOnCache = false): Promise<Features> {
     //these could be event or session attributes ie not persisted directly to user but added to a separate attributes map
     const featureflowAttributes = {};
     const attributes = {
@@ -193,51 +185,52 @@ export default class FeatureflowClient {
     this.features = loadFeatures(this.apiKey, userId);
     if (hasCachedFeatures(this.apiKey, userId)) {
       this.emitter.emit(Events.LOADED_FROM_CACHE, this.features);
-      /*if(initOnCache) {
-          callback(undefined, this.features);
-      }*/
+      if(initOnCache) {
+          return Promise.resolve(this.features);
+      }
     }
 
     // Put this in timeout so we can listen to all events before it is returned
-    setTimeout(() => {
-      if (this.config.offline) {
-        setTimeout(() => {
-          // Convert defaultFeatures to Features format
-          this.features = {};
-          for (const key in this.config.defaultFeatures) {
-            const value = this.config.defaultFeatures[key];
-            if (typeof value === 'string') {
-              this.features[key] = value;
-            } else if (value && typeof value === 'object' && 'rules' in value) {
-              this.features[key] = value as Feature;
+    return new Promise((resolve, reject) => {
+      setTimeout(async () => {
+        if (this.config.offline) {
+          setTimeout(() => {
+            // Convert defaultFeatures to Features format
+            this.features = {};
+            for (const key in this.config.defaultFeatures) {
+              const value = this.config.defaultFeatures[key];
+              if (typeof value === 'string') {
+                this.features[key] = value;
+              } else if (value && typeof value === 'object' && 'rules' in value) {
+                this.features[key] = value as Feature;
+              }
             }
-          }
-          saveFeatures(this.apiKey, userId, this.features);
-          this.receivedInitialResponse = true;
-          this.initialised = true;
-          this.emitter.emit(Events.INIT, this.features);
-          this.emitter.emit(Events.LOADED, this.features);
-          callback(undefined, this.features);
-        });
-      } else {
-        this.restClient.getFeatures(this.user, [], (error, features) => {
-          this.receivedInitialResponse = true;
-          this.initialised = true;
-          if (!error) {
+            saveFeatures(this.apiKey, userId, this.features);
+            this.receivedInitialResponse = true;
+            this.initialised = true;
+            this.emitter.emit(Events.INIT, this.features);
+            this.emitter.emit(Events.LOADED, this.features);
+            resolve(this.features);
+          });
+        } else {
+          try {
+            const features = await this.restClient.getFeatures(this.user, []);
+            this.receivedInitialResponse = true;
+            this.initialised = true;
             this.features = features || {};
             saveFeatures(this.apiKey, userId, this.features);
             this.emitter.emit(Events.INIT, features);
             this.emitter.emit(Events.LOADED, features);
-            callback(undefined, features);
-          } else {
+            resolve(features);
+          } catch (error) {
+            this.receivedInitialResponse = true;
+            this.initialised = true;
             this.emitter.emit(Events.ERROR, error);
-            callback(error);
+            reject(error);
           }
-        });
-      }
-    }, 0);
-
-    return this.user;
+        }
+      }, 0);
+    });
   }
 
   getFeatures(): EvaluatedFeatures {

@@ -11,19 +11,19 @@ import Cookies from 'js-cookie';
 const mitt = (typeof mittFactory === 'function' 
   ? mittFactory 
   : ((mittFactory as any).default || mittFactory)) as <T extends Record<string, unknown> = Record<string, unknown>>() => Emitter<T>;
-import {
-  type Config,
-  type ConfigInternal,
-  type FeatureflowUser,
-  type Features,
-  type EvaluatedFeatures,
-  type Evaluate,
-  type EventCallback,
-  type Feature,
-  type Rule,
-  type FeatureflowClient as IFeatureflowClient,
+import type {
+  Config,
+  ConfigInternal,
+  FeatureflowUser,
+  Features,
+  EvaluatedFeatures,
+  Evaluate,
+  EventCallback,
+  Feature,
+  Rule,
   Condition,
-  Conditions
+  Conditions,
+  FeatureflowClient as IFeatureflowClient
 } from './types';
 
 const DEFAULT_BASE_URL = 'https://app.featureflow.io';

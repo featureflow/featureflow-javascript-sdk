@@ -74,10 +74,12 @@ export type EvalResult = {
 };
 
 /**
- * Public API interface for FeatureflowClient
- * This defines the public methods available on a Featureflow client instance
+ * Internal interface for FeatureflowClient contract enforcement
+ * This ensures the class implements all required public methods.
+ * Users should use the FeatureflowClient class type directly, not this interface.
+ * @internal
  */
-export interface FeatureflowClient {
+export interface IFeatureflowClient {
   /**
    * Initialize the client with a user. Returns a Promise that resolves when initialization is complete.
    */
@@ -140,9 +142,9 @@ export interface FeatureflowClient {
 }
 
 /**
- * @deprecated Use FeatureflowClient instead. This type is kept for backwards compatibility.
+ * @deprecated Use FeatureflowClient class type instead. This type is kept for backwards compatibility.
  */
-export type FeatureflowInstance = FeatureflowClient;
+export type FeatureflowInstance = IFeatureflowClient;
 
 export type RequestConfig = {
   method: string;

@@ -23,7 +23,7 @@ import type {
   Rule,
   Condition,
   Conditions,
-  FeatureflowClient as IFeatureflowClient
+  IFeatureflowClient
 } from './types';
 
 const DEFAULT_BASE_URL = 'https://app.featureflow.io';

@@ -8,17 +8,26 @@
 
 Get your Featureflow account at [featureflow.io](http://www.featureflow.io)
 
+## Build
+
+```bash
+npm install
+npm run build
+```
+
 ## Getting Started
 
 1. Clone this repository
-2. Update example/src/index.js ```const FF_KEY = 'your-javascript-environment-sdk-key';``` 
+2. Update example/src/index.js ```const FF_KEY = 'your-javascript-environment-sdk-key';```
 3. Run `$ npm install` and `$ npm run example`
 
-## Publishing 
-```
+## Publishing
+
+```bash
 ./deploy_prod_npm.sh
 ./deploy_prod_s3.sh
 ```
+
 ## License
 
 Apache-2.0

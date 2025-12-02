@@ -1,42 +1,88 @@
-var webpack = require('webpack');
-var path = require("path");
+const webpack = require('webpack');
+const path = require("node:path");
 
-var HtmlWebpackPlugin = require('html-webpack-plugin');
-var HTMLWebpackPluginConfig = new HtmlWebpackPlugin({
-  template: path.join(__dirname,'/src/index.html'),
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+// Get entry point from environment variable or default to example.js
+const entryPoint = process.env.ENTRY || 'example.js';
+const htmlTemplate = 'example.html';
+const HTMLWebpackPluginConfig = new HtmlWebpackPlugin({
+  template: path.join(__dirname, '/src', htmlTemplate),
   filename: 'index.html',
   inject: 'body'
-})
+});
 
 module.exports = {
-  devtool: 'eval',
-  entry: [path.join(__dirname, "/src/index.js")],
+  devtool: 'eval-source-map',
+  entry: [path.join(__dirname, '/src', entryPoint)],
   output: {
-    path: path.join(__dirname,'/dist'),
+    path: path.join(__dirname, '/dist'),
     publicPath: '',
     filename: 'bundle.js'
+  },
+  resolve: {
+    extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+    // Ensure mitt resolves correctly
+    mainFields: ['main', 'module', 'browser'],
+    alias: {
+      // Ensure mitt resolves to the CommonJS build
+      'mitt': require.resolve('mitt')
+    }
   },
   module: {
     rules: [
       {
-        test: /\.js$/,
+        test: /\.tsx?$/,
         exclude: /node_modules/,
         use: [
-          'babel-loader'
+          {
+            loader: 'ts-loader',
+            options: {
+              transpileOnly: true,
+              configFile: path.join(__dirname, '../tsconfig.json')
+            }
+          }
+        ],
+      },
+      {
+        test: /\.js$/,
+        exclude: [
+          /node_modules/,
+          path.resolve(__dirname, '../dist')
+        ],
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: [['@babel/preset-env', { targets: 'defaults' }]],
+              ignore: [
+                path.resolve(__dirname, '../dist')
+              ]
+            }
+          }
         ],
       }
     ]
   },
-  devtool: 'inline-source-map',
   plugins: [
     HTMLWebpackPluginConfig,
-    new webpack.optimize.CommonsChunkPlugin({
-      name: 'vendor',
-      minChunks: Infinity,
-      filename: 'vendor.bundle.js'
-    }),
     new webpack.DefinePlugin({
       'process.env': { NODE_ENV: JSON.stringify('development') }
     }),
-  ]
+  ],
+  devServer: {
+    static: [
+      {
+        directory: path.join(__dirname, 'dist'),
+      },
+      {
+        directory: path.join(__dirname, 'public'),
+        publicPath: '/public',
+      }
+    ],
+    compress: true,
+    port: 8182,
+    hot: true,
+    open: true
+  }
 };

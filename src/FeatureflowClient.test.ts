@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import Featureflow from './index';
 import FeatureflowClient from './FeatureflowClient';
-import type { Evaluate, Feature, Config } from './types';
+import type { Feature, Config } from './types';
 
 describe('Featureflow', () => {
   const FF_KEY = 'test-api-key';
@@ -178,8 +178,6 @@ describe('Featureflow', () => {
   });
 
   describe('date and hour of day evaluation', () => {
-    let mockDate: Date;
-    let originalDate: typeof Date;
 
     // Helper to create config with Feature objects
     const createConfigWithFeatures = (features: { [key: string]: Feature }): Config => {
@@ -190,15 +188,11 @@ describe('Featureflow', () => {
     };
 
     beforeEach(() => {
-      // Mock Date to return a fixed date: 2024-01-15 14:30:00 (2:30 PM) in local timezone
-      mockDate = new Date(2024, 0, 15, 14, 30, 0); // Year, Month (0-indexed), Day, Hour, Minute, Second
-      jest.useFakeTimers();
-      jest.setSystemTime(mockDate);
+      // No need for date/time mocking when using extreme dates
     });
 
     afterEach(() => {
-      jest.useRealTimers();
-      jest.restoreAllMocks();
+      // No need for timer restoration
     });
 
     describe('featureflow.date evaluation', () => {
@@ -211,14 +205,12 @@ describe('Featureflow', () => {
                 conditions: [{
                   target: 'featureflow.date',
                   operator: 'before',
-                  // Note: 'before' and 'after' operators use a single value (first element of array)
-                  values: ['2024-01-20T00:00:00.000Z']
+                  values: ['2040-01-01T00:00:00.000Z'] // Far future
                 }]
               }
             }]
           }
         }));
-
         const result = featureflow.evaluate('date-feature');
         expect(result.value()).toBe('on');
       });
@@ -232,14 +224,12 @@ describe('Featureflow', () => {
                 conditions: [{
                   target: 'featureflow.date',
                   operator: 'after',
-                  // Note: 'before' and 'after' operators use a single value (first element of array)
-                  values: ['2024-01-10T00:00:00.000Z']
+                  values: ['2000-01-01T00:00:00.000Z'] // Far past
                 }]
               }
             }]
           }
         }));
-
         const result = featureflow.evaluate('date-feature');
         expect(result.value()).toBe('on');
       });
@@ -253,20 +243,24 @@ describe('Featureflow', () => {
                 conditions: [{
                   target: 'featureflow.date',
                   operator: 'after',
-                  // Note: 'before' and 'after' operators use a single value (first element of array)
-                  values: ['2024-01-20T00:00:00.000Z'] // After our mock date
+                  values: ['2040-01-01T00:00:00.000Z'] // Far future
                 }]
               }
             }]
           }
         }));
-
         const result = featureflow.evaluate('date-feature');
         expect(result.value()).toBe('off');
       });
     });
 
     describe('featureflow.hourofday evaluation', () => {
+      beforeEach(() => {
+        jest.spyOn(Date.prototype, 'getHours').mockReturnValue(14);
+      });
+      afterEach(() => {
+        jest.restoreAllMocks();
+      });
       it('should evaluate feature based on hour of day equals condition', async () => {
         const featureflow = await Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
           'hour-feature': {
@@ -387,7 +381,7 @@ describe('Featureflow', () => {
                     target: 'featureflow.date',
                     operator: 'after',
                     // Note: 'before' and 'after' operators use a single value (first element of array)
-                    values: ['2024-01-10T00:00:00.000Z']
+                    values: ['2000-01-01T00:00:00.000Z']
                   },
                   {
                     target: 'featureflow.hourofday',
@@ -415,7 +409,7 @@ describe('Featureflow', () => {
                     target: 'featureflow.date',
                     operator: 'after',
                     // Note: 'before' and 'after' operators use a single value (first element of array)
-                    values: ['2024-01-10T00:00:00.000Z']
+                    values: ['2000-01-01T00:00:00.000Z']
                   },
                   {
                     target: 'featureflow.hourofday',

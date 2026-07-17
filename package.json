@@ -1,6 +1,6 @@
 {
   "name": "featureflow-client",
-  "version": "2.0.1",
+  "version": "2.2.0",
   "description": "Featureflow JavaScript/TypeScript Client SDK",
   "author": "Featureflow <contact@featureflow.io>",
   "license": "Apache-2.0",

@@ -31,7 +31,7 @@ export default class RestClient {
     };
   }
 
-  async getFeatures(user: FeatureflowUser, keys: string[] = []): Promise<Features> {    
+  async getFeatures(user: FeatureflowUser, keys: string[] = []): Promise<Features> {
     const query = (keys.length > 0) ? `?keys=${keys.join(',')}` : '';
     return this.request(
       `${this.baseUrl}/api/js/v1/evaluate/${this.apiKey}/user/${encodeURI(this.base64URLEncode(user))}${query}`,

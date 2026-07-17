@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import Featureflow from './index';
 import FeatureflowClient from './FeatureflowClient';
 import type { Feature, Config } from './types';
@@ -427,5 +427,49 @@ describe('Featureflow', () => {
       });
     });
 
+  });
+
+  describe('jsonValue', () => {
+    // Constructed directly (not via Featureflow.init) so no real fetch happens — .features is set
+    // directly, exercising evaluate()'s resolution logic in isolation. The JSON value now arrives
+    // embedded on the matched Rule itself (from a single /evaluate response), not a separate fetch.
+    const buildClient = (): FeatureflowClient => {
+      const featureflow = new FeatureflowClient('test-api-key', { id: 'test-user' }, { offline: false });
+      jest.spyOn(featureflow.restClient, 'postEvaluateEvent').mockImplementation(() => {});
+      return featureflow;
+    };
+
+    it('resolves the JSON config value embedded on the matched rule', () => {
+      const featureflow = buildClient();
+      featureflow.features = {
+        'my-feature': { rules: [{ variant: 'on', value: { color: '#0066cc', maxItems: 10 } }] }
+      };
+
+      const result = featureflow.evaluate('my-feature');
+      expect(result.value()).toBe('on');
+      expect(result.jsonValue()).toEqual({ color: '#0066cc', maxItems: 10 });
+    });
+
+    it('returns undefined when the resolved variant has no value', () => {
+      const featureflow = buildClient();
+      featureflow.features = {
+        'my-feature': { rules: [{ variant: 'off' }] }
+      };
+
+      const result = featureflow.evaluate('my-feature');
+      expect(result.jsonValue()).toBeUndefined();
+    });
+
+    it('does not affect value()/is()/isOn()/isOff(), which stay string-key based', () => {
+      const featureflow = buildClient();
+      featureflow.features = {
+        'my-feature': { rules: [{ variant: 'on', value: { color: '#0066cc' } }] }
+      };
+
+      const result = featureflow.evaluate('my-feature');
+      expect(result.value()).toBe('on');
+      expect(result.is('on')).toBe(true);
+      expect(result.isOn()).toBe(true);
+    });
   });
 });

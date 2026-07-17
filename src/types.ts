@@ -7,6 +7,8 @@ export type UserAttributes = {
 export type Rule = {
   audience?: Audience;
   variant: string;
+  /** The variant's JSON config payload, embedded directly in the /evaluate response. */
+  value?: unknown;
 };
 
 export type Condition = {
@@ -65,6 +67,8 @@ export interface Evaluate {
   isOn(): boolean;
   isOff(): boolean;
   value(): string;
+  /** The evaluated variant's JSON config payload, or undefined if it has none. */
+  jsonValue<T = unknown>(): T | undefined;
 }
 
 export type EvalResult = {

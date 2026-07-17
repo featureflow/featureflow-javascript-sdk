@@ -264,17 +264,18 @@ export default class FeatureflowClient implements IFeatureflowClient {
       }
       // If it's a Feature object, evaluate it
       if (defaultFeature && typeof defaultFeature === 'object' && 'rules' in defaultFeature) {
-        const variant = this.evalRules(defaultFeature);
-        return createEvaluate(variant || 'off');
+        const matched = this.evalRules(defaultFeature);
+        return createEvaluate(matched?.variant || 'off', matched?.value);
       }
       return createEvaluate('off');
     }
 
     const feature = this.features[key];
     if (typeof feature === 'undefined') return createEvaluate('off'); //we dont know this feature
-    const variant = this.evalRules(feature);
+    const matched = this.evalRules(feature);
+    const resolvedVariant = matched?.variant || 'off';
 
-    const evaluate = createEvaluate(variant || 'off');
+    const evaluate = createEvaluate(resolvedVariant, matched?.value);
     if (!this.config.uniqueEvals || (this.config.uniqueEvals && !this.evaluatedFeatures[key])) {
       this.evaluatedFeatures[key] = evaluate.value();
       this.restClient.postEvaluateEvent(this.user, key, evaluate.value());
@@ -286,7 +287,7 @@ export default class FeatureflowClient implements IFeatureflowClient {
   evalAll(features: { [key: string]: Feature }): EvaluatedFeatures {
     const evaluated: EvaluatedFeatures = {};
     for (const k of Object.keys(features)) {
-      const variant = this.evalRules(features[k]);
+      const variant = this.evalRules(features[k])?.variant;
       evaluated[k] = variant || 'off';
       if (this.config.uniqueEvals && !this.evaluatedFeatures[k]) {
         this.evaluatedFeatures[k] = variant || 'off';
@@ -296,12 +297,13 @@ export default class FeatureflowClient implements IFeatureflowClient {
     return evaluated;
   }
 
-  evalRules(feature: Feature): string | undefined {
-    if (typeof feature === 'string') return feature; //we may have simple string default features
+  /** Returns the matched rule's variant key and JSON config value (embedded directly in the /evaluate response). */
+  evalRules(feature: Feature): { variant: string; value?: unknown } | undefined {
+    if (typeof feature === 'string') return { variant: feature }; //we may have simple string default features
     if (!feature || !feature.rules || !Array.isArray(feature.rules)) return undefined;
     for (const rule of feature.rules) {
       if (this.ruleMatches(rule)) {
-        return rule.variant;
+        return { variant: rule.variant, value: rule.value };
       }
     }
     return undefined;

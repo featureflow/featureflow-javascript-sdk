@@ -492,7 +492,7 @@ Apache-2.0
 [ci-url]: https://github.com/featureflow/featureflow-javascript-sdk/actions/workflows/ci.yml
 [ci-img]: https://github.com/featureflow/featureflow-javascript-sdk/actions/workflows/ci.yml/badge.svg?branch=main
 
-[npm-url]: https://nodei.co/npm/featureflow-client
+[npm-url]: https://www.npmjs.com/package/featureflow-client
 [npm-img]: https://nodei.co/npm/featureflow-client.png
 
 [dependency-url]: https://www.featureflow.com

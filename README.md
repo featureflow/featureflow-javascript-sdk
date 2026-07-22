@@ -30,7 +30,7 @@ or See the example at [Codepen](https://codepen.io/featureflow/pen/BboreK).
 
 ## Change Log
 
-Please see [CHANGELOG](https://github.com/featureflow/featureflow-javascript-sdk/blob/master/CHANGELOG.md).
+Please see [CHANGELOG](https://github.com/featureflow/featureflow-javascript-sdk/blob/main/CHANGELOG.md).
 
 ## Installation
 

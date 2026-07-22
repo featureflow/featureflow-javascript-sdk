@@ -1,5 +1,7 @@
 # featureflow-javascript-sdk
 
+[![CI][ci-img]][ci-url]
+
 [![npm package][npm-img]][npm-url]
 
 [![Featureflow][dependency-img]][dependency-url]
@@ -486,6 +488,9 @@ Callback is fired with one parameter with the error message.
 ## License
 
 Apache-2.0
+
+[ci-url]: https://github.com/featureflow/featureflow-javascript-sdk/actions/workflows/ci.yml
+[ci-img]: https://github.com/featureflow/featureflow-javascript-sdk/actions/workflows/ci.yml/badge.svg?branch=main
 
 [npm-url]: https://nodei.co/npm/featureflow-client
 [npm-img]: https://nodei.co/npm/featureflow-client.png

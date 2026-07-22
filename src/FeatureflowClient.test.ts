@@ -187,12 +187,14 @@ describe('Featureflow', () => {
       } as Config;
     };
 
+    // Pin the hour so featureflow.hourofday conditions don't depend on the real wall clock.
+    // Date conditions use extreme dates (2000/2040) and need no mocking.
     beforeEach(() => {
-      // No need for date/time mocking when using extreme dates
+      jest.spyOn(Date.prototype, 'getHours').mockReturnValue(14);
     });
 
     afterEach(() => {
-      // No need for timer restoration
+      jest.restoreAllMocks();
     });
 
     describe('featureflow.date evaluation', () => {
@@ -255,12 +257,6 @@ describe('Featureflow', () => {
     });
 
     describe('featureflow.hourofday evaluation', () => {
-      beforeEach(() => {
-        jest.spyOn(Date.prototype, 'getHours').mockReturnValue(14);
-      });
-      afterEach(() => {
-        jest.restoreAllMocks();
-      });
       it('should evaluate feature based on hour of day equals condition', async () => {
         const featureflow = await Featureflow.init(FF_KEY, { id: 'test-user' }, createConfigWithFeatures({
           'hour-feature': {

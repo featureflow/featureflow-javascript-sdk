@@ -495,5 +495,5 @@ Apache-2.0
 [npm-url]: https://nodei.co/npm/featureflow-client
 [npm-img]: https://nodei.co/npm/featureflow-client.png
 
-[dependency-url]: https://www.featureflow.io
-[dependency-img]: https://www.featureflow.io/wp-content/uploads/2016/12/featureflow-web.png
+[dependency-url]: https://www.featureflow.com
+[dependency-img]: https://www.featureflow.com/featureflow-web.png

@@ -1,0 +1,113 @@
+name: Publish
+
+# Pushing a v* tag publishes to npm (dist-tag from the package.json version) and deploys
+# the UMD builds to the CDN. Mirrors featureflow-node-sdk/publish.yml; the npm trusted
+# publisher for featureflow-client is configured against this workflow filename.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write # OIDC token for npm trusted publishing
+
+jobs:
+  publish:
+    name: Publish to NPM and CDN
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type check
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # Trusted publishing (OIDC) needs npm >= 11.5.1; provenance is generated automatically.
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Extract version from package.json
+        id: package-version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Determine npm publish tag
+        id: npm-tag
+        run: |
+          VERSION="${{ steps.package-version.outputs.version }}"
+          if [[ "$VERSION" =~ -(alpha|beta|rc) ]]; then
+            if [[ "$VERSION" =~ -(alpha) ]]; then
+              TAG="alpha"
+            elif [[ "$VERSION" =~ -(beta) ]]; then
+              TAG="beta"
+            elif [[ "$VERSION" =~ -(rc) ]]; then
+              TAG="rc"
+            fi
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+            echo "Publishing with tag: $TAG"
+          else
+            echo "tag=latest" >> $GITHUB_OUTPUT
+            echo "Publishing as latest"
+          fi
+
+      - name: Publish to NPM
+        run: |
+          if [ "${{ steps.npm-tag.outputs.tag }}" == "latest" ]; then
+            npm publish
+          else
+            npm publish --tag "${{ steps.npm-tag.outputs.tag }}"
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Extract major.minor version
+        id: version-parts
+        run: |
+          VERSION="${{ steps.package-version.outputs.version }}"
+          # Extract major.minor version (e.g., "2.0" from "2.0.0-beta.2")
+          MAJOR_MINOR=$(echo "$VERSION" | sed -E 's/^([0-9]+\.[0-9]+).*/\1/')
+          echo "major_minor=$MAJOR_MINOR" >> $GITHUB_OUTPUT
+          echo "Major.Minor version: $MAJOR_MINOR"
+
+      - name: Deploy to S3
+        run: |
+          PACKAGE_VERSION="${{ steps.package-version.outputs.version }}"
+          MAJOR_MINOR="${{ steps.version-parts.outputs.major_minor }}"
+          # Deploy with versioned filenames (e.g., featureflow-2.0.x.js) to avoid breaking existing scripts
+          aws s3 cp dist/featureflow.umd.js "s3://cdn.featureflow.io/featureflow-${MAJOR_MINOR}.x.js"
+          aws s3 cp dist/featureflow.umd.min.js "s3://cdn.featureflow.io/featureflow-${MAJOR_MINOR}.x.min.js"
+          # Also deploy to versioned paths
+          aws s3 cp dist/featureflow.umd.js "s3://cdn.featureflow.io/v${PACKAGE_VERSION}/featureflow.js"
+          aws s3 cp dist/featureflow.umd.min.js "s3://cdn.featureflow.io/v${PACKAGE_VERSION}/featureflow.min.js"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          MAJOR_MINOR="${{ steps.version-parts.outputs.major_minor }}"
+          PACKAGE_VERSION="${{ steps.package-version.outputs.version }}"
+          aws cloudfront create-invalidation \
+            --distribution-id E2AUGN9EALQ72O \
+            --paths "/featureflow-${MAJOR_MINOR}.x.js" "/featureflow-${MAJOR_MINOR}.x.min.js" "/v${PACKAGE_VERSION}/featureflow.js" "/v${PACKAGE_VERSION}/featureflow.min.js"

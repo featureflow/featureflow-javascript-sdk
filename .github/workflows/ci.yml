@@ -48,7 +48,11 @@ jobs:
     needs: test
     # Only run on tag creation (release tags starting with 'v')
     if: github.event_name == 'create' && startsWith(github.ref, 'refs/tags/v')
-    
+
+    permissions:
+      contents: read
+      id-token: write # OIDC token for npm trusted publishing
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -61,13 +65,16 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build
         run: npm run build
+
+      # Trusted publishing (OIDC) needs npm >= 11.5.1; provenance is generated automatically.
+      - name: Update npm
+        run: npm install -g npm@latest
 
       - name: Extract version from package.json
         id: package-version
@@ -102,8 +109,6 @@ jobs:
           else
             npm publish --tag "${{ steps.npm-tag.outputs.tag }}"
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

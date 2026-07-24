@@ -1,4 +1,12 @@
 # Change log
+## [2.2.0]
+- Client-side event summarisation: evaluation events are batched as per feature/variant impression counts instead of one raw event per evaluation
+- New `track(goalKey, details?)` API for goal events (OpenFeature-congruent); `goal(goalKey)` is now a deprecated alias and no longer sends the full evaluated-features map
+- Pending events are flushed via `navigator.sendBeacon` when the page is hidden or unloading, and when `updateUser()` switches users
+- Server signals honoured: 401/403 permanently disables event sending; 429 requeues the batch and backs off `Retry-After`
+- Server-driven SDK config applied from the events response body (`eventsEnabled`, `mode`, `flushIntervalSeconds`)
+- New `disableEvents` config option; `uniqueEvals` is deprecated (no effect)
+
 ## [1.3.18]
 - Performance Improvements
 

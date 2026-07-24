@@ -55,6 +55,7 @@ export type {
   Evaluate,
   Features,
   Feature,
-  UserAttributes
+  UserAttributes,
+  GoalDetails
 } from './types';
 

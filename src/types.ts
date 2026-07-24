@@ -49,6 +49,16 @@ export type Config = {
   initOnCache?: boolean;
   offline?: boolean;
   delayInit?: boolean;
+  /**
+   * Disable analytics event sending (evaluate summaries and goals) while still fetching
+   * features. Permanent for the client's lifetime — server config can never re-enable it.
+   */
+  disableEvents?: boolean;
+  /**
+   * @deprecated Evaluate events are now summarised client-side into per (featureKey,
+   * variant) impression counts, which gives exact counts at less cost than deduping.
+   * The option is accepted but has no effect.
+   */
   uniqueEvals?: boolean;
 };
 
@@ -59,8 +69,17 @@ export type ConfigInternal = {
   useCookies: boolean;
   offline: boolean;
   delayInit: boolean;
+  disableEvents: boolean;
+  /** @deprecated See Config.uniqueEvals. */
   uniqueEvals: boolean;
 };
+
+/**
+ * Details for a goal (track) event: a number is the metric value; an object's optional
+ * `value` is the metric value and its remaining fields are sent as custom data —
+ * congruent with the OpenFeature tracking API.
+ */
+export type GoalDetails = number | { value?: number; [key: string]: unknown };
 
 export interface Evaluate {
   is(value: string): boolean;
@@ -110,7 +129,14 @@ export interface IFeatureflowClient {
   evaluate(key: string): Evaluate;
   
   /**
+   * Track a goal event for the current user. `details` is a number (the metric value) or
+   * an object `{ value?, ...custom }` — congruent with the OpenFeature tracking API.
+   */
+  track(goalKey: string, details?: GoalDetails): void;
+
+  /**
    * Send a goal event for A/B testing experiments.
+   * @deprecated Use track(goalKey) instead.
    */
   goal(goalKey: string): void;
   

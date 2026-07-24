@@ -431,7 +431,7 @@ describe('Featureflow', () => {
     // embedded on the matched Rule itself (from a single /evaluate response), not a separate fetch.
     const buildClient = (): FeatureflowClient => {
       const featureflow = new FeatureflowClient('test-api-key', { id: 'test-user' }, { offline: false });
-      jest.spyOn(featureflow.restClient, 'postEvaluateEvent').mockImplementation(() => {});
+      jest.spyOn(featureflow.restClient, 'postEvents').mockImplementation(() => {});
       return featureflow;
     };
 
@@ -466,6 +466,111 @@ describe('Featureflow', () => {
       expect(result.value()).toBe('on');
       expect(result.is('on')).toBe(true);
       expect(result.isOn()).toBe(true);
+    });
+  });
+
+  describe('event summarisation and goals', () => {
+    // Constructed and initialised with a mocked RestClient so no real network is hit;
+    // assertions inspect the eventsClient's pending state and the postEvents wire calls.
+    const buildClient = async (userId = 'u1'): Promise<{ client: FeatureflowClient; batches: any[][] }> => {
+      const client = new FeatureflowClient(FF_KEY, undefined, { offline: false });
+      const batches: any[][] = [];
+      jest.spyOn(client.restClient, 'getFeatures').mockResolvedValue({ 'f1': 'on', 'f2': 'off' });
+      jest.spyOn(client.restClient, 'postEvents').mockImplementation((events) => {
+        batches.push(events as any[]);
+      });
+      await client.initialise({ id: userId });
+      return { client, batches };
+    };
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('records an impression for every evaluate() call, summarised per feature and variant', async () => {
+      const { client } = await buildClient();
+      client.evaluate('f1');
+      client.evaluate('f1');
+      client.evaluate('f2');
+
+      const pending = client.eventsClient.pendingSummaries();
+      expect(pending).toHaveLength(2);
+      expect(pending.find(e => e.featureKey === 'f1')).toMatchObject({ evaluatedVariant: 'on', impressions: 2 });
+      expect(pending.find(e => e.featureKey === 'f2')).toMatchObject({ evaluatedVariant: 'off', impressions: 1 });
+      expect(pending[0].user.id).toBe('u1');
+    });
+
+    it('does not record evaluate events from getFeatures() bulk evaluation', async () => {
+      const { client } = await buildClient();
+      client.getFeatures();
+      expect(client.eventsClient.pendingSummaries()).toHaveLength(0);
+    });
+
+    it('track() queues an OpenFeature-shaped goal row without the legacy evaluatedFeatures map', async () => {
+      const { client } = await buildClient();
+      client.evaluate('f1');
+      client.track('signup', { value: 99, plan: 'pro' });
+
+      const goals = client.eventsClient.pendingGoals();
+      expect(goals).toHaveLength(1);
+      expect(goals[0]).toMatchObject({ type: 'goal', goalKey: 'signup', value: 99, data: { plan: 'pro' } });
+      expect(goals[0].user.id).toBe('u1');
+      expect(goals[0]).not.toHaveProperty('evaluatedFeatures');
+      expect(goals[0]).not.toHaveProperty('impressions');
+    });
+
+    it('goal() is a deprecated alias for track()', async () => {
+      const { client } = await buildClient();
+      client.goal('signup');
+
+      const goals = client.eventsClient.pendingGoals();
+      expect(goals).toHaveLength(1);
+      expect(goals[0]).toMatchObject({ type: 'goal', goalKey: 'signup' });
+      expect(goals[0]).not.toHaveProperty('evaluatedFeatures');
+    });
+
+    it('updateUser() flushes pending summaries for the old user before switching', async () => {
+      const { client, batches } = await buildClient();
+      client.evaluate('f1');
+
+      await client.updateUser({ id: 'u2' });
+
+      expect(batches).toHaveLength(1);
+      expect(batches[0][0]).toMatchObject({ featureKey: 'f1', evaluatedVariant: 'on', impressions: 1, user: { id: 'u1' } });
+      expect(client.eventsClient.pendingSummaries()).toHaveLength(0);
+    });
+
+    it('flushes via sendBeacon on pagehide', async () => {
+      const { client, batches } = await buildClient();
+      const beacon = jest.spyOn(client.restClient, 'postEventsBeacon').mockReturnValue(true);
+      client.evaluate('f1');
+
+      window.dispatchEvent(new Event('pagehide'));
+
+      expect(beacon).toHaveBeenCalledTimes(1);
+      expect((beacon.mock.calls[0][0] as any[])[0]).toMatchObject({ featureKey: 'f1', impressions: 1 });
+      expect(batches).toHaveLength(0);
+    });
+
+    it('disables event sending entirely in offline mode', async () => {
+      const client = new FeatureflowClient(FF_KEY, undefined, { offline: true, defaultFeatures: { 'f1': 'on' } });
+      await client.initialise({ id: 'u1' });
+      client.evaluate('f1');
+      client.track('signup');
+
+      expect(client.eventsClient.disabled).toBe(true);
+      expect(client.eventsClient.pendingSummaries()).toHaveLength(0);
+      expect(client.eventsClient.pendingGoals()).toHaveLength(0);
+    });
+
+    it('disables event sending with disableEvents while still fetching features', async () => {
+      const client = new FeatureflowClient(FF_KEY, undefined, { disableEvents: true });
+      jest.spyOn(client.restClient, 'getFeatures').mockResolvedValue({ 'f1': 'on' });
+      await client.initialise({ id: 'u1' });
+
+      expect(client.evaluate('f1').value()).toBe('on');
+      expect(client.eventsClient.disabled).toBe(true);
+      expect(client.eventsClient.pendingSummaries()).toHaveLength(0);
     });
   });
 });

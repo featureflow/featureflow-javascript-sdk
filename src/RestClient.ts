@@ -1,5 +1,6 @@
 import * as base64 from 'base64-js';
-import type { ConfigInternal, FeatureflowUser, EvaluatedFeatures, Features, RequestConfig } from './types';
+import type { ConfigInternal, FeatureflowUser, Features, RequestConfig } from './types';
+import type { EventsSendResult } from './EventsSummary';
 
 // Read package.json version at build time
 let packageVersion = '2.0.0';
@@ -16,19 +17,11 @@ export default class RestClient {
   baseUrl: string;
   eventsUrl: string;
   apiKey: string;
-  timer: ReturnType<typeof setTimeout> | null = null;
-  queues: {
-    events: any[];
-  };
 
   constructor(apiKey: string, config: ConfigInternal) {
     this.apiKey = apiKey;
     this.baseUrl = config.baseUrl;
     this.eventsUrl = config.eventsUrl;
-    this.timer = null;
-    this.queues = {
-      events: []
-    };
   }
 
   async getFeatures(user: FeatureflowUser, keys: string[] = []): Promise<Features> {
@@ -39,51 +32,54 @@ export default class RestClient {
     );
   }
 
-  postGoalEvent(user: FeatureflowUser, goalKey: string, evaluatedFeaturesMap: EvaluatedFeatures): void {
-    this.flushable();
-    this.queues.events.push({
-      type: 'goal',
-      goalKey,
-      impressions: 1,
-      evaluatedFeatures: evaluatedFeaturesMap,
-      timestamp: new Date(),
-      user
-    });
+  private eventsEndpoint(): string {
+    return `${this.eventsUrl}/api/js/v1/event/${this.apiKey}`;
   }
 
-  postEvaluateEvent(user: FeatureflowUser, featureKey: string, variant: string): void {
-    this.flushable();
-    this.queues.events.push({
-      type: 'evaluate',
-      featureKey,
-      evaluatedVariant: variant,
-      impressions: 1,
-      user,
-      timestamp: new Date()
-    });
-  }
-
-  flush(): void {
-    const queue: any[] = [];
-    if (this.queues.events.length > 0) {
-      queue.push(...this.queues.events);
-      this.queues.events = [];
-      // Fire and forget - don't wait for response
-      this.request(`${this.eventsUrl}/api/js/v1/event/${this.apiKey}`,
-        {
-          method: 'POST',
-          body: queue
-        }
-      ).catch(() => {
-        // Silently handle errors for event flushing
+  /**
+   * POST an event batch and surface the response (status, Retry-After, parsed JSON body) so
+   * the caller can react to 401/403/429 and apply the server-driven SDK config carried in
+   * the response body. Network errors report status 0.
+   */
+  postEvents(events: object[], onResponse: (result: EventsSendResult) => void): void {
+    const request = new XMLHttpRequest();
+    request.addEventListener('load', () => {
+      const retryAfter = parseInt(request.getResponseHeader('Retry-After') || '', 10);
+      let body: unknown;
+      try {
+        body = request.responseText ? JSON.parse(request.responseText) : undefined;
+      } catch (e) {
+        body = undefined;
+      }
+      onResponse({
+        status: request.status,
+        retryAfterSeconds: retryAfter > 0 ? retryAfter : undefined,
+        body
       });
-    }
-    this.timer = null;
+    });
+    request.addEventListener('error', () => {
+      onResponse({ status: 0 });
+    });
+    request.open('POST', this.eventsEndpoint());
+    request.setRequestHeader('X-Featureflow-Client', `JavascriptClient/${packageJSON.version}`);
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.send(JSON.stringify(events));
   }
 
-  flushable(): void {
-    if (!this.timer) {
-      this.timer = setTimeout(this.flush.bind(this), 2000);
+  /**
+   * Hand an event batch to navigator.sendBeacon for delivery after the page is hidden or
+   * unloading. Returns true if the browser accepted the batch. sendBeacon cannot set
+   * headers, but the events endpoint is keyed by the apiKey in the path.
+   */
+  postEventsBeacon(events: object[]): boolean {
+    if (typeof navigator === 'undefined' || typeof navigator.sendBeacon !== 'function') {
+      return false;
+    }
+    try {
+      const blob = new Blob([JSON.stringify(events)], { type: 'application/json' });
+      return navigator.sendBeacon(this.eventsEndpoint(), blob);
+    } catch (e) {
+      return false;
     }
   }
 
@@ -124,4 +120,3 @@ export default class RestClient {
     return new Uint8Array(b);
   }
 }
-

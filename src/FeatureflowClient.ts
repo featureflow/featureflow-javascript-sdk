@@ -1,4 +1,5 @@
 import RestClient from './RestClient';
+import EventsSummary from './EventsSummary';
 import createEvaluate from './Evaluate';
 import Events from './Events';
 import { test } from './Conditions';
@@ -23,6 +24,7 @@ import type {
   Rule,
   Condition,
   Conditions,
+  GoalDetails,
   IFeatureflowClient
 } from './types';
 
@@ -36,6 +38,7 @@ const DEFAULT_CONFIG: ConfigInternal = {
   useCookies: true,
   offline: false,
   delayInit: false,
+  disableEvents: false,
   uniqueEvals: true
 };
 
@@ -92,6 +95,7 @@ export default class FeatureflowClient implements IFeatureflowClient {
   off: (event: string, callback?: EventCallback) => void;
   receivedInitialResponse: boolean;
   restClient: RestClient;
+  eventsClient: EventsSummary;
   initialised: boolean;
   currentContext: {
     attributes: {
@@ -122,6 +126,30 @@ export default class FeatureflowClient implements IFeatureflowClient {
     } as ConfigInternal;
     //Create the rest client
     this.restClient = new RestClient(apiKey, this.config);
+
+    // Evaluate-event summarisation + goal queue. DOM-free module; the transport (XHR/beacon)
+    // is injected from RestClient. Offline or disableEvents locally disables it for good —
+    // server config can never re-enable a local disable.
+    this.eventsClient = new EventsSummary(
+      {
+        send: (events, onResponse) => this.restClient.postEvents(events, onResponse),
+        sendBeacon: (events) => this.restClient.postEventsBeacon(events)
+      },
+      { disabled: this.config.offline || this.config.disableEvents }
+    );
+
+    // Browser sessions die abruptly: flush pending events via sendBeacon when the page is
+    // hidden or unloading.
+    if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+          this.eventsClient.flush(true);
+        }
+      });
+    }
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('pagehide', () => this.eventsClient.flush(true));
+    }
 
     // Note: Initialization is now handled by the init() function, not the constructor
     // This allows init() to await the initialization Promise before returning
@@ -160,6 +188,9 @@ export default class FeatureflowClient implements IFeatureflowClient {
   }
 
   async updateUserWithCache(user: FeatureflowUser, initOnCache = false): Promise<Features> {
+    // Flush pending event summaries before switching user — each summary row carries the
+    // user it was recorded for.
+    this.eventsClient.flush();
     //these could be event or session attributes ie not persisted directly to user but added to a separate attributes map
     const featureflowAttributes = {};
     const attributes = {
@@ -276,23 +307,21 @@ export default class FeatureflowClient implements IFeatureflowClient {
     const resolvedVariant = matched?.variant || 'off';
 
     const evaluate = createEvaluate(resolvedVariant, matched?.value);
-    if (!this.config.uniqueEvals || (this.config.uniqueEvals && !this.evaluatedFeatures[key])) {
-      this.evaluatedFeatures[key] = evaluate.value();
-      this.restClient.postEvaluateEvent(this.user, key, evaluate.value());
-    }
+    // Every evaluation is recorded; the events client summarises into per (featureKey,
+    // variant) impression counts, so exact counts cost less than the old uniqueEvals dedupe.
+    this.evaluatedFeatures[key] = evaluate.value();
+    this.eventsClient.recordEvaluate(key, evaluate.value(), this.user);
 
     return evaluate;
   }
 
   evalAll(features: { [key: string]: Feature }): EvaluatedFeatures {
+    // Bulk evaluation does not record evaluate events — only evaluate(key) counts as an
+    // impression (matches the node SDK's evaluateAll behaviour).
     const evaluated: EvaluatedFeatures = {};
     for (const k of Object.keys(features)) {
       const variant = this.evalRules(features[k])?.variant;
       evaluated[k] = variant || 'off';
-      if (this.config.uniqueEvals && !this.evaluatedFeatures[k]) {
-        this.evaluatedFeatures[k] = variant || 'off';
-        this.restClient.postEvaluateEvent(this.user, k, variant || 'off');
-      }
     }
     return evaluated;
   }
@@ -340,9 +369,13 @@ export default class FeatureflowClient implements IFeatureflowClient {
     return true;
   }
 
+  track(goalKey: string, details?: GoalDetails): void {
+    this.eventsClient.recordGoal(goalKey, this.user, details);
+  }
+
+  /** @deprecated Use track(goalKey) instead. */
   goal(goalKey: string): void {
-    if (this.config.offline) return;
-    this.restClient.postGoalEvent(this.user, goalKey, this.getFeatures());
+    this.track(goalKey);
   }
 
   getAnonymousId(): string {

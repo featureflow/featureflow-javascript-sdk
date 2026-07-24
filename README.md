@@ -292,13 +292,28 @@ Returns the value of a feature for the given user.
 | `featureKey*`  | `string` | **`Required`** | The feature key you are targeting |
 | **`return`** | `string` | | The value of the feature, or the default feature value from `config.defaultFeatures[featureKey]` if present, or `'off'`  |
 
-#### `featureflow.goal(goalKey)`
+#### `featureflow.track(goalKey, details)`
 
-Sends a goal event, along with the current evaluated features to **featureflow.io**. Use with experiments in the admin console.
+Tracks a goal event for the current user. Use with experiments in the admin console.
 
 | Params | Type | Default | Description |
 |---------------|----------|--------------|----------------------------------------------------------------|
 | `goalKey*` | `string` |  | The key of the goal you want to target. |
+| `details` | `number` &#124; `object` |  | Optional. A number is the metric value; an object's optional `value` property is the metric value and its remaining properties are sent as custom data. |
+
+**Example:**
+
+```javascript
+featureflow.track('signup');
+featureflow.track('purchase', 49.95);
+featureflow.track('purchase', { value: 49.95, plan: 'pro' });
+```
+
+#### `featureflow.goal(goalKey)`
+
+> **Deprecated** — use `featureflow.track(goalKey)` instead.
+
+Sends a goal event to **featureflow.io**. Equivalent to `featureflow.track(goalKey)`.
 
 #### `featureflow.updateUser(user)`
 
@@ -461,7 +476,8 @@ All properties are optional. If not provided, sensible defaults will be used.
 | `defaultFeatures` | `object` | `{}` | A flat key-value object representing the default variants a feature should be set to if there is an interrupted connection and no cached value. *e.g. if you set `config.defaultFeatures` to `{'my-feature': 'on'}`, `featureflow.evaluate('my-feature').isOn()` will return `true` when there is an interrupted connection to Featureflow and no locally cached feature features.* |
 | `offline` | `boolean` | `false` | Set to `true` to run in offline mode, this is for testing purposes. Featureflow will not attempt any calls and will use the defaultFeatures values only  |
 | `delayInit` | `boolean` | `false` | Set to `true` to delay initialization. You must call `featureflow.initialise()` manually |
-| `uniqueEvals` | `boolean` | `true` | Set to `false` to allow duplicate evaluation events to be sent |
+| `disableEvents` | `boolean` | `false` | Set to `true` to disable analytics event sending (evaluation counts and goals) while still fetching features |
+| `uniqueEvals` | `boolean` | `true` | **Deprecated** — evaluation events are now summarised client-side into per feature/variant impression counts, so this option has no effect |
 
 #### Events
 

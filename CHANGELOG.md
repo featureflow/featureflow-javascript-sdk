@@ -1,4 +1,8 @@
 # Change log
+## [2.2.1]
+- `Retry-After` is now only read on a 429 response. Reading it on every event response made browsers log "Refused to get unsafe header" on each successful flush, because `Retry-After` is not a CORS-safelisted response header
+- Note that honouring a server-sent `Retry-After` cross-origin also requires the events server to list it in `Access-Control-Expose-Headers`; where it does not, the SDK falls back to its default 60 second backoff
+
 ## [2.2.0]
 - Client-side event summarisation: evaluation events are batched as per feature/variant impression counts instead of one raw event per evaluation
 - New `track(goalKey, details?)` API for goal events (OpenFeature-congruent); `goal(goalKey)` is now a deprecated alias and no longer sends the full evaluated-features map

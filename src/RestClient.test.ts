@@ -102,6 +102,19 @@ describe('RestClient events wire', () => {
       expect(result).toEqual({ status: 200, retryAfterSeconds: undefined, body: undefined });
     });
 
+    it('never reads Retry-After on a non-429, even when the header is present', () => {
+      // Retry-After is not CORS-safelisted, so reading it cross-origin without the events server
+      // exposing it makes the browser log "Refused to get unsafe header". Reading it only on a
+      // 429 keeps that out of the console on every successful flush.
+      client.postEvents([], () => {});
+      const xhr = MockXHR.instances[0];
+      const getResponseHeader = jest.spyOn(xhr, 'getResponseHeader');
+
+      xhr.respond(200, '{}', { 'Retry-After': '30' });
+
+      expect(getResponseHeader).not.toHaveBeenCalledWith('Retry-After');
+    });
+
     it('reports status 0 on network error', () => {
       let result: EventsSendResult | undefined;
       client.postEvents([], (r) => { result = r; });

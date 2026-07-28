@@ -37,14 +37,13 @@ export default class RestClient {
   }
 
   /**
-   * POST an event batch and surface the response (status, Retry-After, parsed JSON body) so
-   * the caller can react to 401/403/429 and apply the server-driven SDK config carried in
+   * POST an event batch and surface the response (status, Retry-After on a 429, parsed JSON body)
+   * so the caller can react to 401/403/429 and apply the server-driven SDK config carried in
    * the response body. Network errors report status 0.
    */
   postEvents(events: object[], onResponse: (result: EventsSendResult) => void): void {
     const request = new XMLHttpRequest();
     request.addEventListener('load', () => {
-      const retryAfter = parseInt(request.getResponseHeader('Retry-After') || '', 10);
       let body: unknown;
       try {
         body = request.responseText ? JSON.parse(request.responseText) : undefined;
@@ -53,7 +52,7 @@ export default class RestClient {
       }
       onResponse({
         status: request.status,
-        retryAfterSeconds: retryAfter > 0 ? retryAfter : undefined,
+        retryAfterSeconds: this.retryAfterSeconds(request),
         body
       });
     });
@@ -64,6 +63,21 @@ export default class RestClient {
     request.setRequestHeader('X-Featureflow-Client', `JavascriptClient/${packageJSON.version}`);
     request.setRequestHeader('Content-Type', 'application/json');
     request.send(JSON.stringify(events));
+  }
+
+  /**
+   * Only a 429 carries Retry-After, so only a 429 reads it.
+   *
+   * `Retry-After` is not a CORS-safelisted response header, so reading it cross-origin requires
+   * the events server to name it in `Access-Control-Expose-Headers`. Where it does not, the
+   * browser logs "Refused to get unsafe header" and returns null — harmless, but reading it on
+   * every response put that warning in the console on every successful flush.
+   */
+  private retryAfterSeconds(request: XMLHttpRequest): number | undefined {
+    if (request.status !== 429) return undefined;
+
+    const retryAfter = parseInt(request.getResponseHeader('Retry-After') || '', 10);
+    return retryAfter > 0 ? retryAfter : undefined;
   }
 
   /**

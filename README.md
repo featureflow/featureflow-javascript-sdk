@@ -231,6 +231,19 @@ Featureflow.init(FF_KEY, user, config).then((featureflow: FeatureflowClient) => 
 });
 ```
 
+#### Naming your application
+
+Optionally tag this site or app with an application name so the Featureflow dashboard
+can attribute SDK usage and flag evaluations to it (Admin → SDKs, and the "Evaluated by"
+panel on each feature's statistics tab):
+
+```ts
+const featureflow = await init(FF_KEY, user, { application: 'web-app' });
+```
+
+The name is a slug — lowercase letters, numbers, `.`, `_` and `-`, at most 64
+characters. An invalid value is dropped with a console warning and no tag is sent.
+
 #### Featureflow Instance
 
 These properties are available on the return of `Featureflow.init(...)`

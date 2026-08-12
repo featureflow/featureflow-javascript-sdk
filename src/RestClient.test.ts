@@ -70,6 +70,52 @@ describe('RestClient events wire', () => {
     jest.restoreAllMocks();
   });
 
+  describe('application tag', () => {
+    it('sends X-Featureflow-Application on events posts when configured', () => {
+      client = new RestClient('js-env-key', { ...config, application: 'web-app' } as ConfigInternal);
+      client.postEvents([{ featureKey: 'f1', type: 'evaluate', impressions: 1 }], () => {});
+
+      const xhr = MockXHR.instances[0];
+      expect(xhr.requestHeaders['X-Featureflow-Application']).toBe('web-app');
+    });
+
+    it('sends X-Featureflow-Application on feature requests when configured', async () => {
+      client = new RestClient('js-env-key', { ...config, application: 'web-app' } as ConfigInternal);
+      const pending = client.getFeatures({ id: 'u1', attributes: {} });
+      const xhr = MockXHR.instances[0];
+      xhr.respond(200, '{}', { 'Content-Type': 'application/json;charset=UTF-8' });
+      await pending;
+
+      expect(xhr.requestHeaders['X-Featureflow-Application']).toBe('web-app');
+    });
+
+    it('sends no application header when none is configured', () => {
+      client.postEvents([{ featureKey: 'f1', type: 'evaluate', impressions: 1 }], () => {});
+
+      const xhr = MockXHR.instances[0];
+      expect(xhr.requestHeaders['X-Featureflow-Application']).toBeUndefined();
+    });
+
+    it('rides on the event DTOs for the beacon path, which cannot set headers', () => {
+      client = new RestClient('js-env-key', { ...config, application: 'web-app' } as ConfigInternal);
+      const sent: string[] = [];
+      (global as any).navigator.sendBeacon = (url: string, blob: Blob) => {
+        sent.push(url);
+        return true;
+      };
+      const blobSpy = jest.spyOn(global as any, 'Blob').mockImplementation(function (this: any, parts: any) {
+        this.parts = parts;
+      } as any);
+
+      const accepted = client.postEventsBeacon([{ featureKey: 'f1', type: 'evaluate', impressions: 1 }]);
+
+      expect(accepted).toBe(true);
+      const payload = JSON.parse((blobSpy.mock.instances[0] as any).parts[0] as string);
+      expect(payload).toEqual([{ featureKey: 'f1', type: 'evaluate', impressions: 1, application: 'web-app' }]);
+      delete (global as any).navigator.sendBeacon;
+    });
+  });
+
   describe('postEvents', () => {
     it('POSTs the batch as JSON to the js events endpoint', () => {
       const batch = [

@@ -17,11 +17,26 @@ export default class RestClient {
   baseUrl: string;
   eventsUrl: string;
   apiKey: string;
+  /** Sanitised application tag (see src/application.ts); undefined = send no tag. */
+  application?: string;
 
   constructor(apiKey: string, config: ConfigInternal) {
     this.apiKey = apiKey;
     this.baseUrl = config.baseUrl;
     this.eventsUrl = config.eventsUrl;
+    this.application = config.application;
+  }
+
+  /**
+   * Standard headers on every XHR. X-Featureflow-Application is write-only telemetry —
+   * it never affects the response, so it cannot fragment the CDN cache; requests already
+   * carry the custom X-Featureflow-Client header, so it adds no new CORS preflight.
+   */
+  private setStandardHeaders(request: XMLHttpRequest): void {
+    request.setRequestHeader('X-Featureflow-Client', `JavascriptClient/${packageJSON.version}`);
+    if (this.application) {
+      request.setRequestHeader('X-Featureflow-Application', this.application);
+    }
   }
 
   async getFeatures(user: FeatureflowUser, keys: string[] = []): Promise<Features> {
@@ -60,7 +75,7 @@ export default class RestClient {
       onResponse({ status: 0 });
     });
     request.open('POST', this.eventsEndpoint());
-    request.setRequestHeader('X-Featureflow-Client', `JavascriptClient/${packageJSON.version}`);
+    this.setStandardHeaders(request);
     request.setRequestHeader('Content-Type', 'application/json');
     request.send(JSON.stringify(events));
   }
@@ -83,14 +98,19 @@ export default class RestClient {
   /**
    * Hand an event batch to navigator.sendBeacon for delivery after the page is hidden or
    * unloading. Returns true if the browser accepted the batch. sendBeacon cannot set
-   * headers, but the events endpoint is keyed by the apiKey in the path.
+   * headers, but the events endpoint is keyed by the apiKey in the path; the application
+   * tag rides as a field on the event DTOs instead (the server prefers the header when
+   * both are present — see featureflow-client-sdk-testbed/CONTRACT.md).
    */
   postEventsBeacon(events: object[]): boolean {
     if (typeof navigator === 'undefined' || typeof navigator.sendBeacon !== 'function') {
       return false;
     }
     try {
-      const blob = new Blob([JSON.stringify(events)], { type: 'application/json' });
+      const payload = this.application
+        ? events.map((event) => ({ ...event, application: this.application }))
+        : events;
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
       return navigator.sendBeacon(this.eventsEndpoint(), blob);
     } catch (e) {
       return false;
@@ -111,7 +131,7 @@ export default class RestClient {
         reject(new Error('error connecting with server'));
       });
       request.open(config.method, endpoint);
-      request.setRequestHeader('X-Featureflow-Client', `JavascriptClient/${packageJSON.version}`);
+      this.setStandardHeaders(request);
       if (config.body) {
         request.setRequestHeader('Content-Type', 'application/json');
         request.send(JSON.stringify(config.body));

@@ -60,6 +60,13 @@ export type Config = {
    * The option is accepted but has no effect.
    */
   uniqueEvals?: boolean;
+  /**
+   * Optional site/app label (e.g. 'web-app') sent as X-Featureflow-Application so the
+   * Featureflow dashboard can attribute usage and flag evaluations per application.
+   * A slug: lowercase [a-z0-9._-], max 64 chars — invalid values are dropped with a
+   * console warning.
+   */
+  application?: string;
 };
 
 export type ConfigInternal = {
@@ -72,6 +79,8 @@ export type ConfigInternal = {
   disableEvents: boolean;
   /** @deprecated See Config.uniqueEvals. */
   uniqueEvals: boolean;
+  /** Sanitised application tag; undefined = none configured (or invalid and dropped). */
+  application?: string;
 };
 
 /**

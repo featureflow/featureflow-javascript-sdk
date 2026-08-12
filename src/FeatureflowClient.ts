@@ -1,5 +1,6 @@
 import RestClient from './RestClient';
 import EventsSummary from './EventsSummary';
+import { sanitiseApplication } from './application';
 import createEvaluate from './Evaluate';
 import Events from './Events';
 import { test } from './Conditions';
@@ -124,6 +125,7 @@ export default class FeatureflowClient implements IFeatureflowClient {
       ...DEFAULT_CONFIG,
       ...config
     } as ConfigInternal;
+    this.config.application = sanitiseApplication(this.config.application);
     //Create the rest client
     this.restClient = new RestClient(apiKey, this.config);
 

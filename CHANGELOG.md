@@ -1,4 +1,7 @@
 # Change log
+## [2.3.0]
+- New `application` config option — a site/app label (e.g. `web-app`) sent as the `X-Featureflow-Application` header on evaluate and event requests so the Featureflow dashboard can attribute SDK usage and flag evaluations per application. A slug (lowercase `[a-z0-9._-]`, max 64 chars); invalid values are dropped with a console warning. On the `sendBeacon` unload path (which cannot set headers) the tag rides as an `application` field on the event DTOs
+
 ## [2.2.1]
 - `Retry-After` is now only read on a 429 response. Reading it on every event response made browsers log "Refused to get unsafe header" on each successful flush, because `Retry-After` is not a CORS-safelisted response header
 - Note that honouring a server-sent `Retry-After` cross-origin also requires the events server to list it in `Access-Control-Expose-Headers`; where it does not, the SDK falls back to its default 60 second backoff

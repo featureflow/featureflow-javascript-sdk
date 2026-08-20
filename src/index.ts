@@ -47,15 +47,19 @@ const Featureflow = {
 export default Featureflow;
 
 export { FeatureflowClient };
+export { amplitudeIntegration } from './integrations';
+export type { AmplitudeLike, AmplitudeIntegrationOptions } from './integrations';
 // Note: FeatureflowClient class is exported above and can be used as both value and type
-export type { 
+export type {
   FeatureflowUser,
-  Config, 
-  EvaluatedFeatures, 
+  Config,
+  EvaluatedFeatures,
   Evaluate,
   Features,
   Feature,
   UserAttributes,
-  GoalDetails
+  GoalDetails,
+  EvaluationDetails,
+  EvaluationListener
 } from './types';
 

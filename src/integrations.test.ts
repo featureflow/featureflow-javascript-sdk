@@ -1,0 +1,156 @@
+import { describe, it, expect, jest } from '@jest/globals';
+import Featureflow from './index';
+import { amplitudeIntegration } from './integrations';
+import type { AmplitudeLike } from './integrations';
+import type { EvaluationDetails } from './types';
+import { EVALUATION } from './Events';
+
+const FF_KEY = 'test-api-key';
+
+/** Offline client with fixed variants — evaluation is synchronous and deterministic. */
+function client(integrations?: Array<(details: EvaluationDetails) => void>) {
+  return Featureflow.init(FF_KEY, { id: 'user-1' }, {
+    offline: true,
+    defaultFeatures: { 'checkout-v2': 'on', 'other-flag': 'off' },
+    integrations
+  });
+}
+
+function fakeAmplitude() {
+  const identifySets: Array<[string, unknown]> = [];
+  const amplitude = {
+    track: jest.fn(),
+    identify: jest.fn(),
+    Identify: class {
+      set(key: string, value: unknown) {
+        identifySets.push([key, value]);
+        return this;
+      }
+    }
+  } as unknown as AmplitudeLike & { track: jest.Mock; identify: jest.Mock };
+  return { amplitude, identifySets };
+}
+
+describe('EVALUATION event', () => {
+  it('fires on every evaluate(key) with the key, variant and user', async () => {
+    const ff = await client();
+    const received: EvaluationDetails[] = [];
+    ff.on(EVALUATION, (details: EvaluationDetails) => received.push(details));
+
+    ff.evaluate('checkout-v2');
+
+    expect(received).toHaveLength(1);
+    expect(received[0].key).toBe('checkout-v2');
+    expect(received[0].variant).toBe('on');
+    expect(received[0].user.id).toBe('user-1');
+  });
+
+  it('fires for unknown keys, which evaluate to off', async () => {
+    const ff = await client();
+    const received: EvaluationDetails[] = [];
+    ff.on(EVALUATION, (details: EvaluationDetails) => received.push(details));
+
+    ff.evaluate('no-such-flag');
+
+    expect(received).toEqual([expect.objectContaining({ key: 'no-such-flag', variant: 'off' })]);
+  });
+
+  it('a throwing listener does not break evaluation', async () => {
+    const ff = await client();
+    ff.on(EVALUATION, () => {
+      throw new Error('broken listener');
+    });
+
+    expect(ff.evaluate('checkout-v2').value()).toBe('on');
+  });
+});
+
+describe('Config.integrations', () => {
+  it('wires listeners at init and isolates a throwing integration from the others', async () => {
+    const received: string[] = [];
+    const ff = await client([
+      () => {
+        throw new Error('broken integration');
+      },
+      ({ key }) => received.push(key)
+    ]);
+
+    expect(ff.evaluate('checkout-v2').value()).toBe('on');
+    // The second integration still ran despite the first throwing.
+    expect(received).toEqual(['checkout-v2']);
+  });
+});
+
+describe('amplitudeIntegration', () => {
+  it('sends $exposure with flag_key and variant, and identifies featureflow_<key>', async () => {
+    const { amplitude, identifySets } = fakeAmplitude();
+    const ff = await client([amplitudeIntegration(amplitude)]);
+
+    ff.evaluate('checkout-v2');
+
+    expect(amplitude.track).toHaveBeenCalledWith('$exposure', { flag_key: 'checkout-v2', variant: 'on' });
+    expect(amplitude.identify).toHaveBeenCalledTimes(1);
+    expect(identifySets).toEqual([['featureflow_checkout-v2', 'on']]);
+  });
+
+  it('dedupes repeat exposures of the same (user, flag, variant)', async () => {
+    const { amplitude } = fakeAmplitude();
+    const ff = await client([amplitudeIntegration(amplitude)]);
+
+    ff.evaluate('checkout-v2');
+    ff.evaluate('checkout-v2');
+    ff.evaluate('checkout-v2');
+
+    expect(amplitude.track).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends again when the variant or the flag differs', async () => {
+    const { amplitude } = fakeAmplitude();
+    const integration = amplitudeIntegration(amplitude);
+    const user = { id: 'user-1' };
+
+    integration({ key: 'checkout-v2', variant: 'on', user });
+    integration({ key: 'checkout-v2', variant: 'off', user });
+    integration({ key: 'other-flag', variant: 'on', user });
+
+    expect(amplitude.track).toHaveBeenCalledTimes(3);
+  });
+
+  it('sends again for a different user', async () => {
+    const { amplitude } = fakeAmplitude();
+    const integration = amplitudeIntegration(amplitude);
+
+    integration({ key: 'checkout-v2', variant: 'on', user: { id: 'user-1' } });
+    integration({ key: 'checkout-v2', variant: 'on', user: { id: 'user-2' } });
+
+    expect(amplitude.track).toHaveBeenCalledTimes(2);
+  });
+
+  it('identify: false sends only the exposure event', async () => {
+    const { amplitude } = fakeAmplitude();
+    const ff = await client([amplitudeIntegration(amplitude, { identify: false })]);
+
+    ff.evaluate('checkout-v2');
+
+    expect(amplitude.track).toHaveBeenCalledTimes(1);
+    expect(amplitude.identify).not.toHaveBeenCalled();
+  });
+
+  it('works with an instance that has no Identify API', async () => {
+    const track = jest.fn();
+    const ff = await client([amplitudeIntegration({ track })]);
+
+    ff.evaluate('checkout-v2');
+
+    expect(track).toHaveBeenCalledWith('$exposure', { flag_key: 'checkout-v2', variant: 'on' });
+  });
+
+  it('supports a custom event name', async () => {
+    const track = jest.fn();
+    const integration = amplitudeIntegration({ track }, { eventName: 'Flag Evaluated' });
+
+    integration({ key: 'checkout-v2', variant: 'on', user: { id: 'user-1' } });
+
+    expect(track).toHaveBeenCalledWith('Flag Evaluated', { flag_key: 'checkout-v2', variant: 'on' });
+  });
+});

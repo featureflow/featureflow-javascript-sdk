@@ -1,4 +1,9 @@
 # Change log
+## [2.4.0]
+- New `EVALUATION` event: fires synchronously on every `evaluate(key)` call with `{ key, variant, value, user }` — the hook for wiring flag exposures into analytics tools. `evaluateAll()` deliberately does not fire it. A throwing listener is logged and swallowed; it never breaks flag evaluation
+- New `integrations` config option: an array of `EVALUATION` listeners wired at init, each isolated so one broken integration cannot break another
+- New `amplitudeIntegration(amplitude, options?)` export: sends `$exposure` events (`flag_key`, `variant`) to the customer's own Amplitude instance for A/B analysis in Amplitude Experiment, and sets a `featureflow_<flagKey>` user property via the Identify API (disable with `identify: false`). Exposures are deduped per (user, flag, variant) for the page's lifetime, so `evaluate()` in a render loop cannot inflate Amplitude event volume. Duck-typed against the customer's instance — works with `@amplitude/unified` and `@amplitude/analytics-browser`, no new dependency
+
 ## [2.3.0]
 - New `application` config option — a site/app label (e.g. `web-app`) sent as the `X-Featureflow-Application` header on evaluate and event requests so the Featureflow dashboard can attribute SDK usage and flag evaluations per application. A slug (lowercase `[a-z0-9._-]`, max 64 chars); invalid values are dropped with a console warning. On the `sendBeacon` unload path (which cannot set headers) the tag rides as an `application` field on the event DTOs
 

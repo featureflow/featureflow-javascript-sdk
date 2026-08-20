@@ -41,6 +41,22 @@ export type FeatureflowUser = {
   attributes?: UserAttributes;
 };
 
+/** What an EVALUATION event carries: one evaluate(key) call's outcome. */
+export type EvaluationDetails = {
+  key: string;
+  variant: string;
+  /** The evaluated variant's JSON config payload, if any. */
+  value?: unknown;
+  user: FeatureflowUser;
+};
+
+/**
+ * An analytics integration is just a listener for EVALUATION events. Passed via
+ * Config.integrations, each listener is isolated: one throwing never breaks another,
+ * and never breaks flag evaluation itself.
+ */
+export type EvaluationListener = (evaluation: EvaluationDetails) => void;
+
 export type Config = {
   baseUrl?: string;
   eventsUrl?: string;
@@ -67,6 +83,11 @@ export type Config = {
    * console warning.
    */
   application?: string;
+  /**
+   * Analytics integrations: listeners invoked on every evaluate(key) call, e.g.
+   * amplitudeIntegration(amplitude) to send $exposure events for A/B analysis.
+   */
+  integrations?: EvaluationListener[];
 };
 
 export type ConfigInternal = {
@@ -81,6 +102,7 @@ export type ConfigInternal = {
   uniqueEvals: boolean;
   /** Sanitised application tag; undefined = none configured (or invalid and dropped). */
   application?: string;
+  integrations?: EvaluationListener[];
 };
 
 /**

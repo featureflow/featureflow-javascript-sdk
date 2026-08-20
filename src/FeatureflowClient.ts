@@ -21,6 +21,7 @@ import type {
   EvaluatedFeatures,
   Evaluate,
   EventCallback,
+  EvaluationDetails,
   Feature,
   Rule,
   Condition,
@@ -139,6 +140,18 @@ export default class FeatureflowClient implements IFeatureflowClient {
       },
       { disabled: this.config.offline || this.config.disableEvents }
     );
+
+    // Analytics integrations are just EVALUATION listeners, each wrapped individually so
+    // one broken integration cannot break another (mitt stops at the first throw).
+    (this.config.integrations || []).forEach((listener) => {
+      this.emitter.on(Events.EVALUATION, (details) => {
+        try {
+          listener(details as EvaluationDetails);
+        } catch (e) {
+          console.warn('[Featureflow] An analytics integration threw', e);
+        }
+      });
+    });
 
     // Browser sessions die abruptly: flush pending events via sendBeacon when the page is
     // hidden or unloading.
@@ -293,18 +306,18 @@ export default class FeatureflowClient implements IFeatureflowClient {
       const defaultFeature = this.config.defaultFeatures[key];
       // Handle both string and Feature object types
       if (typeof defaultFeature === 'string') {
-        return createEvaluate(defaultFeature);
+        return this.emitEvaluation(key, createEvaluate(defaultFeature));
       }
       // If it's a Feature object, evaluate it
       if (defaultFeature && typeof defaultFeature === 'object' && 'rules' in defaultFeature) {
         const matched = this.evalRules(defaultFeature);
-        return createEvaluate(matched?.variant || 'off', matched?.value);
+        return this.emitEvaluation(key, createEvaluate(matched?.variant || 'off', matched?.value));
       }
-      return createEvaluate('off');
+      return this.emitEvaluation(key, createEvaluate('off'));
     }
 
     const feature = this.features[key];
-    if (typeof feature === 'undefined') return createEvaluate('off'); //we dont know this feature
+    if (typeof feature === 'undefined') return this.emitEvaluation(key, createEvaluate('off')); //we dont know this feature
     const matched = this.evalRules(feature);
     const resolvedVariant = matched?.variant || 'off';
 
@@ -314,7 +327,28 @@ export default class FeatureflowClient implements IFeatureflowClient {
     this.evaluatedFeatures[key] = evaluate.value();
     this.eventsClient.recordEvaluate(key, evaluate.value(), this.user);
 
-    return evaluate;
+    return this.emitEvaluation(key, evaluate);
+  }
+
+  /**
+   * Fires the EVALUATION event and returns the evaluation unchanged. Every evaluate(key)
+   * call fires — including offline and unknown-key evaluations, because the user
+   * experienced that variant regardless of where it came from. Errors are swallowed: a
+   * broken analytics listener must never break flag evaluation.
+   */
+  private emitEvaluation(key: string, evaluation: Evaluate): Evaluate {
+    try {
+      const details: EvaluationDetails = {
+        key,
+        variant: evaluation.value(),
+        value: evaluation.jsonValue(),
+        user: this.user
+      };
+      this.emitter.emit(Events.EVALUATION, details);
+    } catch (e) {
+      console.warn('[Featureflow] An EVALUATION listener threw', e);
+    }
+    return evaluation;
   }
 
   evalAll(features: { [key: string]: Feature }): EvaluatedFeatures {

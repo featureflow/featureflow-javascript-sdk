@@ -244,6 +244,44 @@ const featureflow = await init(FF_KEY, user, { application: 'web-app' });
 The name is a slug — lowercase letters, numbers, `.`, `_` and `-`, at most 64
 characters. An invalid value is dropped with a console warning and no tag is sent.
 
+#### Analytics integrations — A/B testing with Amplitude
+
+Send flag evaluations to your analytics tool as exposure events and run experiment
+analysis there. For Amplitude, one line wires it up:
+
+```ts
+import Featureflow, { amplitudeIntegration } from 'featureflow-client';
+import * as amplitude from '@amplitude/unified';
+
+amplitude.initAll('YOUR-AMPLITUDE-API-KEY');
+
+const featureflow = await Featureflow.init(FF_KEY, user, {
+  integrations: [amplitudeIntegration(amplitude)]
+});
+```
+
+Every `evaluate(key)` sends a `$exposure` event (`flag_key`, `variant`) through **your**
+Amplitude instance — so it carries your Amplitude user/device identity with no id mapping
+— and sets a `featureflow_<flagKey>` user property so all your events can be segmented by
+variant. Amplitude Experiment reads `$exposure` natively for A/B analysis. Exposures are
+deduped per (user, flag, variant) for the page's lifetime, so calling `evaluate()` in a
+render loop will not inflate your Amplitude event volume.
+
+Options: `amplitudeIntegration(amplitude, { identify: false })` skips the user property;
+`{ eventName: '...' }` overrides `$exposure`.
+
+For any other tool, listen to the raw evaluation event yourself:
+
+```ts
+featureflow.on('EVALUATION', ({ key, variant, value, user }) => {
+  posthog.capture('$feature_flag_called', { $feature_flag: key, $feature_flag_response: variant });
+});
+```
+
+The `EVALUATION` event fires synchronously on every `evaluate(key)` call
+(`evaluateAll()` does not fire it), and a listener that throws is logged and swallowed —
+it can never break flag evaluation.
+
 #### Featureflow Instance
 
 These properties are available on the return of `Featureflow.init(...)`

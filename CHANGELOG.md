@@ -1,4 +1,7 @@
 # Change log
+## [2.4.1]
+- Fix `AmplitudeLike` parameter types: `unknown` parameters rejected the real Amplitude SDKs under TypeScript's contravariance rules, so `amplitudeIntegration(amplitude)` failed to compile against `@amplitude/unified`. No runtime change
+
 ## [2.4.0]
 - New `EVALUATION` event: fires synchronously on every `evaluate(key)` call with `{ key, variant, value, user }` — the hook for wiring flag exposures into analytics tools. `evaluateAll()` deliberately does not fire it. A throwing listener is logged and swallowed; it never breaks flag evaluation
 - New `integrations` config option: an array of `EVALUATION` listeners wired at init, each isolated so one broken integration cannot break another

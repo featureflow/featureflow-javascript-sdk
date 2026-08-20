@@ -9,8 +9,13 @@ import type { EvaluationDetails, EvaluationListener } from './types';
  */
 export type AmplitudeLike = {
   track: (eventName: string, eventProperties?: Record<string, unknown>) => unknown;
-  identify?: (identify: unknown) => unknown;
-  Identify?: new () => { set(key: string, value: unknown): unknown };
+  // `any` on purpose: function parameters are contravariant, so `unknown` here would
+  // reject the real Amplitude SDKs — their identify() accepts their own IIdentify type,
+  // and Identify.set() their own ValidPropertyType, neither of which accepts `unknown`.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  identify?: (identify: any) => unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Identify?: new () => { set(key: string, value: any): unknown };
 };
 
 export type AmplitudeIntegrationOptions = {

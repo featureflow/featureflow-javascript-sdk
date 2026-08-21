@@ -1,4 +1,7 @@
 # Change log
+## [2.5.0]
+- New `flags` option on `amplitudeIntegration`: choose which flags send exposures — an array of exact keys (`{ flags: ['checkout-v2'] }`) or a predicate for naming conventions (`{ flags: (key) => key.startsWith('exp-') }`). Omitted sends every flag (unchanged); `[]` sends none. Gates both the `$exposure` event and the `featureflow_<flagKey>` user property, and filtered keys never enter the dedupe set
+
 ## [2.4.1]
 - Fix `AmplitudeLike` parameter types: `unknown` parameters rejected the real Amplitude SDKs under TypeScript's contravariance rules, so `amplitudeIntegration(amplitude)` failed to compile against `@amplitude/unified`. No runtime change
 

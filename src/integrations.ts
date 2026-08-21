@@ -27,6 +27,16 @@ export type AmplitudeIntegrationOptions = {
   identify?: boolean;
   /** Event name to send. Default `$exposure`, which Amplitude Experiment reads natively. */
   eventName?: string;
+  /**
+   * Which flags send exposures. Most flags are operational — kill switches, infra
+   * toggles — and every exposure is billed Amplitude volume plus a user-property slot,
+   * so teams running experiments usually want only those flags here.
+   *
+   * An array of exact flag keys, or a predicate for naming conventions and anything
+   * else, e.g. `(key) => key.startsWith('exp-')`. Omitted sends every flag; `[]` sends
+   * none. Gates both the exposure event and the Identify user property.
+   */
+  flags?: string[] | ((key: string) => boolean);
 };
 
 // Cleared wholesale if it somehow grows past this — same shape as EventsSummary's cap.
@@ -56,9 +66,19 @@ export function amplitudeIntegration(
 ): EvaluationListener {
   const eventName = options.eventName || '$exposure';
   const identify = options.identify !== false;
+  const flags = options.flags;
+  // Normalised once to a predicate: an array is exact keys (as a Set — this runs on every
+  // evaluate() call), a function is the caller's own rule, absence means every flag.
+  const allowedKeys = Array.isArray(flags) ? new Set(flags) : undefined;
+  const matchesFlags: (key: string) => boolean =
+    flags === undefined ? () => true : allowedKeys ? (key) => allowedKeys.has(key) : (flags as (key: string) => boolean);
   const seen = new Set<string>();
 
   return ({ key, variant, user }: EvaluationDetails) => {
+    // Filtered keys return before the dedupe set, so unsent flags cost no memory either.
+    if (!matchesFlags(key)) {
+      return;
+    }
     const dedupeKey = `${user?.id ?? ''}\x1f${key}\x1f${variant}`;
     if (seen.has(dedupeKey)) {
       return;

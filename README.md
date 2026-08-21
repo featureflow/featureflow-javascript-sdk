@@ -267,8 +267,22 @@ variant. Amplitude Experiment reads `$exposure` natively for A/B analysis. Expos
 deduped per (user, flag, variant) for the page's lifetime, so calling `evaluate()` in a
 render loop will not inflate your Amplitude event volume.
 
-Options: `amplitudeIntegration(amplitude, { identify: false })` skips the user property;
-`{ eventName: '...' }` overrides `$exposure`.
+Most flags are operational — kill switches, infra toggles — and every exposure is billed
+Amplitude event volume, so you can limit exposures to the flags you actually analyse:
+
+```ts
+// An explicit allowlist…
+amplitudeIntegration(amplitude, { flags: ['checkout-v2', 'pricing-test'] })
+
+// …or a predicate, e.g. for a flag naming convention
+amplitudeIntegration(amplitude, { flags: (key) => key.startsWith('exp-') })
+```
+
+Omitted, every flag sends; `[]` sends none. The filter gates both the exposure event and
+the user property.
+
+Other options: `{ identify: false }` skips the user property; `{ eventName: '...' }`
+overrides `$exposure`.
 
 For any other tool, listen to the raw evaluation event yourself:
 

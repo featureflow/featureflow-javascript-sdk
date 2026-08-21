@@ -145,6 +145,40 @@ describe('amplitudeIntegration', () => {
     expect(track).toHaveBeenCalledWith('$exposure', { flag_key: 'checkout-v2', variant: 'on' });
   });
 
+  it('flags array: only listed flags send an exposure or an identify', async () => {
+    const { amplitude } = fakeAmplitude();
+    const ff = await client([amplitudeIntegration(amplitude, { flags: ['checkout-v2'] })]);
+
+    ff.evaluate('checkout-v2');
+    ff.evaluate('other-flag');
+
+    expect(amplitude.track).toHaveBeenCalledTimes(1);
+    expect(amplitude.track).toHaveBeenCalledWith('$exposure', { flag_key: 'checkout-v2', variant: 'on' });
+    expect(amplitude.identify).toHaveBeenCalledTimes(1);
+  });
+
+  it('flags predicate: naming conventions work without any pattern syntax', async () => {
+    const track = jest.fn();
+    const integration = amplitudeIntegration({ track }, { flags: (key) => key.startsWith('exp-') });
+    const user = { id: 'user-1' };
+
+    integration({ key: 'exp-pricing', variant: 'b', user });
+    integration({ key: 'kill-switch', variant: 'on', user });
+
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith('$exposure', { flag_key: 'exp-pricing', variant: 'b' });
+  });
+
+  it('flags: [] sends nothing — an allowlist is an allowlist', async () => {
+    const { amplitude } = fakeAmplitude();
+    const ff = await client([amplitudeIntegration(amplitude, { flags: [] })]);
+
+    ff.evaluate('checkout-v2');
+
+    expect(amplitude.track).not.toHaveBeenCalled();
+    expect(amplitude.identify).not.toHaveBeenCalled();
+  });
+
   it('supports a custom event name', async () => {
     const track = jest.fn();
     const integration = amplitudeIntegration({ track }, { eventName: 'Flag Evaluated' });

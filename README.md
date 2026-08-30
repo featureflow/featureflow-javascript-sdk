@@ -284,11 +284,30 @@ the user property.
 Other options: `{ identify: false }` skips the user property; `{ eventName: '...' }`
 overrides `$exposure`.
 
-For any other tool, listen to the raw evaluation event yourself:
+For any other tool, `exposureIntegration` (2.6.0+) gives you the same dedupe and `flags`
+filter — you write only the event your tool expects:
+
+```ts
+import Featureflow, { exposureIntegration } from 'featureflow-client';
+
+const featureflow = await Featureflow.init(FF_KEY, user, {
+  integrations: [
+    exposureIntegration(({ key, variant, value, user }) => {
+      posthog.capture('$feature_flag_called', { $feature_flag: key, $feature_flag_response: variant });
+    }, { flags: (key) => key.startsWith('exp-') })
+  ]
+});
+```
+
+`send` is called once per new (user, flag, variant) with the full `EvaluationDetails`.
+Recipes for Mixpanel, PostHog, Segment and Google Analytics are in the
+[docs](https://docs.featureflow.io/ab-testing). `amplitudeIntegration` is built on it.
+
+Or listen to the raw evaluation event yourself, with no dedupe:
 
 ```ts
 featureflow.on('EVALUATION', ({ key, variant, value, user }) => {
-  posthog.capture('$feature_flag_called', { $feature_flag: key, $feature_flag_response: variant });
+  // fires on every evaluate() call — dedupe before sending to a tool that bills per event
 });
 ```
 

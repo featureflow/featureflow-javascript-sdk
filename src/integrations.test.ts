@@ -1,6 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import Featureflow from './index';
-import { amplitudeIntegration } from './integrations';
+import { amplitudeIntegration, exposureIntegration } from './integrations';
 import type { AmplitudeLike } from './integrations';
 import type { EvaluationDetails } from './types';
 import { EVALUATION } from './Events';
@@ -78,6 +78,86 @@ describe('Config.integrations', () => {
     expect(ff.evaluate('checkout-v2').value()).toBe('on');
     // The second integration still ran despite the first throwing.
     expect(received).toEqual(['checkout-v2']);
+  });
+});
+
+describe('exposureIntegration', () => {
+  it('calls send with the full evaluation details on the first exposure', async () => {
+    const send = jest.fn();
+    const ff = await client([exposureIntegration(send)]);
+
+    ff.evaluate('checkout-v2');
+
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({ key: 'checkout-v2', variant: 'on', user: expect.objectContaining({ id: 'user-1' }) })
+    );
+  });
+
+  it('dedupes repeat exposures of the same (user, flag, variant)', async () => {
+    const send = jest.fn();
+    const ff = await client([exposureIntegration(send)]);
+
+    ff.evaluate('checkout-v2');
+    ff.evaluate('checkout-v2');
+    ff.evaluate('checkout-v2');
+
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends again when the variant, flag or user differs', () => {
+    const send = jest.fn();
+    const integration = exposureIntegration(send);
+    const user = { id: 'user-1' };
+
+    integration({ key: 'checkout-v2', variant: 'on', user });
+    integration({ key: 'checkout-v2', variant: 'off', user });
+    integration({ key: 'other-flag', variant: 'on', user });
+    integration({ key: 'checkout-v2', variant: 'on', user: { id: 'user-2' } });
+
+    expect(send).toHaveBeenCalledTimes(4);
+  });
+
+  it('flags array: only listed flags reach send', async () => {
+    const send = jest.fn();
+    const ff = await client([exposureIntegration(send, { flags: ['checkout-v2'] })]);
+
+    ff.evaluate('checkout-v2');
+    ff.evaluate('other-flag');
+
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ key: 'checkout-v2' }));
+  });
+
+  it('flags predicate: naming conventions work without any pattern syntax', () => {
+    const send = jest.fn();
+    const integration = exposureIntegration(send, { flags: (key) => key.startsWith('exp-') });
+    const user = { id: 'user-1' };
+
+    integration({ key: 'exp-pricing', variant: 'b', user });
+    integration({ key: 'kill-switch', variant: 'on', user });
+
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ key: 'exp-pricing', variant: 'b' }));
+  });
+
+  it('flags: [] sends nothing — an allowlist is an allowlist', async () => {
+    const send = jest.fn();
+    const ff = await client([exposureIntegration(send, { flags: [] })]);
+
+    ff.evaluate('checkout-v2');
+
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('a throwing send is isolated by the client like any other integration', async () => {
+    const ff = await client([
+      exposureIntegration(() => {
+        throw new Error('analytics down');
+      })
+    ]);
+
+    expect(ff.evaluate('checkout-v2').value()).toBe('on');
   });
 });
 

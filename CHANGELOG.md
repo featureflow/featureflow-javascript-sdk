@@ -1,4 +1,9 @@
 # Change log
+## [2.6.0]
+- New `exposureIntegration(send, options?)` export: the tool-agnostic analytics integration. `send` is called once per new (user, flag, variant) with the full `EvaluationDetails`, and you write the event in whatever shape your tool expects — Mixpanel `$experiment_started`, PostHog `$feature_flag_called`, Segment `Experiment Viewed`, a GA4 event, anything. Same per-page dedupe and `flags` filter (array or predicate) as `amplitudeIntegration`
+- `amplitudeIntegration` is now built on `exposureIntegration`. No behaviour change
+- New exported types: `ExposureSender`, `ExposureIntegrationOptions`, `FlagFilter`
+
 ## [2.5.0]
 - New `flags` option on `amplitudeIntegration`: choose which flags send exposures — an array of exact keys (`{ flags: ['checkout-v2'] }`) or a predicate for naming conventions (`{ flags: (key) => key.startsWith('exp-') }`). Omitted sends every flag (unchanged); `[]` sends none. Gates both the `$exposure` event and the `featureflow_<flagKey>` user property, and filtered keys never enter the dedupe set
 

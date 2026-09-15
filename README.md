@@ -81,13 +81,15 @@ or using es6 syntax
 import Featureflow from 'featureflow-client';
 ```
 
-##### CDN
+##### CDN (no bundler)
 
-Include the following script in HTML file. This will expose the global variable `Featureflow`
+Load the UMD build from unpkg. It exposes the global variable `Featureflow`:
 
 ```html
-<script crossorigin="anonymous" src="https://cdn.featureflow.io/featureflow.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/featureflow-client@2/dist/featureflow.umd.min.js"></script>
 ```
+
+Pin an exact version (`featureflow-client@2.6.0`) for production pages. `https://cdn.featureflow.io/featureflow.js` is frozen at the 1.x client for pages that already load it; do not use it for new work.
 ### Quick start
 
 Get your environment's Featureflow Javascript API key and initialise a new Featureflow client

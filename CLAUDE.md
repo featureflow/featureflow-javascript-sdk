@@ -27,7 +27,7 @@ CI (`.github/workflows/ci.yml`) runs typecheck + test + build on pushes/PRs to `
 Two distribution channels, both driven by pushing a `v*` tag (CI deploy job):
 
 1. **npm** — prerelease versions (`-alpha`/`-beta`/`-rc` in package.json version) auto-publish under that dist-tag, otherwise `latest`.
-2. **CDN** — UMD builds go to `s3://cdn.featureflow.io` as `featureflow-<major.minor>.x[.min].js` and `/v<version>/featureflow[.min].js`, then CloudFront is invalidated. `deploy_prod_npm.sh` / `deploy_prod_s3.sh` are manual equivalents; note the S3 script also overwrites the un-versioned `featureflow.js` that legacy `<script>` users load — CI deliberately does not.
+2. **CDN** — UMD builds go to `s3://cdn.featureflow.io` as `featureflow-<major.minor>.x[.min].js` and `/v<version>/featureflow[.min].js`, then CloudFront is invalidated. This is legacy: the documented script-tag route is unpkg (`https://unpkg.com/featureflow-client@2/dist/featureflow.umd.min.js`), which needs nothing from us. The un-versioned `cdn.featureflow.io/featureflow.js` is frozen at 1.3.17 for pages that already load it and must never be overwritten — the manual `deploy_prod_s3.sh` that did so has been removed. `deploy_prod_npm.sh` remains the manual npm equivalent.
 
 `dist/` is checked in only as build output; rollup builds it from `src/index.ts`. npm deps are external in the ESM/CJS builds but bundled into the UMD builds.
 
